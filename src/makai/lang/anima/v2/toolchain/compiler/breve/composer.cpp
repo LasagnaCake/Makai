@@ -125,7 +125,7 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 	if (type->scope) {
 		auto const vals = type->scope->meta.values();
 		bool hasMetaInfo = false;
-		for (auto& [name,.val]: type->scope->meta)
+		for (auto const& [name, val]: type->scope->meta)
 			if (val && !val->value.isUndefined()) {
 				hasMetaInfo = true;
 				break;
