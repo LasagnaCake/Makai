@@ -1,0 +1,16 @@
+using import core
+
+module OS.Shell {
+	struct Command {
+		name: string
+		args: [string]
+	}
+
+	@Shared(lib=av2shell, name="av2/shell/cd")
+	cd :: (dir: string) -> bool
+
+	@Shared(lib=av2shell, name="av2/shell/exec")
+	exec :: (proc: string, args: [string]) -> ?int
+
+	exec :: (cmd: Command) => exec(cmd.name, cmd.args)
+}

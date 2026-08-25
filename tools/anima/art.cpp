@@ -11,8 +11,9 @@ DEFINE_ERROR_TYPE_EX(EngineError, FailedAction);
 
 struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	struct BuiltinAPI {
-		bool console:	1;
-		bool time:		1;
+		bool console	= false;
+		bool time		= false;
+		bool shell		= false;
 	};
 
 	BuiltinAPI bapi;
@@ -82,9 +83,34 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 		return local + int64(secs * Makai::Math::pow<double>(10, precision));
 	}
 
+	static Mutex threadEditLock;
+	static List<AtomicCell<Thread>> processes;
+
+	static bool AV2Call cd(String const& str) {
+		return chdir(str.cstr()) != -1;
+	}
+
+	static void handleExec(AtomicCell<Thread> self, Object::Storage out, String command, StringList args) {
+		out->set(OS::launch(command, "", args));
+		threadEditLock.lock();
+		processes.eraseLike(self);
+		threadEditLock.unlock();
+
+	}
+
+	static Object::Storage AV2Call exec(Context& context, String const& command, StringList const& args) {
+		Object::Storage output = output.newEmpty<int64>();
+		auto const thread = AtomicCell<Thread>::create();
+		threadEditLock.lock();
+		processes.pushBack(thread);
+		threadEditLock.unlock();
+		thread->invoke(handleExec, thread, output, command, args);
+		return output;
+	}
+
 	ARTE(
 		bool const allowDynlibs	= false,
-		BuiltinAPI const bapi	= {false, false}
+		BuiltinAPI const bapi	= {}
 	): Engine(Config{allowDynlibs}), bapi(bapi) {
 	}
 
@@ -100,6 +126,10 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 			context.art.addNativeCall("av2/time/utcNow",	utcNow		);
 			context.art.addNativeCall("av2/time/procNow",	procNow		);
 		}
+		if (bapi.shell) {
+			context.art.addNativeCall("av2/shell/exec",	exec	);
+			context.art.addNativeCall("av2/shell/cd",	cd		);
+		}
 	}
 };
 
@@ -113,6 +143,7 @@ struct ARTEMain: Makai::AMain {
 		cfg["add-sources"]		= cfg.array();
 		cfg["bapi:console"]		= false;
 		cfg["bapi:time"]		= false;
+		cfg["bapi:shell"]		= false;
 		return cfg;
 	}
 
@@ -122,8 +153,9 @@ struct ARTEMain: Makai::AMain {
 		tl["B"]		= "binary-first";
 		tl["S"]		= "script";
 		tl["i"]		= "add-sources";
-		tl["BA:C"]	= "bapi-console";
-		tl["BA:T"]	= "bapi-time";
+		tl["BA:C"]	= "bapi:console";
+		tl["BA:T"]	= "bapi:time";
+		tl["BA:S"]	= "bapi:shell";
 	}
 
 	ARTEMain(Makai::CLI::Parser& cli): AMain(cli) {
@@ -147,25 +179,28 @@ struct ARTEMain: Makai::AMain {
 		if (args.fetch("help", false)) {
 			writeLine("Anima RunTime - V" + VER.serialize().get<Makai::String>());
 			writeLine("Available commands:");
-			writeLine("art <program> [-BA:C] [-BA:T] [-DL] [-B] [-S]");
+			writeLine("art <program> [-BA:C] [-BA:T] [-BA:S] [-DL] [-B] [-S]");
 		} else {
 			ARTE engine{
 				args["allow-dynlibs"].getBoolean(),
 				{
-					args["bapi-console"].getBoolean(),
-					args["bapi-time"].getBoolean()
+					args["bapi:console"].getBoolean(),
+					args["bapi:time"].getBoolean(),
+					args["bapi:shell"].getBoolean()
 				}
 			};
 			Makai::Anima::V2::Core::Module file;
 			if (!args.fetch("script", false)) {
-				static auto const ext = Makai::StringList::from(".anp", ".anpb");
-				Makai::String fpath = args["__args"][0].getString();
-				if (Makai::OS::FS::exists(fpath + ext[args.fetch("binary-first", false)]))
-					file = Makai::File::getFLOW(fpath + ext[args.fetch("binary-first", false)]);
-				else Makai::Anima::V2::Core::BinaryFormat::fromBytes(Makai::File::getBinary(fpath + ext[!args.fetch("binary-first", false)]))
-					.then([&] (auto const e) {file = e;})
-					.onError([&] (auto const e) {throw Makai::Error::FailedAction(e.message, CTL_CPP_PRETTY_SOURCE);})
-				;
+				if (args.contains("pipe")) {
+					static auto const ext = Makai::StringList::from(".anp", ".anpb");
+					Makai::String fpath = args["__args"][0].getString();
+					if (Makai::OS::FS::exists(fpath + ext[args.fetch("binary-first", false)]))
+						file = Makai::File::getFLOW(fpath + ext[args.fetch("binary-first", false)]);
+					else Makai::Anima::V2::Core::BinaryFormat::fromBytes(Makai::File::getBinary(fpath + ext[!args.fetch("binary-first", false)]))
+						.then([&] (auto const e) {file = e;})
+						.onError([&] (auto const e) {throw Makai::Error::FailedAction(e.message, CTL_CPP_PRETTY_SOURCE);})
+					;
+				} else file = args["pipe"].getString();
 			} else {
 				using namespace Makai::Anima::V2::Toolchain;
 				Compiler::Breve::Transformer::Import::importer

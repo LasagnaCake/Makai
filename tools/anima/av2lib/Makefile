@@ -100,6 +100,8 @@ av2:
 	$(call compile, convert)
 	$(call compile, string)
 	$(call compile, meta)
+	$(call compile, shell)
+	$(call compile, time)
 
 finale:
 	@echo 
