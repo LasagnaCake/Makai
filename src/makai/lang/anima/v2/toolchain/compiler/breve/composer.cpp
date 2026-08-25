@@ -123,7 +123,14 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 		else decl += " derived<" + type->base->name + ">";
 	}
 	if (type->scope) {
-		if (type->scope->meta.values().filter([] (auto const& e) {return !e || !e->value.isUndefined();}).size()) {
+		auto const vals = type->scope->meta.values();
+		bool hasMetaInfo = false;
+		for (auto& [name,.val]: type->scope->meta)
+			if (val && !val->value.isUndefined()) {
+				hasMetaInfo = true;
+				break;
+			}
+		if (hasMetaInfo) {
 			decl += "\n  meta [\n";
 			for (auto& [name, attrib]: type->scope->meta)
 				if (!attrib->value.isUndefined())
