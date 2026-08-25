@@ -10,23 +10,29 @@ struct ShellLib: ALibrary {
 	static List<ProcessThread> processes;
 
 	static bool AV2Call cd(String const& str) {
+		#ifdef CTL_ON_WINDOWS
+		//return _chdir(str.cstr()) != -1;
+		return false;
+		#else
 		return chdir(str.cstr()) != -1;
+		#endif
 	}
 
-	static void handleExec(AtomicCell<Thread> self, Object::Storage out, String command, StringList args) {
-		out->set(OS::launch(command, "", args));
+	static nulltype handleExec(AtomicCell<Thread> self, Anima::V2::Core::Promise<int64> out, String command, StringList args) {
+		out.set(OS::launch(command, "", args));
 		threadEditLock.lock();
 		processes.eraseLike(self);
 		threadEditLock.unlock();
+		return null;
 	}
 
 	static Object::Storage AV2Call exec(Context& context, String const& command, StringList const& args) {
-		Object::Storage output = output.newEmpty<int64>();
+		Object::Storage output = context.promise<int64>();
 		auto const thread = ProcessThread::create();
 		threadEditLock.lock();
 		processes.pushBack(thread);
 		threadEditLock.unlock();
-		thread->invoke(handleExec, thread, output, command, args);
+		thread->invoke<nulltype>(handleExec, thread, output, command, args);
 		return output;
 	}
 

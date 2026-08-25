@@ -242,8 +242,8 @@ namespace Makai::Anima::V2::Core::Meta {
 		template<> struct ARTTI<Object::Storage> {
 			constexpr static auto const ART_HASH = ConstHasher::hash("any");
 
-			static Data::Value construct(Object const& value) {
-				return value.toDynamicValue();
+			static Object::Storage construct(Object const& value) {
+				return value.clone();
 			}
 
 			static Object::Storage convert(Database<Definition>& db, Object::Storage const& value) {
@@ -278,7 +278,7 @@ namespace Makai::Anima::V2::Core::Meta {
 					if (t->base->hash != ARTTI<T>::ART_HASH) continue;
 				}
 				Object::Storage obj = Object::create(type);
-				obj->reserve(value.size());
+				obj->reserveFields(value.size());
 				for (usize i: range(value.size()))
 					obj->setAtIndex(i, ARTTI<T>::convert(db, value[i]));
 				return obj;
@@ -289,10 +289,10 @@ namespace Makai::Anima::V2::Core::Meta {
 		struct ARTTI<Nullable<T>>: Nullable<T> {
 			static Nullable<T> construct(Object const& value) {
 				if (!value.exists()) return null;
-				return value.get<T>();
+				return value.template toValue<T>();
 			}
 
-			static Object::Storage convert(Database<Definition>& db, List<T> const& value) {
+			static Object::Storage convert(Database<Definition>& db, Nullable<T> const& value) {
 				Database<Definition>::ElementType type;
 				for (auto const& t: db.values) {
 					if (!t->base) continue;
@@ -300,8 +300,20 @@ namespace Makai::Anima::V2::Core::Meta {
 					if (t->base->hash != ARTTI<T>::ART_HASH) continue;
 				}
 				Object::Storage obj = Object::create(type);
-				// TODO: The rest
+				if (!value) return obj;
+				obj->set(value.value());
 				return obj;
+			}
+		};
+
+		template<class T>
+		struct ARTTI<Promise<T>>: Promise<T> {
+			static Promise<T> construct(Object const& value) {
+				return {value.clone()};
+			}
+
+			static Object::Storage convert(Database<Definition>& db, Promise<T> const& value) {
+				return value.object;
 			}
 		};
 

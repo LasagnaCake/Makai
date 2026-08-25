@@ -82,6 +82,11 @@ namespace Makai::Anima::V2::Runtime {
 			return art.template newEmpty<T>();
 		}
 
+		template <class T>
+		Core::Promise<T> promise() {
+			return art.template promise<T>();
+		}
+
 		Pointers				pointers;
 		List<Storage>			globalValueStack;
 		List<Pointers>			pointerStack;

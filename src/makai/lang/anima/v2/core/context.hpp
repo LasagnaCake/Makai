@@ -310,6 +310,11 @@ namespace Makai::Anima::V2::Core {
 			return Object::create(query.front());
 		}
 
+		template <class T>
+		Promise<T> promise() const {
+			return Core::Promise<T>{newEmpty<T>()};
+		}
+
 		struct Library {
 			struct Impl;
 

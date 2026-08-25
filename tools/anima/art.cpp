@@ -83,19 +83,26 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	static Makai::List<Makai::AtomicCell<Makai::Thread>> processes;
 
 	static bool AV2Call cd(Makai::String const& str) {
+		#ifdef CTL_ON_WINDOWS
+		//return _wchdir(str.cstr()) != -1;
+		return false;
+		#else
 		return chdir(str.cstr()) != -1;
+		#endif
 	}
 
-	static nulltype handleExec(Makai::AtomicCell<Makai::Thread> self, Makai::Anima::V2::Core::Object::Storage out, Makai::String command, Makai::StringList args) {
-		out->set(Makai::OS::launch(command, "", args));
+	using ProcessResult = Makai::Anima::V2::Core::Promise<int64>;
+
+	static nulltype handleExec(Makai::AtomicCell<Makai::Thread> self, ProcessResult out, Makai::String command, Makai::StringList args) {
+		out.set(Makai::OS::launch(command, "", args));
 		threadEditLock.lock();
 		processes.eraseLike(self);
 		threadEditLock.unlock();
 		return null;
 	}
 
-	static Makai::Anima::V2::Core::Object::Storage AV2Call exec(Makai::Anima::V2::Runtime::Context& context, Makai::String const& command, Makai::StringList const& args) {
-		Makai::Anima::V2::Core::Object::Storage output = context.art.newEmpty<int64>();
+	static ProcessResult AV2Call exec(Makai::Anima::V2::Core::Context& context, Makai::String const& command, Makai::StringList const& args) {
+		auto output = context.promise<int64>();
 		auto const thread = Makai::AtomicCell<Makai::Thread>::create();
 		threadEditLock.lock();
 		processes.pushBack(thread);

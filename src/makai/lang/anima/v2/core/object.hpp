@@ -580,6 +580,14 @@ namespace Makai::Anima::V2::Core {
 	inline Data::Value operator*(Any const& any) {
 		return decay(any);
 	}
+
+	template <class T>
+	struct Promise {
+		Object::Storage object;
+
+		void set(Nullable<T> const& value)	{if (object) object->set(value);															}
+		Nullable<T> get()					{if (!(object && object->exists())) return null; else return object->template toValue<T>();	}
+	};
 }
 
 #endif

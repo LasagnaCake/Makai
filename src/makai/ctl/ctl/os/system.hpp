@@ -105,7 +105,7 @@ namespace OS {
 	inline int awaitResult(Process& process) {
 		#ifdef CTL_ON_WINDOWS
 		if (!process.handle) return 0;
-		proc = WaitForSingleObject(process.handle, INFINITE);
+		WaitForSingleObject(process.handle, INFINITE);
 		DWORD res;
 		GetExitCodeProcess(process.handle, &res);
 		CloseHandle(process.handle);

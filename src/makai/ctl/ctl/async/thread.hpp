@@ -42,7 +42,7 @@ private:
 	struct Executor<TReturn(TArgs...)>: IExecutor {
 		struct None {};
 		using Caller	= Function<TReturn(TArgs...)>;
-		using Arguments	= Meta::If<sizeof...(TArgs), Tuple<TArgs...>, None>;
+		using Arguments	= Meta::If<sizeof...(TArgs) != 0, Tuple<TArgs...>, None>;
 		using Result	= Meta::If<Type::NonVoid<TReturn>, Decay::AsPassable<TReturn>, None>;
 
 		#ifdef CTL_ON_WINDOWS
@@ -82,6 +82,8 @@ private:
 		}
 
 		Executor(Caller&& func, Arguments&& args): func(move(func)), args(move(args)) {}
+
+		Executor(Caller const& func, Arguments&& args): func(func), args(move(args)) {}
 
 		Caller		func;
 		Arguments	args;
@@ -180,6 +182,8 @@ public:
 		void await_resume()			{					}
 
 	private:
+		Promise(AtomicCell<Impl> const& thread): thread(thread) {}
+
 		friend struct Thread;
 		AtomicCell<Impl> thread;
 	};
@@ -224,6 +228,8 @@ public:
 		Nullable<T> await_resume()	{return result();	}
 
 	private:
+		Promise(AtomicCell<Impl> const& thread): thread(thread) {}
+
 		T value() const {
 			await();
 			if constexpr (Type::Equal<T, AsReference<AsNonReference<T>>>)
@@ -279,6 +285,7 @@ public:
 			-1,
 			Executor<TReturn(TArgs...)>::invoke,
 			(pointer)&thread->exec,
+			0,
 			NULL
 		);
 		#else
