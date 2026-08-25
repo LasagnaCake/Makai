@@ -265,8 +265,11 @@ namespace Makai::Anima::V2::Core::Meta {
 			static List<T> construct(Object const& value) {
 				List<T> result;
 				result.resize(value.count());
-				for (usize i: range(value.count()))
-					result.pushBack(ARTTI<T>::construct(value.getAtIndex(i)));
+				for (usize i: range(value.count())) {
+					auto const v = value.getAtIndex(i);
+					if (!v) return nullptr;
+					result.pushBack(ARTTI<T>::construct(*v.value()));
+				}
 				return result;
 			}
 

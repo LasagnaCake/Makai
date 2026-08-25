@@ -464,7 +464,7 @@ namespace Makai::Anima::V2::Core {
 			if (!canBecome<T>()) return false;
 			if (content) unset();
 			if (!value) return true;
-			set(*value);
+			return set(*value);
 		}
 
 		bool exists() const {return content;}

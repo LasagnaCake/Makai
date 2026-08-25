@@ -60,7 +60,7 @@ private:
 			exec.running	= true;
 			exec.hasResult	= false;
 			if constexpr (Type::Equal<Result, None>) {
-				invokeFromTuple(
+				invokeFromTuple<TReturn>(
 					exec.func,
 					exec.args
 				);
@@ -68,11 +68,11 @@ private:
 				exec.hasResult	= true;
 				return finished();
 			} else if constexpr (Type::Equal<Result, AsReference<AsNonReference<Result>>>)
-				exec.result = &invokeFromTuple(
+				exec.result = &invokeFromTuple<TReturn>(
 					exec.func,
 					exec.args
 				);
-			else exec.result = invokeFromTuple(
+			else exec.result = invokeFromTuple<TReturn>(
 				exec.func,
 				exec.args
 			);
