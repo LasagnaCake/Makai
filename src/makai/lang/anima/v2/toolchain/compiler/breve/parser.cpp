@@ -188,7 +188,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("halt", prefixes, new ExitResolver());
 	add("exit", prefixes, new ExitResolver());
 	add("break", prefixes, new ExitResolver());
-	add("next", prefixes, new ExitResolver());
+	add("continue", prefixes, new ExitResolver());
 	// Advanced infixes
 	MAKAILIB_DEBUGLN_FULL("Advanced infix parsers");
 	add("when", infixes, new InlineIfElseResolver());

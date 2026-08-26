@@ -711,7 +711,6 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 	if (!val.source) {
 		context.top()->impl->writeMainLine("ret");
 		return {.mayBeEmpty = true};
-		return;
 	}
 	if (val.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
 	if (val.shouldBePushed())
@@ -728,14 +727,14 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 			context.error("Expected string value here!", node->leftSide);
 		context.top()->impl->writeMainLine("err");
 	}
-	return {{"move top"}, val.scope, val.type};
+	return {{"move top"}, val.scope, val.type, val.likelihood, val.parent, val.mayBeEmpty};
 }
 
 ATransformer::Result Exit::transform(Context& context, Node::Instance const& node) {
 	if (node->base.text == "exit")		context.top()->impl->writeMainLine("ret");
 	else if (node->base.text == "halt")	context.top()->impl->writeMainLine("halt");
 	else context.error("Invalid/Unsupported expression!");
-	return {.mayBeEmpty = true};
+	return {.mayBeEmpty = node->base.text == "exit"};
 }
 
 ATransformer::Result Block::transform(Context& context, Node::Instance const& node) {

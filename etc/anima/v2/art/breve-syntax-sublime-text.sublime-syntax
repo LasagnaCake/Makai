@@ -52,7 +52,7 @@ contexts:
       push: block_comment
 
   keywords:
-    - match: '\b(return|error|terminate)\b'
+    - match: '\b(return|error|halt|exit|break|continue)\b'
       scope: keyword.control.flow.breve
 
     - match: '\b(if|unless|when|except|else|switch|match)\b'
