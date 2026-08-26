@@ -708,9 +708,12 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 ATransformer::Result Return::transform(Context& context, Node::Instance const& node) {
 	Expression expr;
 	auto const val = expr.transform(context, node->leftSide);
+	if (!val.source) {
+		context.top()->impl->writeMainLine("ret");
+		return {.mayBeEmpty = true};
+		return;
+	}
 	if (val.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
-	if (!val.source)
-		context.error("Invalid expression!", node->leftSide);
 	if (val.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *val.source);
 	else if (val.isStackTop() && val.isCopied()) {
@@ -719,8 +722,20 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 	else if (val.isStackTop() && val.isCopied()) {
 		context.top()->impl->writeMainLine("copy", *val.source, "-> top");
 	}
-	context.top()->impl->writeMainLine("ret");
+	if (node->base.text == "return") context.top()->impl->writeMainLine("ret");
+	if (node->base.text == "error") {
+		if (!(val.type && val.type->basic == Core::BasicType::AV2_BT_STRING))
+			context.error("Expected string value here!", node->leftSide);
+		context.top()->impl->writeMainLine("err");
+	}
 	return {{"move top"}, val.scope, val.type};
+}
+
+ATransformer::Result Exit::transform(Context& context, Node::Instance const& node) {
+	if (node->base.text == "exit")		context.top()->impl->writeMainLine("ret");
+	else if (node->base.text == "halt")	context.top()->impl->writeMainLine("halt");
+	else context.error("Invalid/Unsupported expression!");
+	return {.mayBeEmpty = true};
 }
 
 ATransformer::Result Block::transform(Context& context, Node::Instance const& node) {

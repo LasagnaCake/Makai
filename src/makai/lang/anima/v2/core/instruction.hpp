@@ -224,6 +224,10 @@ namespace Makai::Anima::V2::Core {
 			uint8 unsafe:	1;
 		};
 
+		struct [[gnu::aligned(4)]] Checking {
+			uint8 dynamic:	1;
+		};
+
 		struct [[gnu::aligned(4)]] Field {
 			uint8 dynamic: 1;
 		};
@@ -339,6 +343,10 @@ namespace Makai::Anima::V2::Core {
 			/// @param type `Casting` = How to do the cast.
 			/// @details `cast [<type-id>]`
 			AV2_IN_CAST,
+			/// @brief Checks if a given value is of a given type.
+			/// @param type `Checking` = How to do the check.
+			/// @details `is [<type-id>]`
+			AV2_IN_CHECK,
 			/// @brief Generates a random number.
 			/// @param type `Randomness` = How to generate the number.
 			/// @details `rng`
@@ -431,6 +439,7 @@ namespace Makai::Anima::V2::Core {
 				case Name::AV2_IN_OP:				return "op";
 				case Name::AV2_IN_YIELD:			return "yield";
 				case Name::AV2_IN_CAST:				return "cast";
+				case Name::AV2_IN_CHECK:			return "is";
 				case Name::AV2_IN_RANDOM:			return "rng";
 				case Name::AV2_IN_SCOPE_ENTER:		return "enter";
 				case Name::AV2_IN_SCOPE_EXIT:		return "exit";

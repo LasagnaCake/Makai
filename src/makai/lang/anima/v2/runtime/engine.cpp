@@ -107,6 +107,7 @@ bool Engine::yieldCycle() {
 		case AV2_IN_RETURN: 		v2Return();			break;
 		case AV2_IN_CALL:			v2Call();			break;
 		case AV2_IN_CAST:			v2Cast();			break;
+		case AV2_IN_CHECK:			v2Check();			break;
 		case AV2_IN_OP:				v2Op();				break;
 		case AV2_IN_COMPARE:		v2Compare();		break;
 		case AV2_IN_MODE:			v2SetContext();		break;
@@ -1867,6 +1868,27 @@ void Engine::v2Cast() {
 			}
 		} else if (!convert(t))
 			return crash(makeErrorHere("Cannot convert value to requested type!"));
+	} else return crash(makeErrorHere("Type does not exist!"));
+}
+
+void Engine::v2Check() {
+	Instruction::Casting cast = Makai::Cast::bit<Instruction::Casting>(current.type);
+	if (context.globalValueStack.empty())
+		return crash(outOfRangeError("Global stack is empty!"));
+	uint64 typeID;
+	if (cast.dynamic) {
+		if (context.globalValueStack.size() < 2)
+			return crash(outOfRangeError("Not enough arguments for dynamic type checking!"));
+		auto const id = context.pop();
+		if (!(id && id->isTypeID()))
+			return crash(makeErrorHere("Dynamic type check argument is not a type ID!"));
+		typeID = id->toValue<TypeID>().id;
+	} else {
+		advance(true);
+		typeID = Makai::Cast::bit<uint64>(current);
+	}
+	if (auto const t = context.art.types.byID(typeID)) {
+		context.push(context.pop()->getType() == t);
 	} else return crash(makeErrorHere("Type does not exist!"));
 }
 

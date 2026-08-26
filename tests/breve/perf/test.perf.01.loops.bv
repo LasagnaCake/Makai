@@ -9,7 +9,8 @@ main :: () {
 	repeat @ByCopy i: uint64 => count {
 		unless unlikely ((count-i) % (count/10)) {
 			IO.write("Loop iteration #")
-			IO.writeLine((copy (count-i)) as any)
+			IO.writeLine((count-i) as any)
+			if (i is any) error "Value mysteriously changed types!"
 		}
 	}
 	total := ((OS.Time.localNow(OS.Time.Precision.NANOS) - start) / (10 pow 9))

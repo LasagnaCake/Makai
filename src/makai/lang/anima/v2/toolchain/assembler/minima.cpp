@@ -746,7 +746,19 @@ static void doTypeGet(Context& context) {
 
 
 static void doTypeCheck(Context& context, bool const dynamic = false) {
-	// TODO: Dynamic type checking
+	if (!dynamic) {
+		context.next();
+		auto const type = resolvePath(context);
+		if (context.types.contains(type)) {
+			context.add(Instruction::Name::AV2_IN_CHECK, Instruction::Checking{.dynamic = dynamic});
+			context.add(context.getType(type)->id);
+		} else context.error("Type with name [" + type + "] does not exist!");
+	} else {
+		context.add(
+			Instruction::Name::AV2_IN_CHECK,
+			Instruction::Checking{.dynamic = dynamic}
+		);
+	}
 }
 
 static void doHalt(Context& context, bool const error = false) {

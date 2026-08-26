@@ -65,6 +65,13 @@ Node::Instance PrefixResolver::resolve(Parser& parser, Node::Instance const& lef
 	return result;
 }
 
+Node::Instance ExitResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_EXIT;
+	return result;
+}
+
 Node::Instance InfixResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	MAKAILIB_DEBUGLN_FULL("Resolving infix expression [", token.text, "]...");
 	Node::Instance result = Node::Instance::create();

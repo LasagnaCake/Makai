@@ -23,6 +23,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
+	struct ExitResolver: AResolver {
+		ExitResolver(): AResolver() {}
+		virtual ~ExitResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
 	struct DirectResolver: AResolver {
 		DirectResolver(): AResolver() {}
 		virtual ~DirectResolver() {}

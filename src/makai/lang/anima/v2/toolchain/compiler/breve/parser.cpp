@@ -84,6 +84,7 @@ Parser::Parser(BaseContext& context): context(context) {
 		"sqrt",
 		"not",
 		"return",
+		"error",
 		"ref",
 		"move",
 		"copy",
@@ -184,6 +185,10 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("match", prefixes, new MatchResolver());
 	add("get", prefixes, new GetterResolver());
 	add("set", prefixes, new SetterResolver());
+	add("halt", prefixes, new ExitResolver());
+	add("exit", prefixes, new ExitResolver());
+	add("break", prefixes, new ExitResolver());
+	add("next", prefixes, new ExitResolver());
 	// Advanced infixes
 	MAKAILIB_DEBUGLN_FULL("Advanced infix parsers");
 	add("when", infixes, new InlineIfElseResolver());
