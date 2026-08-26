@@ -68,30 +68,7 @@ static void doType(Composer& composer, Namespace::TypeRef const& type) {
 		decl += " basic<";
 		if (!type->basic)
 			Transformer::ATransformer::Context::error("Missing basic type analog!");
-		switch (*type->basic) {
-			case Core::BasicType::AV2_BT_ANY:		decl += "any";	break;
-			case Core::BasicType::AV2_BT_INT8:		decl += "i8";	break;
-			case Core::BasicType::AV2_BT_INT16:		decl += "i16";	break;
-			case Core::BasicType::AV2_BT_INT32:		decl += "i32";	break;
-			case Core::BasicType::AV2_BT_INT64:		decl += "i64";	break;
-			case Core::BasicType::AV2_BT_UINT8:		decl += "u8";	break;
-			case Core::BasicType::AV2_BT_UINT16:	decl += "u16";	break;
-			case Core::BasicType::AV2_BT_UINT32:	decl += "u32";	break;
-			case Core::BasicType::AV2_BT_UINT64:	decl += "u64";	break;
-			case Core::BasicType::AV2_BT_REAL32:	decl += "f32";	break;
-			case Core::BasicType::AV2_BT_REAL64:	decl += "f64";	break;
-			case Core::BasicType::AV2_BT_REAL128:	decl += "f128";	break;
-			case Core::BasicType::AV2_BT_STRING:	decl += "str";	break;
-			case Core::BasicType::AV2_BT_VECTOR:	decl += "vec";	break;
-			case Core::BasicType::AV2_BT_MATRIX:	decl += "mat";	break;
-			case Core::BasicType::AV2_BT_TYPEID:	decl += "type";	break;
-			case Core::BasicType::AV2_BT_BYTES:		decl += "bin";	break;
-			case Core::BasicType::AV2_BT_NULL:		decl += "nil";	break;
-			case Core::BasicType::AV2_BT_VOID:		decl += "void";	break;
-			case Core::BasicType::AV2_BT_BOOL:		decl += "bool";	break;
-			case Core::BasicType::AV2_BT_CHAR:		decl += "char";	break;
-			default: break;
-		}
+		decl += Core::asNameString(*type->basic);
 		decl += ">";
 	}
 	if (type->flags.isNullable)

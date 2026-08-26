@@ -75,6 +75,8 @@ namespace Makai::Anima::V2::Core {
 		AV2_BT_CALLID,
 	};
 
+	String asNameString(BasicType const type);
+
 	constexpr bool isBoolean(BasicType const bt) {
 		return bt == BasicType::AV2_BT_BOOL;
 	}
@@ -190,6 +192,8 @@ namespace Makai::Anima::V2::Core {
 		}
 
 		static void makeBasic(Definition& type);
+
+		String cleanName() const;
 
 		Nullable<BasicType>				basic;
 		AtomicCell<Definition>			base		= nullptr;

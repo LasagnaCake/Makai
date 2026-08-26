@@ -983,9 +983,9 @@ void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
 		return;
 	}
 	if (lhs->getType() != rhs->getType()) [[unlikely]] {
-		auto const lname = rhs->getType()->name;
-		auto const rname = rhs->getType()->name;
-		String const tview = "(" + lname + " != " + rname + ")";
+		auto const lname = lhs->getType()->cleanName();
+		auto const rname = rhs->getType()->cleanName();
+		String const tview = " (" + lname + " != " + rname + ")";
 		if (!inStrictMode()) [[unlikely]] {context.pop(); context.pushEmpty();}
 		else [[likely]] crash(invalidOperationError("Value types do not match!" + tview));
 		return;
