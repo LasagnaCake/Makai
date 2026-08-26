@@ -195,6 +195,24 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		Makai::Data::Value serialize() const override;
 
+		String basicNumberName() const {
+			if (!basic) return "";
+			switch (*basic) {
+				case Core::BasicType::AV2_BT_INT8:		return ("i8");
+				case Core::BasicType::AV2_BT_INT16:		return ("i16");
+				case Core::BasicType::AV2_BT_INT32:		return ("i32");
+				case Core::BasicType::AV2_BT_INT64:		return ("i64");
+				case Core::BasicType::AV2_BT_UINT8:		return ("u8");
+				case Core::BasicType::AV2_BT_UINT16:	return ("u16");
+				case Core::BasicType::AV2_BT_UINT32:	return ("u32");
+				case Core::BasicType::AV2_BT_UINT64:	return ("u64");
+				case Core::BasicType::AV2_BT_REAL32:	return ("f32");
+				case Core::BasicType::AV2_BT_REAL64:	return ("f64");
+				case Core::BasicType::AV2_BT_REAL128:	return ("f128");
+				default: return "";
+			}
+		}
+
 		TypeDecl(UTF8String const& name = "");
 		virtual ~TypeDecl();
 	};
@@ -318,7 +336,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		constexpr UTF8String getSource() {
 			if (isCompiled())
-				return value.toString();
+				return value.toString() + " " + type->basicNumberName();
 			auto const pb = (isConstant ? "copy" : passBy);
 			if (global) return pb + " " + source;
 			else return pb + " local[" + Makai::toString(id) + "]";

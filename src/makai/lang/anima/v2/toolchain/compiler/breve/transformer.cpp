@@ -405,6 +405,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		Expression expr;
 		auto const tmp = context.declare(UTF8StringList::from("<init>" + node->name()));
 	 	auto const result = expr.transform(context, node->rightSide);
+		if (result.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->rightSide);
 		if (result.source)
 			tmp->impl->writeMainLine("copy", *result.source, "->", var.getSource());
 		else context.error("Expected value here!", node->rightSide);
@@ -422,7 +423,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	if (!var.type)
 		context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!", node);
 	else if (var.type->flags.hasNoResult)
-		context.error("[Variables cannot have discardable types!", node);
+		context.error("Variables cannot have discardable types!", node);
 	return {{"ref " + var.getSource()}, scope, var.type.raw(), direct};
 }
 
@@ -707,6 +708,7 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 ATransformer::Result Return::transform(Context& context, Node::Instance const& node) {
 	Expression expr;
 	auto const val = expr.transform(context, node->leftSide);
+	if (val.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
 	if (!val.source)
 		context.error("Invalid expression!", node->leftSide);
 	if (val.shouldBePushed())
@@ -897,6 +899,7 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 		return Return().transform(context, node);
 	Expression expr;
 	auto val = expr.transform(context, node->leftSide);
+	if (val.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
 	if (
 		node->base.text == "likely"
 	||	node->base.text == "unlikely"
@@ -992,6 +995,7 @@ static Makai::String asFastOpQualifier(Core::BasicType const& type, ATransformer
 ATransformer::Result PostfixExpression::transform(Context& context, Node::Instance const& node) {
 	Expression expr;
 	auto const val = expr.transform(context, node->leftSide);
+	if (val.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
 	if (!val.source)
 		context.error("Invalid expression (Does not result in a value)!", node->leftSide);
 	if (val.isCompilable() && node->base.text != "typeof") {
@@ -1090,6 +1094,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	Expression expr;
 	bool lhsHasBeenPushed = false;
 	auto const lhs = expr.transform(context, node->leftSide);
+	if (lhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
 	bool const comparison = isComparison(node);
 	if (!lhs.source)
 		context.error("Invalid expression (Does not result in a value)!", node->leftSide);
@@ -1132,6 +1137,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		return {{"move top"}, retType->scope.raw(), retType};
 	}
 	auto const rhs = expr.transform(context, node->rightSide);
+	if (rhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->rightSide);
 	if (lhs.isCompilable() && isLogicOp(node)) {
 		if (lhs.direct.isTruthy() && node->base.type == LTS_TT_LOGIC_AND) return rhs;
 		if (lhs.direct.isFalsy() && node->base.type == LTS_TT_LOGIC_OR) return rhs;
@@ -1619,6 +1625,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 	auto const ndecl = "__exists_" + node->name();
 	if (node->middle) {
 		auto lhs = Expression().transform(context, node->leftSide);
+		if (lhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
 		if (!(lhs.source && (lhs.type->flags.isArray or lhs.type->basic == Core::BasicType::AV2_BT_VECTOR)))
 			context.error("Expected indexable value here!", node->leftSide);
 		if (lhs.shouldBePushed())
@@ -1627,6 +1634,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 			context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
 		}
 		auto i = Expression().transform(context, node->middle);
+		if (i.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->middle);
 		if (!(i.source && TypeDecl::stronger(i.type, context.basicType("uint64"))))
 			context.error("Expected integer here!", node->middle);
 		if (i.direct.isUndefined() && i.shouldBePushed())
@@ -1647,6 +1655,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 			context.top()->impl->writeMainLine("jump if not empty", ndecl);
 		}
 		auto const rhs = Expression().transform(context, node->rightSide);
+		if (rhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->rightSide);
 		if (!rhs.source)
 			context.error("Expected value here!", node->rightSide);
 		if (auto const t = TypeDecl::stronger(lhs.type->base, rhs.type)) {
@@ -1674,6 +1683,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		} else context.error("Type mismatch in assignment expression!", node);
 	}
 	auto lhs = Expression().transform(context, node->leftSide);
+	if (lhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
 	if (lhs.scope && lhs.scope->property) {
 		if (!lhs.scope->property->setter)
 			context.error("Cannot set a read-only property!", node->leftSide);
@@ -1696,6 +1706,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 	if (lhs.isStackTop() && lhs.isCopied())
 		context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
 	auto const rhs = Expression().transform(context, node->rightSide);
+	if (rhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->rightSide);
 	if (lhs.parent) {
 		context.top()->impl->main.popBack();
 		if (lhs.isStackTop() && lhs.isCopied())
@@ -1861,6 +1872,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 	bool runtimeCall = false;
 	for (auto const& arg: node->children) {
 		auto const expr = Expression().transform(context, arg);
+		if (expr.mayBeEmpty) context.error("One or more code paths may not result in a value!", arg);
 		if (!expr.source)
 			context.error("Expected value here!", arg);
 		if (expr.shouldBePushed())
@@ -1920,7 +1932,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 			context.functionStack.back()->variant.context = ExecutionContext::AV2_TCB_EC_RUNTIME;
 		else context.error("Cannot call indirect functions inside mixed or direct functions!", node);
 	}
-	return {{"move top"}, ov.result->scope.raw(), ov.result};
+	return {.source = {"move top"}, .scope = ov.result->scope.raw(), .type = ov.result, .mayBeEmpty = Makai::Cast::as<bool>(ov.result->flags.hasNoResult)};
 }
 
 ATransformer::Result Subscript::transform(Context& context, Node::Instance const& node) {
@@ -1935,6 +1947,7 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 		context.top()->impl->writeMainLine("copy", *src.source, "-> top");
 	}
 	auto const index = Expression().transform(context, node->rightSide);
+	if (index.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->rightSide);
 	if (index.isCompilable()) {
 		if (!index.direct.isInteger() or index.direct.getSigned() < 0)
 			context.error("Direct value must be an unsigned integer here!", node->rightSide);
@@ -1965,6 +1978,7 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 	usize const count = node->children.size();
 	for (auto const& arg: node->children) {
 		auto const expr = Expression().transform(context, arg);
+		if (expr.mayBeEmpty) context.error("One or more code paths may not result in a value!", arg);
 		if (!expr.source)
 			context.error("Expected value here!", arg);
 		if (expr.shouldBePushed())
@@ -1993,6 +2007,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 	if (node->rightSide) {
 		t = context.arrayFor(t);
 		auto const sz = Expression().transform(context, node->rightSide);
+		if (sz.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->rightSide);
 		if (!sz.source)
 			context.error("Expected value here!", node->rightSide);
 		if (sz.direct.isInteger()) {
@@ -2034,6 +2049,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 					if (filled.contains(field.front()))
 						context.error("Field has already been set!", arg->leftSide);
 					auto const expr = Expression().transform(context, arg->rightSide);
+					if (expr.mayBeEmpty) context.error("One or more code paths may not result in a value!", arg);
 					if (!expr.source)
 						context.error("Expected value here!", arg->rightSide);
 					auto const fx = t->fields[field.front()];
@@ -2051,6 +2067,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 					if (index >= t->fields.size())
 						context.error("All fields have been already set!", arg);
 					auto const expr = Expression().transform(context, arg);
+					if (expr.mayBeEmpty) context.error("One or more code paths may not result in a value!", arg);
 					if (!expr.source)
 						context.error("Expected value here!", arg);
 					auto const fx = t->fields[remap[index]];
@@ -2125,6 +2142,7 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 	MAKAILIB_DEBUGLN_FULL("If-Condition: ", cond.type ? cond.type->name : "ERR", "(must be ", invert ? "TRUE" : "FALSE", ")");
 	auto const varc = context.top()->varc;
 	auto const ifScope = context.declare(UTF8StringList::from("<if>" + node->name()));
+	bool mayBeEmpty = true;
 	ifScope->varc += varc;
 	ifScope->implementContents = true;
 	if (cond.isCompilable()) {
@@ -2152,6 +2170,7 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 			branchScope->varc += ifScope->varc;
 			branchScope->implementContents = true;
 			ifTrue = Expression().transform(context, node->leftSide);
+			mayBeEmpty = mayBeEmpty or ifTrue.mayBeEmpty;
 			if (ifTrue.source && ifTrue.shouldBePushed())
 				branchScope->impl->writeMainLine("push", ifTrue.source.value());
 			else if (ifTrue.isStackTop() && ifTrue.isCopied()) {
@@ -2168,6 +2187,7 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 			branchScope->varc += ifScope->varc;
 			branchScope->implementContents = true;
 			ifFalse = Expression().transform(context, node->rightSide);
+			mayBeEmpty = mayBeEmpty or ifFalse.mayBeEmpty;
 			if (ifFalse.source && ifFalse.shouldBePushed())
 				branchScope->impl->writeMainLine("push", ifFalse.source.value());
 			else if (ifFalse.isStackTop() && ifFalse.isCopied()) {
@@ -2201,7 +2221,7 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 		ifScope->impl->writePostLine("@target", ifEndLabel, ":");
 		context.pop(1);
 		context.impl()->writeMainLine(ifScope->compose()->toString());
-		return {.source = {"move top"}, .type = ifTrue.type, .likelihood = ifTrue.likelihood + ifFalse.likelihood};
+		return {.source = {"move top"}, .type = ifTrue.type, .likelihood = ifTrue.likelihood + ifFalse.likelihood, .mayBeEmpty = mayBeEmpty or !node->rightSide};
 	}
 }
 
@@ -2503,6 +2523,7 @@ ATransformer::Result NullDecay::transform(Context& context, Node::Instance const
 	auto const exit = "__null_decay_" + node->name() + "_end";
 	ATransformer::Result result;
 	auto const lhs = Expression().transform(context, node);
+	if (lhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
 	if (!(lhs.type && lhs.type->flags.isNullable))
 		context.error("Expression must result in a nullable value!", node->leftSide);
 	if (lhs.shouldBePushed())
@@ -2512,6 +2533,7 @@ ATransformer::Result NullDecay::transform(Context& context, Node::Instance const
 	context.top()->impl->writeMainLine("push val top");
 	context.top()->impl->writeMainLine("jump if not empty", exit);
 	auto const rhs = Expression().transform(context, node);
+	if (rhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->rightSide);
 	if (!(lhs.type->base != rhs.type))
 		context.error("Type mismatch in null decay!", node->rightSide);
 	if (rhs.shouldBePushed())
@@ -2537,6 +2559,8 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 	switchScope->varc += varc;
 	switchScope->implementContents = true;
 	auto const switchExpr = Expression().transform(context, node->leftSide);
+	if (switchExpr.mayBeEmpty)
+		context.error("One or more paths paths may not return a value!", node->leftSide);
 	usize pickExprLoc = 0;
 	if (!switchExpr.isCompilable()) {
 		if (switchExpr.shouldBePushed())
@@ -2574,6 +2598,7 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 	Makai::Map<ssize, String> matches;
 	decltype(switchType) prevCaseType;
 	bool isFirstCase = true;
+	bool mayBeEmpty = false;
 	if (node->children.size() < 2)
 		context.error("Switch statements must have at least two cases!", node);
 	MAKAILIB_DEBUGLN_FULL("Total cases: ", node->children.size());
@@ -2597,6 +2622,7 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 			isDefaultCase = true;
 		} else context.error("Redeclaration of default case!", caseExpr->leftSide);
 		auto const then = Expression().transform(context, caseExpr->rightSide);
+		mayBeEmpty = mayBeEmpty or then.mayBeEmpty;
 		if (!isFirstCase && prevCaseType != then.type)
 			context.error("Case result mismatch!", caseExpr->rightSide);
 		else if (isFirstCase)
@@ -2625,7 +2651,7 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 	context.pop(1);
 	context.impl()->writeMainLine(switchScope->compose()->toString());
 	if (!result.source) return {};
-	return {.source = {"move top"}, .type = result.type, .likelihood = result.likelihood + result.likelihood};
+	return {.source = {"move top"}, .type = result.type, .likelihood = result.likelihood + result.likelihood,.mayBeEmpty = mayBeEmpty or !hasDefault};
 }
 
 ATransformer::Result Match::transform(Context& context, Node::Instance const& node) {
@@ -2641,6 +2667,7 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 	Node::Instance defaultCaseExpr;
 	Namespace::TypeRef prevCaseType;
 	bool isFirstCase = true;
+	bool mayBeEmpty = false;
 	MAKAILIB_DEBUGLN_FULL("Total cases: ", node->children.size());
 	for (auto& caseExpr: node->children) {
 		auto const caseScope = context.declare(UTF8StringList::from("<case>" + caseExpr->name()));
@@ -2659,11 +2686,14 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 			continue;
 		} else context.error("Redeclaration of default case!", caseExpr->leftSide);
 		auto const then = Expression().transform(context, caseExpr->rightSide);
+		mayBeEmpty = mayBeEmpty or then.mayBeEmpty;
 		if (!isFirstCase && prevCaseType != then.type)
 			context.error("Case result mismatch!", caseExpr->rightSide);
 		else if (isFirstCase)
 			prevCaseType = then.type;
 		result = then;
+		if (then.mayBeEmpty)
+			context.error("One or more paths may not return a value!");
 		if (then.shouldBePushed())
 			caseScope->impl->writeMainLine("push", then.source.value());
 		else if (then.isStackTop() && then.isCopied())
@@ -2686,6 +2716,8 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 		else if (isFirstCase)
 			prevCaseType = then.type;
 		result = then;
+		if (then.mayBeEmpty)
+			context.error("One or more paths may not return a value!");
 		if (then.shouldBePushed())
 			caseScope->impl->writeMainLine("push", then.source.value());
 		else if (then.isStackTop() && then.isCopied())
@@ -2698,7 +2730,7 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 	context.pop(1);
 	context.impl()->writeMainLine(matchScope->compose()->toString());
 	if (!result.source) return {};
-	return {.source = {"move top"}, .type = result.type, .likelihood = result.likelihood + result.likelihood};
+	return {.source = {"move top"}, .type = result.type, .likelihood = result.likelihood + result.likelihood, .mayBeEmpty = mayBeEmpty or defaultCaseExpr};
 }
 
 ATransformer::Result SwitchMatch::transform(Context& context, Node::Instance const& node) {

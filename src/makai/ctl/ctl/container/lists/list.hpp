@@ -1114,6 +1114,14 @@ public:
 		return transform(fun);
 	}
 
+	/// @brief Returns a `List` of `transform`ed elements.
+	/// @tparam TProcedure Procedure type.
+	/// @param fun Procedure to apply.
+	/// @return List of transformed elements.
+	template <Type::Functional<TransformType> TProcedure>
+	constexpr SelfType operator|(TProcedure const& fun) const {
+		return transformed(fun);
+	}
 
 	/// @brief Apllies a procedure to the `List`.
 	/// @tparam TProcedure Procedure type.
@@ -1124,21 +1132,12 @@ public:
 		return fun(*this);
 	}
 
-	/// @brief Returns a `List` of `transform`ed elements.
+	/// @brief Returns a copy of the list, with the given procedure applied to it.
 	/// @tparam TProcedure Procedure type.
 	/// @param fun Procedure to apply.
-	/// @return List of transformed elements.
-	template <Type::Functional<TransformType> TProcedure>
+	/// @return Transformed list.
+	template <Type::Functional<SelfType(SelfType const&)> TProcedure>
 	constexpr SelfType operator|(TProcedure const& fun) const {
-		return transformed(fun);
-	}
-
-	/// @brief Applies a procedure to the list.
-	/// @tparam TProcedure Procedure type.
-	/// @param fun Procedure to apply.
-	/// @return Result of the procedure.
-	template <class T, Type::Functional<T(SelfType const&)> TProcedure>
-	constexpr T operator|(TProcedure const& fun) const {
 		return fun(*this);
 	}
 
