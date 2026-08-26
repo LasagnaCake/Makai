@@ -101,7 +101,7 @@ static Makai::Nullable<Makai::UTF8String> addToStack(
 ) {
 	if (ns->variable) {
 		if (ns->variable->context > ExecutionContext::AV2_TCB_EC_RUNTIME)
-			return {{ns->variable->value.toString()}};
+			return {{ns->variable->value.toString() + " " + ns->variable->value->type->basicNumberName()}};
 		if (!ns->variable->exists())
 			context.error(ns->variable->emptyVarError(), node);
 		if (ns->variable->fieldOf && !ns->variable->staticEntity) {
@@ -912,7 +912,7 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 	if (val.isCompilable() && node->base.text != "typeof") {
 		auto const result = uopDirectResolve(val.direct, node->base);
 		if (!result.isUndefined())
-			return {{result.toString()}, val.scope, directName(context, result.type()), result, val.likelihood + likelihoodOf(node)};
+			return {{result.toString() + " " + directName(context, result.type())->basicNumberName()}, val.scope, directName(context, result.type()), result, val.likelihood + likelihoodOf(node)};
 	}
 	if (
 		node->base.text == "copy"
@@ -1001,7 +1001,7 @@ ATransformer::Result PostfixExpression::transform(Context& context, Node::Instan
 	if (val.isCompilable() && node->base.text != "typeof") {
 		auto const result = uopDirectResolve(val.direct, node->base);
 		if (!result.isUndefined())
-			return {{result.toString()}, val.type->scope.raw(), directName(context, result.type()), result, val.likelihood};
+			return {{result.toString() + " " + directName(context, result.type())->basicNumberName()}, val.type->scope.raw(), directName(context, result.type()), result, val.likelihood};
 	}
 	if (val.shouldBePushed()) {
 		if (
@@ -1150,7 +1150,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		if (!result.isUndefined()) {
 			result = directCast(result, *TypeDecl::stronger(lhs.type, rhs.type)->basic);
 			return {
-				{result.toString()},
+				{result.toString() + " " + directName(context, result.type())->basicNumberName()},
 				directName(context, result.type())->scope.raw(),
 				directName(context, result.type()),
 				result,
@@ -1922,7 +1922,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 			return {.type = context.basicType("void")};
 		else if (ret.isObject())
 			return Expression().transform(context, context.evaluate(ret["eval"].getString()));
-		else return {{ret.isNull() ? "nil" : ret.toString()}, nullptr, context.basicTypeOf(ret), ret};
+		else return {{ret.isNull() ? "nil" : (ret.toString() + " " + directName(context, result.type())->basicNumberName())}, nullptr, context.basicTypeOf(ret), ret};
 	} else if (ov.variant.context < ExecutionContext::AV2_TCB_EC_COMPILE)
 		context.top()->impl->writeMainLine("call", ov.entry);
 	else context.error("It is forbidden to call a direct function with indirect arguments!", node);
