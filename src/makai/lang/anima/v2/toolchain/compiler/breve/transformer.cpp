@@ -101,7 +101,7 @@ static Makai::Nullable<Makai::UTF8String> addToStack(
 ) {
 	if (ns->variable) {
 		if (ns->variable->context > ExecutionContext::AV2_TCB_EC_RUNTIME)
-			return {{ns->variable->value.toString() + " " + ns->variable->value->type->basicNumberName()}};
+			return {{ns->variable->value.toString() + " " + ns->variable->type->basicNumberName()}};
 		if (!ns->variable->exists())
 			context.error(ns->variable->emptyVarError(), node);
 		if (ns->variable->fieldOf && !ns->variable->staticEntity) {
