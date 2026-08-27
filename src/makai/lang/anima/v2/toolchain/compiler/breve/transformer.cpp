@@ -727,7 +727,7 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 			context.error("Expected string value here!", node->leftSide);
 		context.top()->impl->writeMainLine("err");
 	}
-	return {{"move top"}, val.scope, val.type, val.parent, val.likelihood, val.mayBeEmpty};
+	return {{"move top"}, val};
 }
 
 ATransformer::Result Exit::transform(Context& context, Node::Instance const& node) {
