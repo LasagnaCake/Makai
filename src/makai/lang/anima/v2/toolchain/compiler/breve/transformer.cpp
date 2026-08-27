@@ -606,7 +606,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	for (auto& var: protecteds)
 		var->scope->makeProtected();
 	context.pop(1);
-	return {.scope = scope, .type = scope->type};
+	return {.scope = scope, .type = scope->type, .mayBeEmpty = false};
 }
 
 ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const& node) {
@@ -727,7 +727,7 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 			context.error("Expected string value here!", node->leftSide);
 		context.top()->impl->writeMainLine("err");
 	}
-	return {{"move top"}, val};
+	return {{"move top"}, val.scope, val.type, {}, val.likelihood, nullptr, val.mayBeEmpty};
 }
 
 ATransformer::Result Exit::transform(Context& context, Node::Instance const& node) {
@@ -909,7 +909,10 @@ static ssize likelihoodOf(Node::Instance const& node) {
 }
 
 ATransformer::Result PrefixExpression::transform(Context& context, Node::Instance const& node) {
-	if (node->base.text == "return")
+	if (
+		node->base.text == "return"
+	or	node->base.text == "error"
+	)
 		return Return().transform(context, node);
 	Expression expr;
 	auto val = expr.transform(context, node->leftSide);
@@ -947,7 +950,7 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 				context.error("Constants can only be copied!", node);
 			val.scope->variable->setFillState(node->base.text != "move");
 		}
-		return {{mod + " " + *val.source}, val.scope, val.type, val.direct, val.likelihood};
+		return {{mod + " " + *val.source}, val.scope, val.type, val.direct, val.likelihood, val.parent, val.mayBeEmpty};
 	}
 	if (val.shouldBePushed()) {
 		if (
@@ -1844,7 +1847,7 @@ ATransformer::Result NamespaceDecl::transform(Context& context, Node::Instance c
 	scope->declaredAsNamespace = true;
 	Block().transform(context, node->rightSide);
 	context.pop(path.size());
-	return {.scope = scope};
+	return {.scope = scope, .mayBeEmpty = false};
 }
 
 ATransformer::Result Declaration::transform(Context& context, Node::Instance const& node) {
