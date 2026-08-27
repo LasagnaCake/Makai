@@ -725,7 +725,7 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 	if (node->base.text == "error") {
 		if (!(val.type && val.type->basic == Core::BasicType::AV2_BT_STRING))
 			context.error("Expected string value here!", node->leftSide);
-		context.top()->impl->writeMainLine("err");
+		context.top()->impl->writeMainLine("error");
 	}
 	return {{"move top"}, val.scope, val.type, {}, val.likelihood, nullptr, val.mayBeEmpty};
 }
@@ -2510,6 +2510,7 @@ ATransformer::Result AwaitBlock::transform(Context& context, Node::Instance cons
 	auto const awaitVarsStart = awaitScope->varc;
 	awaitScope->varc += node->children.size();
 	awaitScope->impl->writePreLine("decl", node->children.size());
+	bool const awaitAny = node->base.text == "yield";
 	for (auto const& [chk, index]: Range::expand(node->children)) {
 		auto const expr = Expression().transform(context, node->leftSide);
 		if (!expr.source)
@@ -2524,7 +2525,7 @@ ATransformer::Result AwaitBlock::transform(Context& context, Node::Instance cons
 	awaitScope->impl->writePostLine("@target", awaitStart, ":");
 	for (auto const& [expr, index]: Range::expand(awaitExprs)) {
 		awaitScope->impl->writePostLine("push local[", awaitVarsStart + index, "]");
-		if (node->base.text == "race")
+		if (awaitAny)
 			awaitScope->impl->writePostLine("jump if", expr, awaitEnd);
 		else awaitScope->impl->writePostLine("jump if not", expr, awaitNext);
 	}

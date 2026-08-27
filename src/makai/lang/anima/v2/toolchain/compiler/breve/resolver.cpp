@@ -744,7 +744,7 @@ Node::Instance AwaitExpressionResolver::resolve(Parser& parser, Node::Instance c
 	auto const next = parser.context.peek();
 	if (
 		next.text == "yield"
-	or	next.text == "race"
+	or	next.text == "sync"
 	) {
 		result->base = parser.context.expectNext(LTS_TT_IDENTIFIER).token();
 		parser.context.expectNext(LTS_TT_OPEN_CURLY);
