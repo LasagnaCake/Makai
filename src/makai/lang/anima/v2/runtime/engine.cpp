@@ -13,7 +13,7 @@ static void printValueState(Object::Storage const& value) {
 	MAKAILIB_DEBUG_BLOCK_FULL {
 		MAKAILIB_DEBUG_FULL("> Value? ", value ? "YES" : "NO");
 		if (value) {
-			 MAKAILIB_DEBUGLN_FULL(" (Type? ", value->getOriginalType() ? "YES" : "NO", ")");
+			 MAKAILIB_DEBUGLN_FULL(" (Type? ", value->getOriginalType() ? value->getOriginalType()->cleanName() : "NO", ")");
 				MAKAILIB_DEBUGLN_FULL(" = ", value->toDynamicValue().toString());
 		}
 		else MAKAILIB_DEBUGLN_FULL("");
@@ -755,8 +755,8 @@ void Engine::doBinaryOperation(Operator const op) {
 	}
 	auto const _l = lhs.sync();
 	auto out	= lhs;
-	MAKAILIB_DEBUGLN_FULL("LHS: ", lhs->getType() ? Makai::toString(lhs->getType()->hash) : "##ERR");
-	MAKAILIB_DEBUGLN_FULL("RHS: ", rhs->getType() ? Makai::toString(rhs->getType()->hash) : "##ERR");
+	MAKAILIB_DEBUGLN_FULL("LHS: ", lhs->getType() ? lhs->getType()->cleanName() : "##ERR");
+	MAKAILIB_DEBUGLN_FULL("RHS: ", rhs->getType() ? lhs->getType()->cleanName() : "##ERR");
 	if (err) return;
 	bool success = false;
 	if (lhs->isBoolean() && rhs->isBoolean())				success = bopIt<bool>(out, lhs, rhs, op, context);
@@ -773,6 +773,7 @@ void Engine::doBinaryOperation(Operator const op) {
 		context.pop();
 		context.pushEmpty();
 	}
+	MAKAILIB_DEBUGLN_FULL("Result: ", out->getType() ? out->getType()->cleanName() : "##ERR");
 }
 
 template <class T>
@@ -1396,7 +1397,7 @@ void Engine::load() {
 		MAKAILIB_DEBUGLN_FULL("Types:");
 		MAKAILIB_DEBUG_BLOCK_FULL
 			for (auto& type : context.art.types.values)
-				MAKAILIB_DEBUGLN_FULL("> ", type ? toString(type->hash) : toString("NULL"));
+				MAKAILIB_DEBUGLN_FULL("> ", type ? toString(type->cleanName()) : toString("NULL"));
 	}
 	engineState = State::AV2_RES_RUNNING;
 }
@@ -1610,7 +1611,7 @@ void Engine::v2FieldGet() {
 			}
 		});
 	if  (err) return;
-	MAKAILIB_DEBUGLN_FULL("Field[", loc, "] = ", v ? Makai::toString(v->getType()->hash) : "NULL");
+	MAKAILIB_DEBUGLN_FULL("Field[", loc, "] = ", v ? Makai::toString(v->getType()->cleanName()) : "NULL");
 	context.push(v);
 	printValueState(context.top());
 }
