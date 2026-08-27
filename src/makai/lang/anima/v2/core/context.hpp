@@ -294,7 +294,7 @@ namespace Makai::Anima::V2::Core {
 					"Could not find ART analog for the given type!",
 					CTL_CPP_PRETTY_SOURCE
 				);
-			MAKAILIB_DEBUGLN_FULL("Selected Type: ", query.front()->hash);
+			MAKAILIB_DEBUGLN_FULL("Selected Type: ", query.front()->cleanName());
 			return Object::create(value, query.front());
 		}
 
@@ -306,7 +306,7 @@ namespace Makai::Anima::V2::Core {
 					"Could not find ART analog for the given type!",
 					CTL_CPP_PRETTY_SOURCE
 				);
-			MAKAILIB_DEBUGLN_FULL("Selected Type: ", query.front()->hash);
+			MAKAILIB_DEBUGLN_FULL("Selected Type: ", query.front()->cleanName());
 			return Object::create(query.front());
 		}
 

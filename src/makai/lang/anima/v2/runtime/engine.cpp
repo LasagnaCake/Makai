@@ -13,7 +13,7 @@ static void printValueState(Object::Storage const& value) {
 	MAKAILIB_DEBUG_BLOCK_FULL {
 		MAKAILIB_DEBUG_FULL("> Value? ", value ? "YES" : "NO");
 		if (value) {
-			 MAKAILIB_DEBUGLN_FULL(" (Type? ", value->getOriginalType() ? value->getOriginalType()->cleanName() : "NO", ")");
+			 MAKAILIB_DEBUG_FULL(" (Type? ", value->getOriginalType() ? value->getOriginalType()->cleanName() : "?", " as ", value->getOriginalType() ? value->getType()->cleanName() : "?", ")");
 				MAKAILIB_DEBUGLN_FULL(" = ", value->toDynamicValue().toString());
 		}
 		else MAKAILIB_DEBUGLN_FULL("");
@@ -984,6 +984,8 @@ void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
 		else [[likely]] crash(invalidOperationError("Left-Side Operand does not exist!"));
 		return;
 	}
+	MAKAILIB_DEBUGLN_FULL("Left-Side  := ", lhs->getType()->cleanName());
+	MAKAILIB_DEBUGLN_FULL("Right-Side := ", rhs->getType()->cleanName());
 	if (lhs->getType() != rhs->getType()) [[unlikely]] {
 		auto const lname = lhs->getType()->cleanName();
 		auto const rname = rhs->getType()->cleanName();
