@@ -13,3 +13,8 @@ struct int32 : any {}
 struct int64 : any {}
 
 using int = int64
+
+using i8	= int8
+using i16	= int16
+using i32	= int32
+using i64	= int64

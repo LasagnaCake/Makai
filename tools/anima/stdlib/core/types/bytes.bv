@@ -2,3 +2,5 @@ using import core.types.any
 
 @Basic(type = "bytes")
 struct bytes : any {}
+
+using bin = bytes

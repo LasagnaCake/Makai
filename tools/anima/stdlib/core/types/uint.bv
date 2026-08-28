@@ -13,3 +13,8 @@ struct uint32 : any {}
 struct uint64 : any {}
 
 using uint = uint64
+
+using u8	= uint8
+using u16	= uint16
+using u32	= uint32
+using u64	= uint64

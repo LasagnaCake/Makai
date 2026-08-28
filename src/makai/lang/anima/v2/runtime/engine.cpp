@@ -645,7 +645,11 @@ static bool bopIt(Object::Storage const& out, Object::Storage const& lhs, Object
 	if constexpr (Makai::Type::Number<T>) {
 		switch (op) {
 			using enum Operator;
-			case AV2_BOP_REM:	*out = *context.art.newValue<T>((T)Makai::Math::mod<double>(lhs->toValue<T>(), rhs->toValue<T>()));		return true;
+			case AV2_BOP_REM: {
+				if constexpr (Makai::Type::Real<T>)
+					*out = *context.art.newValue<T>((T)Makai::Math::mod<T>(lhs->toValue<T>(), rhs->toValue<T>()));
+				else *out = *context.art.newValue<T>(lhs->toValue<T>() % rhs->toValue<T>());
+			} return true;
 			case AV2_BOP_POW:	*out = *context.art.newValue<T>(Makai::Math::pow<double>(lhs->toValue<T>(), rhs->toValue<T>()));		return true;
 			case AV2_BOP_ATAN2:	*out = *context.art.newValue<T>((T)Makai::Math::atan2<double>(lhs->toValue<T>(), rhs->toValue<T>()));	return true;
 			case AV2_BOP_LOGX:	*out = *context.art.newValue<T>(Makai::Math::logn<double>(lhs->toValue<T>(), rhs->toValue<T>()));		return true;

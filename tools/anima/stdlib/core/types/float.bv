@@ -9,5 +9,11 @@ struct float64 : any {}
 @Basic(type = "float128")
 struct float128 : any {}
 
-using float	= float32
-using real	= float64
+using float		= float32
+using real		= float64
+using double	= float64
+using decimal	= float128
+
+using f32		= float32
+using f64		= float64
+using f128		= float128

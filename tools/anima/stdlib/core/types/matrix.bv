@@ -2,3 +2,5 @@ using import core.types.any
 
 @Basic(type = "matrix")
 struct matrix : any {}
+
+using mat = matrix

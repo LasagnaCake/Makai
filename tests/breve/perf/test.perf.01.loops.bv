@@ -9,7 +9,7 @@ main :: () {
 	repeat @ByCopy i: uint64 => count {
 		@ByCopy it := ((count-i+1) % (count/10))
 		IO.writeLine(it as any)
-		unless it {
+		unless unlikely it {
 			IO.write("Loop iteration #")
 			IO.writeLine((count-i) as any)
 		}

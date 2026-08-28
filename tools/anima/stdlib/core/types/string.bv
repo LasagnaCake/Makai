@@ -2,3 +2,5 @@ using import core.types.any
 
 @Basic(type = "string")
 struct string : any {}
+
+using str = string

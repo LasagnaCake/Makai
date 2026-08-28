@@ -61,3 +61,5 @@ extend vector {
 	@Static FUTURE	:: () => new vector{0, 0, 0, +1}
 	@Static PAST	:: () => new vector{0, 0, 0, -1}
 }
+
+using vec = vector
