@@ -12,7 +12,7 @@ main :: () {
 			IO.writeLine((count-i) as any)
 		}
 	}
-	total := ((OS.Time.localNow(OS.Time.Precision.NANOS) - start) / (10 pow 9))
+	total := ((OS.Time.localNow(OS.Time.Precision.NANOS) - start) / (10 pow 9.0))
 	IO.write("\nResult::{\n  total-time: ")
 	IO.writeLine(total as any)
 	IO.writeLine("}")
