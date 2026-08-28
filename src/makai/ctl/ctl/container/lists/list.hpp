@@ -657,8 +657,8 @@ public:
 		if (stop < 0) wrapBounds(stop, count);
 		if (stop < start) return 0;
 		if (SizeType(stop) > count) stop = count;
-		squashRange(start, stop - start);
-		return stop - start;
+		squashRange(start, stop - start + 1);
+		return stop - start + 1;
 	}
 
 	/// @brief Erases an element at a given index.

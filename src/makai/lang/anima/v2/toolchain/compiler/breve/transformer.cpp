@@ -1173,6 +1173,12 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 				result,
 				likelihood
 			};
+		} else {
+			if (rhs.shouldBePushed())
+				context.top()->impl->writeMainLine("push", *rhs.source);
+			else if (rhs.isStackTop() && rhs.isCopied()) {
+				context.top()->impl->writeMainLine("copy", *rhs.source, "-> top");
+			}
 		}
 	}
 	if (!lhsHasBeenPushed)
@@ -1208,9 +1214,9 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 			return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
 		} else if (t->flags.isEnum && comparison) {
 			if (lhs.type->base->basic == rhs.type->base->basic)
-				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node) + asFastOpQualifier(*t->base->basic, rhs));
+				context.top()->impl->writeMainLine("cmp", bopName(context, node) + asFastOpQualifier(*t->base->basic, rhs));
 			else
-				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node));
+				context.top()->impl->writeMainLine("cmp", bopName(context, node));
 			return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
 		} else return infixResolve(context, node, t);
 	} else if (
