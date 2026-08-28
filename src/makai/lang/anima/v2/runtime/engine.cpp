@@ -1022,6 +1022,8 @@ void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
 }
 
 void Engine::immediateBinaryOperation(Operator const op, BasicType const type, pointer const rhs) {
+	if (context.globalValueStack.size() < 1)
+		return crash(invalidSourceError("Missing values to operate on!"));
 	auto lhs	= context.top();
 	auto const _l = lhs.sync();
 	if (!lhs) [[unlikely]] {
