@@ -1162,6 +1162,10 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	if (!rhs.source)
 		context.error("Invalid expression (Does not result in a value)!", node->rightSide);
 	auto const likelihood = lhs.likelihood + rhs.likelihood + likelihoodOf(node);
+	MAKAILIB_DEBUGLN_FULL("Left-Type: ", lhs.type->name);
+	MAKAILIB_DEBUGLN_FULL("Right-Type: ", rhs.type->name);
+	MAKAILIB_DEBUGLN_FULL("Left-Type = ", lhs.direct.toString());
+	MAKAILIB_DEBUGLN_FULL("Right-Type = ", rhs.direct.toString());
 	if (lhs.isCompilable() && rhs.isCompilable()) {
 		auto result = bopDirectResolve(lhs.direct, rhs.direct, node->base);
 		if (!result.isUndefined()) {
@@ -1174,6 +1178,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 				likelihood
 			};
 		} else {
+			CPP::Debug::breakpoint();
 			if (rhs.shouldBePushed())
 				context.top()->impl->writeMainLine("push", *rhs.source);
 			else if (rhs.isStackTop() && rhs.isCopied()) {
@@ -1273,6 +1278,8 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 		if (ns->variable) {
 			result.type		= ns->variable->type.raw();
 			result.scope	= ns->variable->scope.raw();
+			if (ns->variable->isCompiled())
+				result.direct = ns->variable->value;
 		} else result.scope = ns;
 		return result;
 	} if (node->leftSide->content == Node::Content::AV2_TANC_FN_CALL) {
