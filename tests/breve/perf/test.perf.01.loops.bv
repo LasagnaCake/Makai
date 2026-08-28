@@ -3,7 +3,7 @@ using import core
 @Main
 main :: () {
 	@Direct count := (10 pow 3) as uint64
-	IO.writeLine("Doing 100 million loops...")
+	IO.writeLine("Doing " + (count as string) + " loops...")
 	start := OS.Time.localNow(OS.Time.Precision.NANOS)
 	IO.writeLine("Loop iteration #0")
 	repeat @ByCopy i: uint64 => count {
