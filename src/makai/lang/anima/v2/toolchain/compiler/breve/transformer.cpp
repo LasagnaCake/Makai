@@ -1188,7 +1188,10 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	}
 	if (!lhsHasBeenPushed)
 		context.top()->impl->writeMainLine("push", *lhs.source);
-	if ((lhs.type == rhs.type) && (!rhs.isCompilable() or rhs.direct.isString())) {
+	if (
+		(lhs.type != rhs.type)
+	or	!(rhs.isCompilable() and !rhs.direct.isString())
+	) {
 		if (rhs.shouldBePushed())
 			context.top()->impl->writeMainLine("push", *rhs.source);
 		else if (rhs.isStackTop() && rhs.isCopied()) {
