@@ -92,11 +92,11 @@ static bool isSpaceChar(UTF::U8Char const ch) {
 }
 
 static UTF::U8Char unescape(UTF::U8Char const ch) {
-	if (ch == UTF::U8Char{'n'}) return {'\n'};
-	if (ch == UTF::U8Char{'t'}) return {'\t'};
-	if (ch == UTF::U8Char{'v'}) return {'\v'};
-	if (ch == UTF::U8Char{'r'}) return {'\r'};
-	if (ch == UTF::U8Char{'b'}) return {'\b'};
+	if (ch == UTF::U8Char{'n'}) return {"\n"};
+	if (ch == UTF::U8Char{'t'}) return {"\t"};
+	if (ch == UTF::U8Char{'v'}) return {"\v"};
+	if (ch == UTF::U8Char{'r'}) return {"\r"};
+	if (ch == UTF::U8Char{'b'}) return {"\b"};
 	return ch;
 }
 

@@ -2,16 +2,17 @@ using import core
 
 @Main
 main :: () {
-	@Direct count := (10 pow 3) as uint64
-	IO.writeLine("Doing " + (count as string) + " loops...")
+	@Direct count := (10 pow 4) as uint64
+	IO.write("Doing ")
+	IO.write(count as any)
+	IO.writeLine(" loops...")
 	start := OS.Time.localNow(OS.Time.Precision.NANOS)
 	IO.writeLine("Loop iteration #0")
 	repeat @ByCopy i: uint64 => count {
-		@ByCopy it := ((count-i+1) % (count/10))
-		IO.writeLine(it as any)
-		unless unlikely it {
+		@ByCopy it := ((count+1-i) % (10 pow 3))
+		unless (it > 0) {
 			IO.write("Loop iteration #")
-			IO.writeLine((count-i) as any)
+			IO.writeLine((count+1-i) as any)
 		}
 	}
 	total := ((OS.Time.localNow(OS.Time.Precision.NANOS) - start) / (10 pow 9.0))

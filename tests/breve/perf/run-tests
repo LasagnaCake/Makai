@@ -29,16 +29,16 @@ end () {
 }
 
 do-python () {
-	python test.perf.$1.*.py > output/result.$1-$2.python.txt 
+	python test.perf.$1.*.py > output/result.$1-$2.python.txt
 }
 
 do-lua () {
-	lua test.perf.$1.*.lua > output/result.$1-$2.lua.txt 
+	lua test.perf.$1.*.lua > output/result.$1-$2.lua.txt
 }
 
 do-breve () {
 	[ -f ../../../output/bin/art ] &&
-		../../../output/bin/art test.perf.$1.*.bv -S -C > output/result.$1-$2.breve.txt 
+		../../../output/bin/art test.perf.$1.*.bv -S -BA:C -BA:T > output/result.$1-$2.breve.txt
 }
 
 profile () {
@@ -83,8 +83,11 @@ do-test() {
 		do-lua $1 $2 & PERF_TESTS[$((tid++))]=$!
 		do-python $1 $2 & PERF_TESTS[$((tid++))]=$!
 	else
+		echo "Running breve..."
 		do-breve $1 $2
+		echo "Running lua..."
 		do-lua $1 $2
+		echo "Running python..."
 		do-python $1 $2
 	fi
 }
@@ -101,7 +104,7 @@ if [ "$TEST_MODE" != "-M" ]; then
 	rm -rf output/result.*.txt
 
 	echo Starting tests...
-	
+
 	get-samples $TEST_ID $TEST_COUNT
 
 	echo Waiting for tests to finish...
