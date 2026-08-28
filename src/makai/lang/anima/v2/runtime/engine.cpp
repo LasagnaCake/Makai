@@ -879,7 +879,11 @@ static void fbop(T& lhs, T& rhs, Operator const op) {
 		}
 		if constexpr (Makai::Type::Number<T>) switch (op) {
 			using TCalc = Makai::Meta::If<Makai::Type::Real<T>, T, floatmax>;
-			case Operator::AV2_BOP_REM: if constexpr (Makai::Type::Real<T>) lhs = Makai::Math::mod(lhs, rhs); else lhs %= rhs; return;
+			case Operator::AV2_BOP_REM: {
+				if constexpr (Makai::Type::Real<T>)
+					lhs = Makai::Math::mod(lhs, rhs);
+				else lhs %= rhs;
+			} return;
 			case Operator::AV2_BOP_POW: lhs = Makai::Math::pow<TCalc>(lhs, rhs); return;
 			case Operator::AV2_BOP_ATAN2: lhs = Makai::Math::atan2<TCalc>(lhs, rhs); return;
 			case Operator::AV2_BOP_LOGX: lhs = Makai::Math::logn<TCalc>(lhs, rhs); return;
