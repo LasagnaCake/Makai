@@ -125,6 +125,8 @@ namespace Makai::Anima::V2::Runtime {
 
 		virtual void onLoad() {}
 
+		virtual void onBreakpoint();
+
 	private:
 		void load();
 		void unload();

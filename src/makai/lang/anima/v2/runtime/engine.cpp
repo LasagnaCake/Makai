@@ -1809,6 +1809,10 @@ void Engine::v2Initialize() {
 }
 
 void Engine::v2Breakpoint() {
+	onBreakpoint();
+}
+
+void Engine::onBreakpoint() {
 	Makai::CPP::Debug::breakpoint();
 }
 

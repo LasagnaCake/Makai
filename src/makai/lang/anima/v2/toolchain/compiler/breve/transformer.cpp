@@ -755,7 +755,18 @@ ATransformer::Result Block::transform(Context& context, Node::Instance const& no
 }
 
 ATransformer::Result SubExpression::transform(Context& context, Node::Instance const& node) {
-	return Block().transform(context, node);
+	ATransformer::Result result;
+	for (auto const& child: node->children) {
+		result = Expression().transform(context, child);
+		if (result.scope && result.scope->variable) {
+			context.top()->impl->writeMainLine(result.scope->impl->toString());
+			if (!result.scope->variable->initializer)		continue;
+			if (context.nearestVarScope() == context.root)	continue;
+			context.top()->impl->writeMainLine(result.scope->variable->initializer->impl->toString());
+			result.scope->variable->initializer = null;
+		}
+	}
+	return result;
 }
 
 static Namespace::TypeRef directName(ATransformer::Context& context, Makai::Data::Value::Kind const& type) {
@@ -2390,12 +2401,12 @@ ATransformer::Result Definition::transform(Context& context, Node::Instance cons
 }
 
 ATransformer::Result InlineAssembly::transform(Context& context, Node::Instance const& node) {
-	auto const scope = context.nearestVarScope();
+	auto const scope = context.top()->impl;
+	CPP::Debug::breakpoint();
 	Makai::UTF8String interject = "";
 	for (auto& tok: node->interject)
 		interject += tok.text + " ";
-	scope->impl->writeMainLine(interject);
-	context.pop(1);
+	scope->writeMainLine(interject);
 	return {};
 }
 

@@ -117,6 +117,20 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	): Engine(Config{allowDynlibs}), bapi(bapi) {
 	}
 
+	void onBreakpoint() override {
+		printf("<break>\n");
+		printf("  <instruction id='%Zu' />\n", context.pointers.instruction);
+		printf("  <stack size='%Zu'>\n", context.globalValueStack.size());
+		for (auto& val: context.globalValueStack) {
+			auto const e = val->toDynamicValue().toString();
+			printf("    <value>%s</value>\n", e.cstr());
+		}
+		printf("  </stack>\n");
+		printf("  <scope-stack size='%Zu'/>\n", context.scopeStack.size());
+		printf("</break>");
+		Engine::onBreakpoint();
+	}
+
 	void onLoad() override {
 		if (bapi.console) {
 			context.art.addNativeCall("av2/console/write_string", 		write_string		);
