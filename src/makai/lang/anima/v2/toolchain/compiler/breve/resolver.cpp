@@ -278,6 +278,8 @@ Node::Instance LoopResolver::resolve(Parser& parser, Node::Instance const& leftS
 		}
 	} else if (token.text == "for") {
 		result->leftSide	= parser.nextExpression();
+		parser.context.expectNext(LTS_TT_BIG_ARROW);
+		result->middle = parser.nextExpression();
 		result->rightSide	= parser.nextExpression();
 	} else if (token.text == "repeat") {
 		result->leftSide	= parser.nextExpression();
@@ -860,6 +862,8 @@ Node::Instance MatchResolver::resolve(Parser& parser, Node::Instance const& left
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_SWITCH;
+	if (parser.context.peek().type != LTS_TT_OPEN_CURLY)
+		result->leftSide = parser.nextExpression();
 	parser.context.expectNext(LTS_TT_OPEN_CURLY);
 	while (true) {
 		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {

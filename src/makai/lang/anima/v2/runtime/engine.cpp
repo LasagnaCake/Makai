@@ -13,8 +13,9 @@ static void printValueState(Object::Storage const& value) {
 	MAKAILIB_DEBUG_BLOCK_FULL {
 		MAKAILIB_DEBUG_FULL("> Value? ", value ? "YES" : "NO");
 		if (value) {
-			 MAKAILIB_DEBUG_FULL(" (Type? ", value->getOriginalType() ? value->getOriginalType()->cleanName() : "?", " as ", value->getOriginalType() ? value->getType()->cleanName() : "?", ")");
-				MAKAILIB_DEBUGLN_FULL(" = ", value->toDynamicValue().toString());
+			MAKAILIB_DEBUG_FULL(" (Type? ", value->getOriginalType() ? value->getOriginalType()->cleanName() : "?");
+			MAKAILIB_DEBUG_FULL(" as ", value->getType() ? value->getType()->cleanName() : "?", ")");
+			MAKAILIB_DEBUGLN_FULL(" = ", value->toDynamicValue().toString());
 		}
 		else MAKAILIB_DEBUGLN_FULL("");
 	}
@@ -61,7 +62,7 @@ bool Engine::DefaultLibraryLoader::loadLibrary(Context& context, String const& p
 	if (auto const artHome = getenv("ART_HOME"))
 		paths.pushBack(OS::FS::concatenate(artHome, "av2", path));
 	for (auto const& p: paths) {
-		MAKAILIB_DEBUGLN_FULL("  > On path '", p, "'");
+		MAKAILIB_DEBUGLN_FULL("  > On  path '", p, "'");
 		if (OS::FS::exists(p))
 			return context.art.openLibrary(p);
 	}
@@ -351,8 +352,10 @@ void Engine::v2Call() {
 	if (invocation.external) {
 		decltype(context.globalValueStack) args;
 		if (auto argc = context.art.argumentCountOf(loc)) {
-			args = context.globalValueStack.sliced(-argc, -1).reverse();
-			context.globalValueStack.eraseRange(-argc, -1);
+			StackStateScopePrinter s3p{context};
+			auto& gvs = context.globalValueStack;
+			args = gvs.sliced(-argc, -1);
+			gvs.eraseRange(- argc - 1, - 1);
 		}
 		context.art
 			.callNative(loc, args)
@@ -984,8 +987,6 @@ void Engine::fastBinaryOperation(Operator const op, BasicType const type) {
 		else [[likely]] crash(invalidOperationError("Left-Side Operand does not exist!"));
 		return;
 	}
-	MAKAILIB_DEBUGLN_FULL("Left-Side  := ", lhs->getType()->cleanName());
-	MAKAILIB_DEBUGLN_FULL("Right-Side := ", rhs->getType()->cleanName());
 	if (lhs->getType() != rhs->getType()) [[unlikely]] {
 		auto const lname = lhs->getType()->cleanName();
 		auto const rname = rhs->getType()->cleanName();
