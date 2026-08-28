@@ -1177,13 +1177,6 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 				result,
 				likelihood
 			};
-		} else {
-			CPP::Debug::breakpoint();
-			if (rhs.shouldBePushed())
-				context.top()->impl->writeMainLine("push", *rhs.source);
-			else if (rhs.isStackTop() && rhs.isCopied()) {
-				context.top()->impl->writeMainLine("copy", *rhs.source, "-> top");
-			}
 		}
 	}
 	if (!lhsHasBeenPushed)

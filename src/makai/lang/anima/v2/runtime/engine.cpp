@@ -1056,7 +1056,7 @@ void Engine::immediateBinaryOperation(Operator const op, BasicType const type, p
 }
 
 void Engine::fastUnaryOperation(Operator const op, BasicType const type) {
-	if (context.globalValueStack.size() < 2)
+	if (context.globalValueStack.size() < 1)
 		return crash(invalidSourceError("Missing values to operate on!"));
 	auto val	= context.top();
 	if (!val) {
