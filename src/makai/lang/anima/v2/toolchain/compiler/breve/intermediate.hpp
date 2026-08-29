@@ -280,8 +280,19 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		using ArgTypes = List<Namespace::TypeRef>;
 
-		OverloadRef overloadFromVariables(List<Namespace::VariableRef> const& args) const;
-		OverloadRef overloadFromTypes(List<Namespace::TypeRef> const& args) const;
+		struct Fuzz {
+			Nullable<Map<usize, bool>> detail;
+
+			static Fuzz range(usize const start, usize const stop) {
+				Map<usize, bool> out;
+				for (usize i = start; i <= stop; ++i)
+					out[i] = true;
+				return {out};
+			}
+		};
+
+		OverloadRef overloadFromVariables(List<Namespace::VariableRef> const& args, Nullable<Fuzz> const& fuzz = null) const;
+		OverloadRef overloadFromTypes(ArgTypes const& args, Nullable<Fuzz> const& fuzz = null) const;
 
 		Makai::Data::Value serialize() const override;
 

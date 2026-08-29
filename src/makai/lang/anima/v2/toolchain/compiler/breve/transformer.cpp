@@ -1731,7 +1731,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		else if (lhs.isStackTop() && lhs.isCopied())
 			context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
 		auto const rhs = Expression().transform(context, node->rightSide);
-		auto const set = prop.setter->overloadFromTypes({lhs.parent, rhs.type});
+		auto const set = prop.setter->overloadFromTypes({lhs.parent, rhs.type}, Function::Fuzz::range(1, 1));
 		if (!set)
 			context.error("No suitable setter for expression type", node->rightSide);
 		if (rhs.shouldBePushed())
@@ -1933,12 +1933,12 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 	auto const ovLookupSig = args.toList<UTF8String>([] (auto const& e) {return e->name;}).join(" ");
 	auto const ovMemLookupSig = memArgs.toList<UTF8String>([] (auto const& e) {return e->name;}).join(" ");
 	MAKAILIB_DEBUGLN_FULL("Looking for: [", ovLookupSig, "] or [", ovMemLookupSig, "]");
-	if (!(f.overloadFromTypes(args) or f.overloadFromTypes(memArgs)))
+	if (!(f.overloadFromTypes(args, Function::Fuzz()) or f.overloadFromTypes(memArgs, Function::Fuzz::range(1, args.size()))))
 		context.error("No suitable overload exists!", node);
-	auto ovf = f.overloadFromTypes(args);
+	auto ovf = f.overloadFromTypes(args, Function::Fuzz());
 	bool isMemFn = false;
 	if (!ovf) {
-		ovf = f.overloadFromTypes(memArgs);
+		ovf = f.overloadFromTypes(memArgs, Function::Fuzz::range(1, args.size()));
 		if (!(ovf && !ovf->staticEntity))
 			context.error("No suitable overload exists!", node);
 		isMemFn = true;
@@ -2288,13 +2288,54 @@ ATransformer::Result Loop::transform(Context& context, Node::Instance const& nod
 }
 
 ATransformer::Result ForLoop::transform(Context& context, Node::Instance const& node) {
-	context.error("This has been unimplemented yet!", node);
 	auto const loopStart = context.top()->name + "_start" + node->name();
 	auto const loopEnd = context.top()->name + "_end" + node->name();
 	auto const loopScope = context.top();
-	loopScope->impl->writePreLine("@target", loopStart, ":");
-	// TODO: This
-	loopScope->impl->writePostLine("jump if true", loopStart);
+	loopScope->impl->writePreLine("decl 2");
+	Namespace::Instance varScope;
+	if (node->leftSide->content == Node::Content::AV2_TANC_DECLARATION)
+		varScope = VariableDecl().transform(context, node->leftSide).scope;
+	else {
+		auto const vname = context.pathOf(node->leftSide);
+		auto const scope = context.declare(vname);
+		auto& var = *(scope->variable = scope->variable.create());
+		var.name = scope->name;
+		var.parentScope = loopScope.asWeak();
+		var.id = loopScope->varc++;
+		varScope = scope;
+		context.pop(vname.size());
+	}
+	auto& elemVar = *varScope->variable;
+	auto const toIterate = Expression().transform(context, node->middle);
+	String const traversalVar = Makai::toString("local[", loopScope->varc++, "]");
+	if (!toIterate.source)
+		context.error("Expected value here!", node->middle);
+	if (toIterate.mayBeEmpty)
+		context.error("One or more code path does not result in a value!", node->middle);
+	if (!toIterate.type->flags.isArray) {
+		// TODO: iteratable objects (later)
+		context.error("Only array for loops are currently supported!", node->middle);
+	} else {
+		if (!elemVar.type) elemVar.type = toIterate.type->base;
+		else if (TypeDecl::stronger(elemVar.type.raw(), toIterate.type->base) != elemVar.type)
+			context.error("Element type is stronger than variable type!", node->middle);
+		context.top()->impl->writeMainLine("copy", toIterate.source.value(), "->", traversalVar);
+		if (toIterate.isStackTop())
+			context.top()->impl->writeMainLine("pop");
+		context.top()->impl->writeMainLine("op inv");
+		loopScope->impl->writeMainLine("@target", loopStart, ":");
+		loopScope->impl->writeMainLine("push ref", traversalVar);
+		loopScope->impl->writeMainLine("count");
+		loopScope->impl->writeMainLine("jump if false", loopEnd);
+		loopScope->impl->writeMainLine("push ref", traversalVar);
+		loopScope->impl->writeMainLine("op apop");
+		loopScope->impl->writeMainLine("copy move top ->", elemVar.getSource());
+		loopScope->impl->writeMainLine("pop");
+		elemVar.fill();
+		auto const loopExpr = Expression().transform(context, node->rightSide);
+		loopScope->impl->writePostLine("jump", loopStart);
+		loopScope->impl->writeMainLine("@target", loopEnd, ":");
+	}
 	return {.scope = loopScope};
 }
 

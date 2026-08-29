@@ -124,33 +124,58 @@ void Intermediate::addPostLine(UTF8String const& what) {
 	root->impl->addPostLine(what);
 }
 
-Function::OverloadRef Function::overloadFromVariables(List<Namespace::VariableRef> const& args) const {
-	return overloadFromTypes(args.toList<Namespace::TypeRef>([] (auto const& e) -> Namespace::TypeRef {return e->type.raw();}));
+Function::OverloadRef Function::overloadFromVariables(List<Namespace::VariableRef> const& args, Nullable<Fuzz> const& fuzz) const {
+	return overloadFromTypes(args.toList<Namespace::TypeRef>([] (auto const& e) -> Namespace::TypeRef {return e->type.raw();}), fuzz);
 }
 
-static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> const& args) {
+static bool const test(Namespace::TypeRef const& a, Namespace::TypeRef const& b, bool const fuzzy) {
+	if (fuzzy) return TypeDecl::stronger(a, b) != b;
+	else return a != b;
+}
+
+static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> const& args, Makai::Nullable<Function::Fuzz> const fuzz) {
 	if (args.size() < ov->arguments.size()) return false;
 	auto const paramc = ov->arguments.size();
+	auto const isFuzzy = fuzz
+		? Makai::Function<bool(usize)>(
+			[fuzz = fuzz.value()] (usize const index) {
+				return !fuzz.detail or fuzz.detail.value().contains(index);
+			}
+		)
+		: Makai::Function<bool(usize)>(
+			[&] (usize const) {
+				return false;
+			}
+		)
+	;
 	for (auto const& [arg, index] : Makai::Range::expand(args)) {
 		auto const pIndex = (index < paramc-1 ? index : paramc-1);
 		auto const param =  ov->arguments[pIndex]->type;
 		if (!(arg.exists() and param.exists())) return false;
 		if (arg == param) continue;
-		if (ov->variadic && index >= pIndex) {
-			if (TypeDecl::stronger(arg, param->base) != param->base)
-				return false;
-		} else if (TypeDecl::stronger(arg, param.raw()) != param.raw()) return false;
+		if (ov->variadic && index >= pIndex)
+			if (test(arg, param->base, fuzz && isFuzzy(index))) return false;
+		else if (TypeDecl::stronger(arg, param.raw()) != param.raw()) return false;
 	}
 	return true;
 }
 
-Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const& args) const {
+Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const& args, Nullable<Fuzz> const& fuzz) const {
+	decltype(overloads) matches;
 	for (auto& ov: overloads) {
 		if (!ov) continue;
-		if (!validate(ov, args)) continue;
-		return ov;
+		if (!validate(ov, args, fuzz))
+			continue;
+		if (fuzzy) matches.pushBack(ov);
+		else return ov;
 	}
-	return nullptr;
+	if (!fuzz or matches.empty()) return nullptr;
+	for (auto& ov: matches) {
+		if (!ov) continue;
+		if (validate(ov, args, null))
+			return ov;
+	}
+	return ov.back();
 }
 
 Implementation::Instance Namespace::compose() const {
@@ -998,6 +1023,7 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createMixedAttribute());
 	addGlobalAttribute(createDirectAttribute());
 	addGlobalAttribute(createTransformerAttribute());
+	addGlobalAttribute(createVariadicAttribute());
 }
 
 Makai::Data::Value Implementation::serialize() const {
