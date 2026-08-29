@@ -139,7 +139,7 @@ static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> c
 		if (ov->variadic && index >= pIndex) {
 			if (TypeDecl::stronger(arg, param->base) != param->base)
 				return false;
-		} else if (arg != param.raw()) return false;
+		} else if (TypeDecl::stronger(arg, param.raw()) != param.raw()) return false;
 	}
 	return true;
 }
