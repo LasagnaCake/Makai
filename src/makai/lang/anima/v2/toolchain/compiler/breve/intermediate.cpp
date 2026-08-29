@@ -142,8 +142,7 @@ static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> c
 			[fuzz = fuzz.value()] (usize const index) {
 				return !fuzz.detail or fuzz.detail.value().contains(index);
 			}
-		)
-		: Makai::Function<bool(usize)>(
+		) : Makai::Function<bool(usize)>(
 			[&] (usize const) {
 				return false;
 			}
@@ -155,8 +154,8 @@ static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> c
 		if (!(arg.exists() and param.exists())) return false;
 		if (arg == param) continue;
 		if (ov->variadic && index >= pIndex) {
-			if (test(arg, param->base, fuzz && isFuzzy(index))) return false;
-		} else if (TypeDecl::stronger(arg, param.raw()) != param.raw()) return false;
+			if (test(arg, param->base, fuzz && test(arg, param->base, true))) return false;
+		} else if (isFuzzy(index)) return false;
 	}
 	return true;
 }
