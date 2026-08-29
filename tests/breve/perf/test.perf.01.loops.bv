@@ -3,21 +3,18 @@ using import core
 @Main
 main :: () {
 	@Direct count := (10 pow 5) as uint64
-	IO.write("Doing ")
-	IO.write(count as any)
-	IO.writeLine(" loops...")
-	start := OS.Time.localNow(OS.Time.Precision.NANOS)
+	IO.write("Doing ", count, " loops...")
+	@ByCopy start := OS.Time.localNow(OS.Time.Precision.NANOS)
+	@ByCopy lap := start 
 	IO.writeLine("Loop iteration #0")
 	repeat @ByCopy i: uint64 => count {
 		@ByCopy it := ((count+1-i) % (10 pow 4))
 		unless (it > 0) {
-			IO.write("Loop iteration #")
-			IO.writeLine((count+1-i) as any)
-			asm {break}
+			@ByRef delta := (OS.Time.localNow(OS.Time.Precision.NANOS) - lap)
+			IO.write("Loop iteration #", count+1-i, " (lap: ", delta, "ns)")
+			lap = OS.Time.localNow(OS.Time.Precision.NANOS)
 		}
 	}
-	total := ((OS.Time.localNow(OS.Time.Precision.NANOS) - start) / (10 pow 9.0))
-	IO.write("\nResult::{\n  total-time: ")
-	IO.writeLine(total as any)
-	IO.writeLine("}")
+	total := ((OS.Time.localNow(OS.Time.Precision.NANOS) - start) / ((10 pow 9.0) as float))
+	IO.write("\nResult::{\n  total-time: ", total, "\n}")
 }

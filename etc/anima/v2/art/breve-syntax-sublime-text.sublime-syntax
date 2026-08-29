@@ -67,7 +67,7 @@ contexts:
     - match: '\b((type|name|count)of)\b'
       scope: keyword.operator.info.breve
 
-    - match: '\b(repeat|while|do)\b'
+    - match: '\b(repeat|while|do|for)\b'
       scope: keyword.control.loop.breve
 
     - match: '\b(asm)\b'

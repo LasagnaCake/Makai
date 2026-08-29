@@ -255,6 +255,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			bool							optional = false;
 			bool							hasImplementation = false;
 			bool							staticEntity = false;
+			bool							variadic = false;
 			Handle<Overload>				fullImpl;
 			Node::Instance					decl = nullptr;
 

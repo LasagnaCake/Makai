@@ -128,22 +128,26 @@ Function::OverloadRef Function::overloadFromVariables(List<Namespace::VariableRe
 	return overloadFromTypes(args.toList<Namespace::TypeRef>([] (auto const& e) -> Namespace::TypeRef {return e->type.raw();}));
 }
 
+static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> const& args) {
+	if (args.size() < ov->arguments.size()) return false;
+	auto const paramc = ov->arguments.size();
+	for (auto const& [arg, index] : Makai::Range::expand(args)) {
+		auto const pIndex = (index < paramc-1 ? index : paramc-1);
+		auto const param =  ov->arguments[pIndex]->type;
+		if (!(arg.exists() and param.exists())) return false;
+		if (arg == param) continue;
+		if (ov->variadic && index >= pIndex) {
+			if (TypeDecl::stronger(arg, param->base) != param->base)
+				return false;
+		} else if (arg != param.raw()) return false;
+	}
+	return true;
+}
+
 Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const& args) const {
 	for (auto& ov: overloads) {
 		if (!ov) continue;
-		if (ov->arguments.size() != args.size()) continue;
-		bool miss = false;
-		for (auto const arg: Range::expand(ov->arguments))
-			if (!(args[arg.index].exists() || arg.value.exists()))
-				continue;
-			else if (args[arg.index].exists() != arg.value.exists()) {
-				miss = true;
-				break;
-			} else if (args[arg.index] != arg.value->type.raw()) {
-				miss = true;
-				break;
-			}
-		if (miss) continue;
+		if (!validate(ov, args)) continue;
 		return ov;
 	}
 	return nullptr;
@@ -474,6 +478,20 @@ static Namespace::AttributeRef createStaticAttribute() {
 					ov->staticEntity = true;
 				}
 		}
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createVariadicAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Variadic";
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		for (auto& ov: ns->function->current)
+			if (ov->arguments.size() && ov->arguments.back()->type->flags.isArray)
+				ov->variadic = true;
 	};
 	return attrib;
 }
