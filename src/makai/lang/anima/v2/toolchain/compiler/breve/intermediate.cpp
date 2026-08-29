@@ -155,7 +155,7 @@ static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> c
 		if (arg == param) continue;
 		if (ov->variadic && index >= pIndex) {
 			if (test(arg, param->base, fuzz && test(arg, param->base, true))) return false;
-		} else if (isFuzzy(index)) return false;
+		} else if (test(arg, param.raw(), isFuzzy(index))) return false;
 	}
 	return true;
 }
@@ -170,12 +170,15 @@ Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const
 		else return ov;
 	}
 	if (!fuzz or matches.empty()) return nullptr;
+	Function::OverloadRef match;
 	for (auto& ov: matches) {
 		if (!ov) continue;
 		if (validate(ov, args, null))
 			return ov;
+		if (!match or match->arguments.size() < ov->arguments.size())
+			match = ov;
 	}
-	return matches.back();
+	return match;
 }
 
 Implementation::Instance Namespace::compose() const {
