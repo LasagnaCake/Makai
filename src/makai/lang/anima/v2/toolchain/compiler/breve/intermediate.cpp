@@ -134,7 +134,8 @@ static bool const test(Namespace::TypeRef const& a, Namespace::TypeRef const& b,
 }
 
 static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> const& args, Makai::Nullable<Function::Fuzz> const fuzz) {
-	if (args.size() < ov->arguments.size()) return false;
+	if (!fuzz && args.size() != ov->arguments.size()) return false;
+	else if (args.size() < ov->arguments.size()) return false;
 	auto const paramc = ov->arguments.size();
 	auto const isFuzzy = fuzz
 		? Makai::Function<bool(usize)>(
@@ -153,9 +154,9 @@ static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> c
 		auto const param =  ov->arguments[pIndex]->type;
 		if (!(arg.exists() and param.exists())) return false;
 		if (arg == param) continue;
-		if (ov->variadic && index >= pIndex)
+		if (ov->variadic && index >= pIndex) {
 			if (test(arg, param->base, fuzz && isFuzzy(index))) return false;
-		else if (TypeDecl::stronger(arg, param.raw()) != param.raw()) return false;
+		} else if (TypeDecl::stronger(arg, param.raw()) != param.raw()) return false;
 	}
 	return true;
 }
@@ -166,7 +167,7 @@ Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const
 		if (!ov) continue;
 		if (!validate(ov, args, fuzz))
 			continue;
-		if (fuzzy) matches.pushBack(ov);
+		if (fuzz) matches.pushBack(ov);
 		else return ov;
 	}
 	if (!fuzz or matches.empty()) return nullptr;
@@ -175,7 +176,7 @@ Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const
 		if (validate(ov, args, null))
 			return ov;
 	}
-	return ov.back();
+	return matches.back();
 }
 
 Implementation::Instance Namespace::compose() const {
