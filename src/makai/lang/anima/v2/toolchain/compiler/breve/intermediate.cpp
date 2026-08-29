@@ -134,8 +134,8 @@ static bool const test(Namespace::TypeRef const& a, Namespace::TypeRef const& b,
 }
 
 static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> const& args, Makai::Nullable<Function::Fuzz> const fuzz) {
-	if (!fuzz && args.size() != ov->arguments.size()) return false;
-	else if (args.size() < ov->arguments.size()) return false;
+	if (ov->variadic && args.size() < ov->arguments.size()) return false;
+	else if (args.size() != ov->arguments.size()) return false;
 	auto const paramc = ov->arguments.size();
 	auto const isFuzzy = fuzz
 		? Makai::Function<bool(usize)>(
@@ -170,6 +170,7 @@ Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const
 		else return ov;
 	}
 	if (!fuzz or matches.empty()) return nullptr;
+	if (matches.size() == 1) return matches.back();
 	Function::OverloadRef match;
 	for (auto& ov: matches) {
 		if (!ov) continue;
