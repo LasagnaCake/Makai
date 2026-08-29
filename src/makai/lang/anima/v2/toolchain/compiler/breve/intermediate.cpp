@@ -124,7 +124,7 @@ void Intermediate::addPostLine(UTF8String const& what) {
 	root->impl->addPostLine(what);
 }
 
-Function::OverloadRef Function::overloadFromVariables(List<Namespace::VariableRef> const& args, Nullable<Fuzz> const& fuzz) const {
+Function::OverloadRef Function::overloadFromVariables(List<Namespace::VariableRef> const& args, FuzzySearch const& fuzz) const {
 	return overloadFromTypes(args.toList<Namespace::TypeRef>([] (auto const& e) -> Namespace::TypeRef {return e->type.raw();}), fuzz);
 }
 
@@ -133,40 +133,41 @@ static bool const test(Namespace::TypeRef const& a, Namespace::TypeRef const& b,
 	else return a != b;
 }
 
-static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> const& args, Makai::Nullable<Function::Fuzz> const fuzz) {
-	if (ov->variadic && args.size() < ov->arguments.size()) return false;
+static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> const& args, Function::FuzzySearch const fuzz) {
+	if (ov->variadic && args.size() < (ov->arguments.size()-1)) return false;
 	else if (args.size() != ov->arguments.size()) return false;
 	auto const paramc = ov->arguments.size();
-	auto const isFuzzy = fuzz
-		? Makai::Function<bool(usize)>(
-			[fuzz = fuzz.value()] (usize const index) {
-				return !fuzz.detail or fuzz.detail.value().contains(index);
-			}
-		) : Makai::Function<bool(usize)>(
-			[&] (usize const) {
-				return false;
-			}
-		)
-	;
+	auto const isFuzzy = [fuzz] (usize const i) {
+		switch (fuzz) {
+			using enum Function::FuzzySearch;
+			case AV2_TCF_FS_NONE:				return false;
+			case AV2_TCF_FS_ALL_ARGS:			return true;
+			case AV2_TCF_FS_ALL_EXCEPT_FIRST:	return i > 0;
+		}
+	};
 	for (auto const& [arg, index] : Makai::Range::expand(args)) {
 		auto const pIndex = (index < paramc-1 ? index : paramc-1);
 		auto const param =  ov->arguments[pIndex]->type;
 		if (!(arg.exists() and param.exists())) return false;
 		if (arg == param) continue;
-		if (ov->variadic && index >= pIndex) {
-			if (test(arg, param->base, fuzz && test(arg, param->base, true))) return false;
-		} else if (test(arg, param.raw(), isFuzzy(index))) return false;
+		if (ov->variadic && index >= pIndex && test(arg, param->base, true))
+			return false;
+		else if (test(arg, param.raw(), isFuzzy(index))) return false;
 	}
 	return true;
 }
 
-Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const& args, Nullable<Fuzz> const& fuzz) const {
+Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const& args, FuzzySearch const& fuzz) const {
 	decltype(overloads) matches;
 	for (auto& ov: overloads) {
 		if (!ov) continue;
 		if (!validate(ov, args, fuzz))
 			continue;
-		if (fuzz) matches.pushBack(ov);
+		if (fuzz) {
+			if (validate(ov, args, null))
+				return ov;
+			matches.pushBack(ov);
+		}
 		else return ov;
 	}
 	if (!fuzz or matches.empty()) return nullptr;

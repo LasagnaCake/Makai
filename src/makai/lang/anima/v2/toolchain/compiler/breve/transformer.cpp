@@ -1731,7 +1731,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		else if (lhs.isStackTop() && lhs.isCopied())
 			context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
 		auto const rhs = Expression().transform(context, node->rightSide);
-		auto const set = prop.setter->overloadFromTypes({lhs.parent, rhs.type}, Function::Fuzz::range(1, 1));
+		auto const set = prop.setter->overloadFromTypes({lhs.parent, rhs.type}, Function::FuzzySearch::AV2_TCF_FS_ALL_EXCEPT_FIRST);
 		if (!set)
 			context.error("No suitable setter for expression type", node->rightSide);
 		if (rhs.shouldBePushed())
@@ -1923,9 +1923,9 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		else runtimeCall = true;
 	}
 	MAKAILIB_DEBUGLN_FULL("Function: ", f.name);
-	MAKAILIB_DEBUG_FULL("Overloads: [ ");
+	MAKAILIB_DEBUGLN_FULL("Overloads: [ ");
 	for (auto const& ov: f.overloads)
-		MAKAILIB_DEBUG_FULL(ov->prototype(), " ");
+		MAKAILIB_DEBUGLN_FULL("  ", ov->prototype(), ov->variadic ? "<variadic> " : " ");
 	MAKAILIB_DEBUGLN_FULL("]");
 	auto memArgs = args;
 	if (fn.type)
@@ -1933,12 +1933,15 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 	auto const ovLookupSig = args.toList<UTF8String>([] (auto const& e) {return e->name;}).join(" ");
 	auto const ovMemLookupSig = memArgs.toList<UTF8String>([] (auto const& e) {return e->name;}).join(" ");
 	MAKAILIB_DEBUGLN_FULL("Looking for: [", ovLookupSig, "] or [", ovMemLookupSig, "]");
-	if (!(f.overloadFromTypes(args, Function::Fuzz()) or f.overloadFromTypes(memArgs, Function::Fuzz::range(1, args.size()))))
+	if (!(
+		f.overloadFromTypes(args, Function::FuzzySearch::AV2_TCF_FS_ALL_ARGS)
+	or	f.overloadFromTypes(memArgs, Function::FuzzySearch::AV2_TCF_FS_ALL_EXCEPT_FIRST)
+	))
 		context.error("No suitable overload exists!", node);
-	auto ovf = f.overloadFromTypes(args, Function::Fuzz());
+	auto ovf = f.overloadFromTypes(args, Function::FuzzySearch::AV2_TCF_FS_ALL_ARGS);
 	bool isMemFn = false;
 	if (!ovf) {
-		ovf = f.overloadFromTypes(memArgs, Function::Fuzz::range(1, args.size()));
+		ovf = f.overloadFromTypes(memArgs, Function::FuzzySearch::AV2_TCF_FS_ALL_EXCEPT_FIRST);
 		if (!(ovf && !ovf->staticEntity))
 			context.error("No suitable overload exists!", node);
 		isMemFn = true;

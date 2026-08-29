@@ -280,19 +280,14 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		using ArgTypes = List<Namespace::TypeRef>;
 
-		struct Fuzz {
-			Nullable<Map<usize, bool>> detail;
-
-			static Fuzz range(usize const start, usize const stop) {
-				Map<usize, bool> out;
-				for (usize i = start; i <= stop; ++i)
-					out[i] = true;
-				return {out};
-			}
+		enum class FuzzySearch {
+			AV2_TCF_FS_NONE,
+			AV2_TCF_FS_ALL_ARGS,
+			AV2_TCF_FS_ALL_EXCEPT_FIRST,
 		};
 
-		OverloadRef overloadFromVariables(List<Namespace::VariableRef> const& args, Nullable<Fuzz> const& fuzz = null) const;
-		OverloadRef overloadFromTypes(ArgTypes const& args, Nullable<Fuzz> const& fuzz = null) const;
+		OverloadRef overloadFromVariables(List<Namespace::VariableRef> const& args, FuzzySearch const fuzz = FuzzySearch::AV2_TCF_FS_NONE) const;
+		OverloadRef overloadFromTypes(ArgTypes const& args, FuzzySearch const fuzz = FuzzySearch::AV2_TCF_FS_NONE) const;
 
 		Makai::Data::Value serialize() const override;
 
