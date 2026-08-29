@@ -5,6 +5,7 @@ module IO {
 	write :: (what: any) -> void
 
 	@Shared(lib = av2console, name = "av2/console/writeLine_any", optional = true)
+	writeLine :: (what: any) -> void
 
 	@Variadic
 	write :: (first: any, rest: [any]) {
