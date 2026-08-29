@@ -124,7 +124,7 @@ void Intermediate::addPostLine(UTF8String const& what) {
 	root->impl->addPostLine(what);
 }
 
-Function::OverloadRef Function::overloadFromVariables(List<Namespace::VariableRef> const& args, FuzzySearch const& fuzz) const {
+Function::OverloadRef Function::overloadFromVariables(List<Namespace::VariableRef> const& args, FuzzySearch const fuzz) const {
 	return overloadFromTypes(args.toList<Namespace::TypeRef>([] (auto const& e) -> Namespace::TypeRef {return e->type.raw();}), fuzz);
 }
 
@@ -144,6 +144,7 @@ static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> c
 			case AV2_TCF_FS_ALL_ARGS:			return true;
 			case AV2_TCF_FS_ALL_EXCEPT_FIRST:	return i > 0;
 		}
+		return false;
 	};
 	for (auto const& [arg, index] : Makai::Range::expand(args)) {
 		auto const pIndex = (index < paramc-1 ? index : paramc-1);
@@ -157,25 +158,25 @@ static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> c
 	return true;
 }
 
-Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const& args, FuzzySearch const& fuzz) const {
+Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const& args, FuzzySearch const fuzz) const {
 	decltype(overloads) matches;
 	for (auto& ov: overloads) {
 		if (!ov) continue;
 		if (!validate(ov, args, fuzz))
 			continue;
-		if (fuzz) {
-			if (validate(ov, args, null))
+		if (fuzz != FuzzySearch::AV2_TCF_FS_NONE) {
+			if (validate(ov, args, FuzzySearch::AV2_TCF_FS_NONE))
 				return ov;
 			matches.pushBack(ov);
 		}
 		else return ov;
 	}
-	if (!fuzz or matches.empty()) return nullptr;
+	if (fuzz == FuzzySearch::AV2_TCF_FS_NONE or matches.empty()) return nullptr;
 	if (matches.size() == 1) return matches.back();
 	Function::OverloadRef match;
 	for (auto& ov: matches) {
 		if (!ov) continue;
-		if (validate(ov, args, null))
+		if (validate(ov, args, FuzzySearch::AV2_TCF_FS_NONE))
 			return ov;
 		if (!match or match->arguments.size() < ov->arguments.size())
 			match = ov;
