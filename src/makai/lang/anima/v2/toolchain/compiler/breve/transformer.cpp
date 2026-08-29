@@ -2402,7 +2402,6 @@ ATransformer::Result Definition::transform(Context& context, Node::Instance cons
 
 ATransformer::Result InlineAssembly::transform(Context& context, Node::Instance const& node) {
 	auto const scope = context.top()->impl;
-	CPP::Debug::breakpoint();
 	Makai::UTF8String interject = "";
 	for (auto& tok: node->interject)
 		interject += tok.text + " ";

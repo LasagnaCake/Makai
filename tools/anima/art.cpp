@@ -127,7 +127,7 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 		}
 		printf("  </stack>\n");
 		printf("  <scope-stack size='%Zu'/>\n", context.scopeStack.size());
-		printf("</break>");
+		printf("</break>\n");
 		Engine::onBreakpoint();
 	}
 
