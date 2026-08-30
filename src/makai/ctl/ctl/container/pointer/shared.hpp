@@ -65,7 +65,6 @@ namespace Base {
 /// @brief Smart pointer, with automatic reference counting.
 /// @tparam T Type of data pointed to.
 /// @tparam W Whether the given `Shared` is weak.
-/// @tparam U Unique type. Used for creating shared pointers with separate reference counter databases than the global one (`void`).
 /// @tparam D Deleter.
 /// @note
 ///		Differences between strong and weak pointers:
@@ -123,7 +122,7 @@ public:
 	/// @brief New shared pointer type.
 	/// @tparam NW Whether the pointer is weak.
 	template<bool NW>
-	using NewPointerType = Shared<DataType, NW, U, D>;
+	using NewPointerType = Shared<DataType, NW>;
 
 	/// @brief Opposite shared pointer type.
 	using OtherType = NewPointerType<!WEAK>;
