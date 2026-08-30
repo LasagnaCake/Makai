@@ -134,8 +134,10 @@ static bool const test(Namespace::TypeRef const& a, Namespace::TypeRef const& b,
 }
 
 static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> const& args, Function::FuzzySearch const fuzz) {
-	if (ov->variadic && args.size() < (ov->arguments.size()-1)) return false;
-	else if (args.size() != ov->arguments.size()) return false;
+	MAKAILIB_DEBUGLN_FULL("");
+	MAKAILIB_DEBUGLN_FULL("[", args.size(), " :: ", ov->arguments.size(), "]");
+	if (ov->variadic && (args.size()+1) < ov->arguments.size()) return false;
+	else if (!ov->variadic && args.size() != ov->arguments.size()) return false;
 	auto const paramc = ov->arguments.size();
 	auto const isFuzzy = [fuzz] (usize const i) {
 		switch (fuzz) {
@@ -147,8 +149,9 @@ static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> c
 		return false;
 	};
 	for (auto const& [arg, index] : Makai::Range::expand(args)) {
+		MAKAILIB_DEBUGLN_FULL("Testing arg[", index, "]...");
 		auto const pIndex = (index < paramc-1 ? index : paramc-1);
-		auto const param =  ov->arguments[pIndex]->type;
+		auto const param = ov->arguments[pIndex]->type;
 		if (!(arg.exists() and param.exists())) return false;
 		if (arg == param) continue;
 		if (ov->variadic && index >= pIndex && test(arg, param->base, true))
