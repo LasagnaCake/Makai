@@ -123,7 +123,7 @@ public:
 	/// @brief New shared pointer type.
 	/// @tparam NW Whether the pointer is weak.
 	template<bool NW>
-	using NewPointerType = Shared<DataType, NW>;
+	using NewPointerType = Shared<DataType, NW, U, D>;
 
 	/// @brief Opposite shared pointer type.
 	using OtherType = NewPointerType<!WEAK>;
@@ -296,6 +296,9 @@ public:
 	/// @brief Returns a weak pointer to the bound object.
 	/// @return Weak pointer to object.
 	constexpr Shared<DataType, true>	asWeak() const		{return	raw();								}
+	/// @brief Returns a strong pointer to the bound object.
+	/// @return Strong pointer to object.
+	constexpr Shared<DataType, true>	asStrong() const	{return	raw();								}
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
 	constexpr ref<DataType>				raw() const			{return	exists() ? getPointer() : nullptr;	}
