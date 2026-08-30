@@ -65,6 +65,7 @@ namespace Base {
 /// @brief Smart pointer, with automatic reference counting.
 /// @tparam T Type of data pointed to.
 /// @tparam W Whether the given `Shared` is weak.
+/// @tparam U Unique type. Used for creating shared pointers with separate reference counter databases than the global one (`void`).
 /// @tparam D Deleter.
 /// @note
 ///		Differences between strong and weak pointers:
