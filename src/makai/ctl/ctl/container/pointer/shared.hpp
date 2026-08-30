@@ -298,7 +298,7 @@ public:
 	constexpr Shared<DataType, true>	asWeak() const		{return	raw();								}
 	/// @brief Returns a strong pointer to the bound object.
 	/// @return Strong pointer to object.
-	constexpr Shared<DataType, true>	asStrong() const	{return	raw();								}
+	constexpr Shared<DataType, false>	asStrong() const	{return	raw();								}
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
 	constexpr ref<DataType>				raw() const			{return	exists() ? getPointer() : nullptr;	}
