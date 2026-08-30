@@ -161,9 +161,14 @@ static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> c
 Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const& args, FuzzySearch const fuzz) const {
 	decltype(overloads) matches;
 	for (auto& ov: overloads) {
+		MAKAILIB_DEBUG_FULL("");
 		if (!ov) continue;
-		if (!validate(ov, args, fuzz))
+		MAKAILIB_DEBUG_FULL("Testing ", ov->entry, "... ");
+		if (!validate(ov, args, fuzz)) {
+			MAKAILIB_DEBUG_FULL("no match");
 			continue;
+		}
+		MAKAILIB_DEBUGLN_FULL("matched!");
 		if (fuzz != FuzzySearch::AV2_TCF_FS_NONE) {
 			if (validate(ov, args, FuzzySearch::AV2_TCF_FS_NONE))
 				return ov;
