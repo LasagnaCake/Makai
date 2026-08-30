@@ -165,7 +165,7 @@ Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const
 		if (!ov) continue;
 		MAKAILIB_DEBUG_FULL("Testing ", ov->entry, "... ");
 		if (!validate(ov, args, fuzz)) {
-			MAKAILIB_DEBUG_FULL("no match");
+			MAKAILIB_DEBUGLN_FULL("no match");
 			continue;
 		}
 		MAKAILIB_DEBUGLN_FULL("matched!");
