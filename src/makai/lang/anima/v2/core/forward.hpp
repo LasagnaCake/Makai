@@ -11,7 +11,7 @@ namespace Makai::Anima::V2::Core {
 	struct ALibrary;
 
 	// While `AtomicCell` is not working, this will do
-	using ObjectStorage = Instance<Object>;
+	using ObjectStorage = Shared<Object, false, Object>;
 
 	struct Symbol {
 		Nullable<uint64>	source = null;

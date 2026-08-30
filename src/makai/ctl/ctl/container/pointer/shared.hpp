@@ -26,7 +26,7 @@ CTL_NAMESPACE_BEGIN
 namespace Base {
 	/// @brief Reference counter.
 	/// @tparam T Reference type.
-	template <class T>
+	template <class T, class _>
 	struct ReferenceCounter {
 		/// @brief Reference data.
 		struct ReferenceData {
@@ -81,22 +81,23 @@ namespace Base {
 /// @note
 ///			Both types will throw if object is no longer usable,
 ///			either via releasing the pointer to it, or when a strong pointer destroys it.
-template <Type::Container::Pointable TData, bool W, auto D = Deleter<TData>()>
+template <Type::Container::Pointable TData, bool W, class U = void, auto D = Deleter<TData>()>
 class Shared:
-	private Base::ReferenceCounter<pointer>,
-	Derived<Base::ReferenceCounter<pointer>>,
+	private Base::ReferenceCounter<pointer, U>,
+	Derived<Base::ReferenceCounter<pointer, U>>,
 	Typed<TData>,
-	SelfIdentified<Shared<TData, W>>,
+	SelfIdentified<Shared<TData, W, U, D>>,
 	Ordered,
 	Deletable<D, TData> {
 public:
+	using ReferenceCounter = Base::ReferenceCounter<pointer, U>;
 	/// @brief Whether the pointer is a strong or weak pointer.
 	constexpr static bool WEAK = W;
 
 	using ReferenceCounter::isBound;
 
 	using Typed				= ::CTL::Typed<TData>;
-	using SelfIdentified	= ::CTL::SelfIdentified<Shared<TData, WEAK>>;
+	using SelfIdentified	= ::CTL::SelfIdentified<Shared<TData, WEAK, U, D>>;
 	using Deletable			= ::CTL::Deletable<D, TData>;
 
 	using
@@ -448,6 +449,7 @@ private:
 	friend OtherType;
 
 	using ReferenceCounter::database;
+	using ReferenceCounter::mutex;
 
 	/// @brief Pointer to referenced object.
 	PointerType ref = nullptr;
