@@ -67,7 +67,7 @@ namespace Makai {
 				Makai::Popup::showError(e.report());
 			else
 			#endif
-				writeLine(e.what());
+				writeLine(e.report());
 			return -1;
 		} catch (Makai::Exception const& e) {
 			#ifndef MAKAILIB_MAIN_NO_POPUPS
