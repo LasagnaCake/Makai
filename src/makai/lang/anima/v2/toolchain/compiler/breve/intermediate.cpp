@@ -149,14 +149,15 @@ static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> c
 		return false;
 	};
 	for (auto const& [arg, index] : Makai::Range::expand(args)) {
-		MAKAILIB_DEBUGLN_FULL("Testing arg[", index, "]...");
+		MAKAILIB_DEBUG_FULL("Testing arg[", index, "]... ");
 		auto const pIndex = (index < paramc-1 ? index : paramc-1);
 		auto const param = ov->arguments[pIndex]->type;
 		if (!(arg.exists() and param.exists())) return false;
+		auto const inVariadicRegion = ov->variadic && index >= pIndex;
+		MAKAILIB_DEBUGLN_FULL(arg->name, " :: ", inVariadicRegion ? param->base->name : param->name);
 		if (arg == param) continue;
-		if (ov->variadic && index >= pIndex && test(arg, param->base, true))
+		if (test(arg, inVariadicRegion ? param->base : Namespace::TypeRef(param.raw()), inVariadicRegion || isFuzzy(index)))
 			return false;
-		else if (test(arg, param.raw(), isFuzzy(index))) return false;
 	}
 	return true;
 }

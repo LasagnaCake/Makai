@@ -1966,8 +1966,12 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 	} else if (ov.variant.context < ExecutionContext::AV2_TCB_EC_COMPILE) {
 		if (ov.variadic) {
 			auto const vat = ov.arguments.back()->type;
-			context.top()->impl->writeMainLine("new[",vat->name, ":", args.size() - ov.arguments.size(), "]");
-			context.top()->impl->writeMainLine("create", vat->name);
+			if (args.size < ov.arguments.size()) {
+				context.top()->impl->writeMainLine("new[",vat->name, ":0]");
+			} else {
+				context.top()->impl->writeMainLine("new[",vat->name, ":", (args.size() - ov.arguments.size()) + 1, "]");
+				context.top()->impl->writeMainLine("create", vat->name);
+			}
 		}
 		context.top()->impl->writeMainLine("call", ov.entry);
 	}
