@@ -169,7 +169,9 @@ struct ExternalMapping {
 };
 
 Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module, bool const strip) {
-	Builder builder;
+	Bytes<> output;
+	ByteWriter writer;
+	Builder<FileStructure> builder(writer);
 	return
 		builder
 			.begin()
@@ -300,6 +302,6 @@ Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module, bool const st
 				}
 			)
 			.end()
-			.output
+			.writer.output
 	;
 }

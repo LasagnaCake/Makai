@@ -486,13 +486,13 @@ private:
 
 /// @brief `Shared` analog for a managed instance of an object (strong pointer).
 /// @tparam T Type of data pointed to.
-template<Type::Container::Pointable T>
-using Instance	= Shared<T, false>;
+template<Type::Container::Pointable T, class U = void>
+using Instance	= Shared<T, false, U>;
 
 /// @brief `Shared` analog for a handle to an object (weak pointer).
 /// @tparam T Type of data pointed to.
-template<Type::Container::Pointable T>
-using Handle	= Shared<T, true>;
+template<Type::Container::Pointable T, class U = void>
+using Handle	= Shared<T, true, U>;
 
 #pragma GCC diagnostic pop
 

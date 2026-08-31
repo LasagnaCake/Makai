@@ -6,6 +6,14 @@
 
 /// @brief Color space facilities.
 namespace Makai::Graph::Color {
+	/// @brief RGBA 8-bit-per-channel color.
+	struct [[CTL_PACKED_STRUCT]] Color8 {
+		uint8 r;
+		uint8 g;
+		uint8 b;
+		uint8 a;
+	};
+
 	/// @brief Partial implementations.
 	namespace Partial {
 		/// @brief Hue conversion facilitator.

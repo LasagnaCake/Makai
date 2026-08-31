@@ -11,5 +11,6 @@
 #include "collision/collision.hpp"
 #include "calendar/calendar.hpp"
 #include "cli/cli.hpp"
+#include "binary/binary.hpp"
 
 #endif // CTL_EX_H
