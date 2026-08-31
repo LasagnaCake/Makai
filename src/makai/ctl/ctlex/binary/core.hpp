@@ -7,16 +7,9 @@
 CTL_EX_NAMESPACE_BEGIN
 
 namespace BinaryFormat {
-	using IReadable = IInput<Bytes<>>;
+	using IReadable = IInputStream<Bytes<>>;
 
-	struct [[CTL_PACKED_STRUCT]] Version {
-		uint64 major	= 0;
-		uint64 minor	= 0;
-		uint64 patch	= 0;
-		uint64 hotfix	= 0;
-	};
-
-	struct IWritable: IOutput<ConstByteSpan<>> {
+	struct IWritable: IOutputStream<ConstByteSpan<>> {
 		virtual ~IWritable() {}
 
 		template <class T>
@@ -34,6 +27,59 @@ namespace BinaryFormat {
 				data.size() * sizeof(T)
 			});
 		}
+	};
+
+	struct Reader: IReadable {
+		Bytes<>	input;
+		usize	pointer = 0;
+
+		Bytes<> read(usize const count) override {
+			if (pointer > input.size())
+				return {};
+			pointer += count;
+			if (pointer > input.size())
+				return input.sliced(pointer - count, -1);
+			return input.sliced(pointer - count, pointer - 1);
+		}
+
+		void go(usize const pos) override {
+			pointer = pos < (input.size() - 1) ? pos : input.size() - 1;
+		}
+
+		usize position() const override {return pointer;}
+
+		Reader(Bytes<> const& input): input(input) {}
+	};
+
+	struct Writer: IWritable {
+		Bytes<>&	output;
+		usize		pointer = 0;
+
+		usize position() const override {return pointer;}
+
+		void write(ConstByteSpan<> const& bytes) override {
+			if (pointer < output.size()) {
+				if (output.size() < pointer + bytes.size())
+					output.reserve(pointer + bytes.size(), 0);
+				MX::memmove(output.data() + pointer, bytes.data(), bytes.size());
+			}
+			else output.appendBack(bytes.begin(), bytes.end());
+			pointer += bytes.size();
+		}
+
+		void go(usize const pos) override {
+			pointer = pos < (output.size() - 1) ? pos : output.size() - 1;
+		}
+
+		Writer(Bytes<>& output): output(output) {}
+	};
+
+	struct [[CTL_PACKED_STRUCT]] Version {
+		uint64 major			= 0;
+		uint64 minor			= 0;
+		uint64 patch			= 0;
+		uint64 hotfix			= 0;
+		uint64 lateNightPush	= 0;
 	};
 
 	struct [[CTL_PACKED_STRUCT]] Entry {
@@ -139,7 +185,7 @@ namespace BinaryFormat {
 			source.go(start);
 			auto block = source.read(size);
 			if (block.size() != size) return null;
-			return wrap<Nullable>(stringFromBytes<T>(block));
+			return wrap<Nullable>(Convert::toString<T>(block));
 		}
 	};
 

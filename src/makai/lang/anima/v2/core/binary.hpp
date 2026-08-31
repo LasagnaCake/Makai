@@ -6,52 +6,12 @@
 namespace Makai::Anima::V2::Core::BinaryFormat {
 	using namespace CTL::Ex::BinaryFormat;
 
+	using ByteReader = Reader;
+	using ByteWriter = Writer;
+
 	template <class T> using Builder = Encoder<T>;
 
-	using VersionInfo = CTL::Ex::Binary::Version;
-
-	struct ByteReader: IReadable {
-		Bytes<>	input;
-		usize	pointer = 0;
-
-		Bytes<> read(usize const count) override {
-			MAKAILIB_DEBUGLN_FULL("Size: ", input.size());
-			MAKAILIB_DEBUGLN_FULL("Reading ", count, " bytes at index ", pointer, "...");
-			if (pointer > input.size())
-				return {};
-			pointer += count;
-			if (pointer > input.size())
-				return input.sliced(pointer - count, -1);
-			return input.sliced(pointer - count, pointer - 1);
-		}
-
-		void go(usize const pos) override {
-			pointer = pos < (input.size() - 1) ? pos : input.size() - 1;
-		}
-
-		ByteReader(Bytes<> const& input): input(input) {}
-	};
-
-	struct ByteWriter: IWritable {
-		Bytes<>&	output;
-		usize		pointer = 0;
-
-		void write(ConstByteSpan<> const& bytes) override {
-			if (pointer < output.size()) {
-				if (output.size() < pointer + bytes.size())
-					output.reserve(pointer + bytes.size(), 0);
-				MX::memmove(output.data() + pointer, bytes.data(), bytes.size());
-			}
-			else output.appendBack(bytes.begin(), bytes.end());
-			pointer += bytes.size();
-		}
-
-		void go(usize const pos) override {
-			pointer = pos < (output.size() - 1) ? pos : output.size() - 1;
-		}
-
-		ByteWriter(Bytes<>& output): output(output) {}
-	};
+	using VersionInfo = CTL::Ex::BinaryFormat::Version;
 
 	struct [[CTL_PACKED_STRUCT]] Label: Text {
 		uint64 id	= 0;

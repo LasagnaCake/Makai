@@ -6,15 +6,15 @@
 CTL_EX_NAMESPACE_BEGIN
 
 namespace BinaryFormat {
-	template <class T>
+	template <class TFile>
 	struct Encoder {
 		IWritable&	writer;
-		T			file;
+		TFile		file;
 
 		template <class T>
 		Entry put(T const& value) {
 			Entry entry;
-			entry.start = writer.pointer;
+			entry.start = writer.position();
 			writer.put(value);
 			entry.size = sizeof(T);
 			return entry;
@@ -23,19 +23,19 @@ namespace BinaryFormat {
 		template <class T>
 		Entry append(List<T> const& values) {
 			Entry entry;
-			entry.start = writer.pointer;
+			entry.start = writer.position();
 			writer.append(values);
-			entry.size = writer.pointer - entry.start;
+			entry.size = writer.position() - entry.start;
 			return entry;
 		}
 
 		template <Type::OneOf<String, UTF8String, UTF32String> T>
 		Entry append(T const& value) {
 			Entry entry;
-			entry.start = writer.pointer;
+			entry.start = writer.position();
 			String s = value;
 			writer.write({(ref<byte const>)s.data(), s.size()});
-			entry.size = writer.pointer - entry.start;
+			entry.size = writer.position() - entry.start;
 			return entry;
 		}
 
@@ -90,7 +90,7 @@ namespace BinaryFormat {
 		}
 
 		Encoder& begin() {
-			put(Entry(0, sizeof(FileStructure)));
+			put(Entry(0, sizeof(TFile)));
 			return *this;
 		}
 

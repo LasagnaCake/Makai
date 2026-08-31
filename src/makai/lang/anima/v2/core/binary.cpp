@@ -172,136 +172,135 @@ Result<Bytes<>, BF::Error> BF::toBytes(Core::Module const& module, bool const st
 	Bytes<> output;
 	ByteWriter writer;
 	Builder<FileStructure> builder(writer);
-	return
-		builder
-			.begin()
-			.run(
-				[&module, strip] (Builder& builder) {
-					MAKAILIB_DEBUGLN_FULL("Adding basic information...");
-					builder.file.type			= module.type;
-					builder.file.artVersion		= {module.art.major,		module.art.minor,		module.art.patch,		module.art.hotfix		};
-					builder.file.moduleVersion	= {module.version.major,	module.version.minor,	module.version.patch,	module.version.hotfix	};
-					builder.file.moduleFlags	= module.flags;
-					builder.file.entry			= module.entry;
-					builder.file.totalTypes		= module.sym.types.size();
-					builder.file.totalMethods	= strip ? 0 : module.sym.methods.size();
-					builder.file.strings		= {builder.embed(module.strings.toList<String>())};
-					builder.file.jumps			= {builder.append(module.jumpTable)};
-					builder.file.code			= {builder.append(module.code)};
-					builder.file.relocations	= {builder.append(module.relocations)};
-					builder.file.ani			= {builder.processIf(
-						module.ani.exists(),
-						[&module] (Builder& builder) {
-							ANI result;
-							auto& ani = *module.ani;
-							List<Label> labels;
-							for (auto const& [label, id]: ani.in) {
-								labels.pushBack({{builder.append(label)}});
-								labels.back().id = id;
-							}
-							result.in = {builder.include(labels)};
-							result.out = {builder.embed(ani.out.toList<String>())};
-							result.shared = {builder.process(
-								[&ani] (Builder& builder) {
-									Shared shared;
-									shared.libraries	= {builder.embed(ani.shared.libraries)};
-									shared.modules		= {builder.embed(ani.shared.modules)};
-									shared.interops		= {builder.embed(ani.shared.interops)};
-									return builder.put(shared);
-								}
-							)};
-							return builder.put(result);
+	builder
+		.begin()
+		.run(
+			[&module, strip] (Builder& builder) {
+				MAKAILIB_DEBUGLN_FULL("Adding basic information...");
+				builder.file.type			= module.type;
+				builder.file.artVersion		= {module.art.major,		module.art.minor,		module.art.patch,		module.art.hotfix		};
+				builder.file.moduleVersion	= {module.version.major,	module.version.minor,	module.version.patch,	module.version.hotfix	};
+				builder.file.moduleFlags	= module.flags;
+				builder.file.entry			= module.entry;
+				builder.file.totalTypes		= module.sym.types.size();
+				builder.file.totalMethods	= strip ? 0 : module.sym.methods.size();
+				builder.file.strings		= {builder.embed(module.strings.toList<String>())};
+				builder.file.jumps			= {builder.append(module.jumpTable)};
+				builder.file.code			= {builder.append(module.code)};
+				builder.file.relocations	= {builder.append(module.relocations)};
+				builder.file.ani			= {builder.processIf(
+					module.ani.exists(),
+					[&module] (Builder& builder) {
+						ANI result;
+						auto& ani = *module.ani;
+						List<Label> labels;
+						for (auto const& [label, id]: ani.in) {
+							labels.pushBack({{builder.append(label)}});
+							labels.back().id = id;
 						}
-					)};
+						result.in = {builder.include(labels)};
+						result.out = {builder.embed(ani.out.toList<String>())};
+						result.shared = {builder.process(
+							[&ani] (Builder& builder) {
+								Shared shared;
+								shared.libraries	= {builder.embed(ani.shared.libraries)};
+								shared.modules		= {builder.embed(ani.shared.modules)};
+								shared.interops		= {builder.embed(ani.shared.interops)};
+								return builder.put(shared);
+							}
+						)};
+						return builder.put(result);
+					}
+				)};
+			}
+		)
+		.run(
+			[&module, strip] (Builder& builder) {
+				MAKAILIB_DEBUGLN_FULL("Adding types & methods...");
+				List<Decl> moduleTypes;
+				List<Method> moduleMethods;
+				Map<usize, ExternalMapping> external;
+				MAKAILIB_DEBUGLN_FULL("Total types: ", module.sym.types.size());
+				for (auto& symbol: module.sym.types) {
+					if (symbol.source) {
+						external[symbol.source.value()].types.pushBack(
+							Record {
+								.id		= symbol.id
+							}
+						);
+					} else {
+						auto& type = module.detail.types[symbol.id];
+						moduleTypes.pushBack(
+							Decl {
+								.basic		= type.basic ? type.basic.value() : BasicType::AV2_BT_NOT_A_BASIC_TYPE,
+								.base		= type.base ? type.base.value() : -1,
+								.byteSize	= type.byteSize,
+								.alignment	= type.alignment,
+								.fields		= {builder.append(type.fields)}
+							}
+						);
+						auto& mt = moduleTypes.back();
+						mt.id 		= type.id;
+						mt.hash		= type.hash;
+						mt.flags	= type.flags;
+						if (!strip)
+							mt.name	= {builder.append(type.name)};
+						if (type.meta.isObject())
+							mt.meta	= {builder.append(type.meta.toFLOWString())};
+					}
 				}
-			)
-			.run(
-				[&module, strip] (Builder& builder) {
-					MAKAILIB_DEBUGLN_FULL("Adding types & methods...");
-					List<Decl> moduleTypes;
-					List<Method> moduleMethods;
-					Map<usize, ExternalMapping> external;
-					MAKAILIB_DEBUGLN_FULL("Total types: ", module.sym.types.size());
-					for (auto& symbol: module.sym.types) {
+				MAKAILIB_DEBUGLN_FULL("Total methods: ", module.sym.methods.size());
+				if (!strip)
+					for (auto& symbol: module.sym.methods) {
 						if (symbol.source) {
-							external[symbol.source.value()].types.pushBack(
+							external[symbol.source.value()].methods.pushBack(
 								Record {
 									.id		= symbol.id
 								}
 							);
 						} else {
-							auto& type = module.detail.types[symbol.id];
-							moduleTypes.pushBack(
-								Decl {
-									.basic		= type.basic ? type.basic.value() : BasicType::AV2_BT_NOT_A_BASIC_TYPE,
-									.base		= type.base ? type.base.value() : -1,
-									.byteSize	= type.byteSize,
-									.alignment	= type.alignment,
-									.fields		= {builder.append(type.fields)}
+							auto& method = module.detail.methods[symbol.id];
+							moduleMethods.pushBack(
+								Method {
+									.returnType	= method.retType,
+									.argTypes	= {builder.append(method.argTypes)},
+									.entry		= method.entrypoint,
+									.size		= method.size
 								}
 							);
-							auto& mt = moduleTypes.back();
-							mt.id 		= type.id;
-							mt.hash		= type.hash;
-							mt.flags	= type.flags;
+							auto& mm = moduleMethods.back();
+							mm.id 		= method.id;
+							mm.hash		= method.hash;
+							mm.flags	= method.flags;
 							if (!strip)
-								mt.name	= {builder.append(type.name)};
-							if (type.meta.isObject())
-								mt.meta	= {builder.append(type.meta.toFLOWString())};
+								mm.name	= {builder.append(method.name)};
+							if (method.meta.isObject())
+								mm.meta	= {builder.append(method.meta.toFLOWString())};
 						}
 					}
-					MAKAILIB_DEBUGLN_FULL("Total methods: ", module.sym.methods.size());
-					if (!strip)
-						for (auto& symbol: module.sym.methods) {
-							if (symbol.source) {
-								external[symbol.source.value()].methods.pushBack(
-									Record {
-										.id		= symbol.id
-									}
-								);
-							} else {
-								auto& method = module.detail.methods[symbol.id];
-								moduleMethods.pushBack(
-									Method {
-										.returnType	= method.retType,
-										.argTypes	= {builder.append(method.argTypes)},
-										.entry		= method.entrypoint,
-										.size		= method.size
-									}
-								);
-								auto& mm = moduleMethods.back();
-								mm.id 		= method.id;
-								mm.hash		= method.hash;
-								mm.flags	= method.flags;
-								if (!strip)
-									mm.name	= {builder.append(method.name)};
-								if (method.meta.isObject())
-									mm.meta	= {builder.append(method.meta.toFLOWString())};
-							}
+				builder.file.module = {builder.put(
+					Module {
+						.types		= {builder.include(moduleTypes)},
+						.methods	= {builder.include(moduleMethods)}
+					}
+				)};
+				List<Include> includes;
+				for (auto& [id, include]: external)
+					includes.pushBack(
+						Include {
+							.module		= id,
+							.types		= {builder.include(include.types)},
+							.methods	= {builder.include(include.methods)}
 						}
-					builder.file.module = {builder.put(
-						Module {
-							.types		= {builder.include(moduleTypes)},
-							.methods	= {builder.include(moduleMethods)}
-						}
-					)};
-					List<Include> includes;
-					for (auto& [id, include]: external)
-						includes.pushBack(
-							Include {
-								.module		= id,
-								.types		= {builder.include(include.types)},
-								.methods	= {builder.include(include.methods)}
-							}
-						);
-					builder.file.external = {builder.put(
-						External {
-							.modules = {builder.include(includes)}
-						}
-					)};
-				}
-			)
-			.end()
-			.writer.output
+					);
+				builder.file.external = {builder.put(
+					External {
+						.modules = {builder.include(includes)}
+					}
+				)};
+			}
+		)
+		.end()
 	;
+	return output;
 }
