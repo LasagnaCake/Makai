@@ -7,6 +7,8 @@
 #include "get.hpp"
 
 namespace Makai::Video::V2D::MVSX {
+	using namespace CTL::Ex::BinaryFormat;
+
 	using Color8 = Graph::Color::Color8;
 	using ImageFormat = Image::I2D::Format;
 
@@ -34,9 +36,60 @@ namespace Makai::Video::V2D::MVSX {
 		MV2P_BLOCK_DELTA_MASKED,
 	};
 
-	struct [[CTL_PACKED_STRUCT]] Section {
-		uint64 start;
-		uint64 size;
+	struct [[CTL_PACKED_STRUCT]] Frame {
+		enum class Mode: uint16 {
+			/// @brief Mix in region denoted in mask with image contents. (src * mask + dst * (1 - mask))
+			MV2_FM_MIX,
+			/// @brief Add to region denoted in mask with image contents. (dst + (src * mask))
+			MV2_FM_ADD,
+			/// @brief Subtract from region denoted in mask with image contents. (dst - (src * mask))
+			MV2_FM_SUBTRACT,
+			/// @brief Multiply to region denoted in mask with image contents. (mix(dst, src * dst, mask))
+			MV2_FM_MULTIPLY,
+			/// @brief Divide from region denoted in mask with image contents. (mix(dst, dst / src, mask))
+			MV2_FM_DIVIDE,
+			/// @brief Take the average from region denoted in mask with image contents. (mix(dst, (dst + src) * 2, mask))
+			MV2_FM_AVERAGE,
+		};
+
+		struct [[CTL_FLAG_STRUCT(uint64)]] Flags {
+			uint64: 0;
+		};
+
+		struct [[CTL_PACKED_STRUCT]] Block {
+			struct [[CTL_FLAG_STRUCT(uint64)]] Flags {
+				uint64 hasSubBlocks:				1;
+				uint64 solidColor:					1;
+				uint64 backgroundColorIsBaseColor:	1;
+			};
+			Flags	flags;
+			Color8	background;
+			Data	data;
+		};
+
+		Mode				mode;
+		Flags				flags;
+		HeaderTable<Block>	blocks;
+	};
+
+	struct [[CTL_PACKED_STRUCT]] Audio {
+		Text	language;
+		Data	data;
+	};
+
+	struct [[CTL_PACKED_STRUCT]] Subtitles {
+		struct [[CTL_PACKED_STRUCT]] Entry {
+			uint64 frameStart, duration;
+			Color8 foreground, background;
+			uint64 fontID;
+			uint64 x, y;
+			uint64 width, height;
+			int8 hjust: 3;
+			int8 vjust: 3;
+		};
+
+		Text				language;
+		HeaderTable<Entry>	entries;
 	};
 
 	struct [[CTL_PACKED_STRUCT]] Header {
@@ -54,55 +107,11 @@ namespace Makai::Video::V2D::MVSX {
 
 		Packing		packing;
 
-		Section<ImageFormat>	video;
-		Section<AudioFormat>	audio;
-		Section					subtitles;
+		ImageFormat imageFormat;
+		AudioFormat audioFormat;
+
+		HeaderTable<Frame>		video;
+		HeaderTable<Audio>		audio;
+		HeaderTable<Subtitles>	subtitles;
 	};
-
-	struct [[CTL_PACKED_STRUCT]] Frame {
-		enum class Mode: uint16 {
-			/// @brief Mix in region denoted in mask with image contents. (src * mask + dst * (1 - mask))
-			MV2_FM_MIX,
-			/// @brief Add to region denoted in mask with image contents. (dst + (src * mask))
-			MV2_FM_ADD,
-			/// @brief Subtract from region denoted in mask with image contents. (dst - (src * mask))
-			MV2_FM_SUBTRACT,
-			/// @brief Multiply to region denoted in mask with image contents. (dst * (src * mask))
-			MV2_FM_MULTIPLY,
-			/// @brief Divide from region denoted in mask with image contents. (dst / (src * mask))
-			MV2_FM_DIVIDE,
-			/// @brief Take the average from region denoted in mask with image contents. (mix(dst, (dst + src) * 2, mask))
-			MV2_FM_AVERAGE,
-		};
-
-		struct [[CTL_FLAG_STRUCT(uint64)]] Flags {
-			uint64 applyMaskToSource: 1;
-		};
-
-		struct [[CTL_PACKED_STRUCT]] Block {
-			struct [[CTL_FLAG_STRUCT(uint64)]] Flags {
-				uint64 hasSubBlocks:				1;
-				uint64 solidColor:					1;
-				uint64 backgroundColorIsBaseColor:	1;
-			};
-			Flags	flags;
-			Color8	background;
-		};
-
-		Mode	mode;
-		Flags	flags;
-	};
-
-	struct [[CTL_PACKED_STRUCT]] Subtitles {
-		struct [[CTL_PACKED_STRUCT]] Entry: Section {
-			uint64 frameStart, duration;
-			Color8 foreground, background;
-			uint64 fontID;
-			uint64 x, y;
-			uint64 width, height;
-			int8 hjust: 3;
-			int8 vjust: 3;
-		};
-		Section entries;
-	}
 }

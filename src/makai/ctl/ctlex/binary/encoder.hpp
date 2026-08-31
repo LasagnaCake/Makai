@@ -5,10 +5,10 @@
 
 CTL_EX_NAMESPACE_BEGIN
 
-namespace Binary {
+namespace BinaryFormat {
 	template <class T>
 	struct Encoder {
-		IWriter&	writer;
+		IWritable&	writer;
 		T			file;
 
 		template <class T>

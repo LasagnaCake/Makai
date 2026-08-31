@@ -4,7 +4,7 @@
 #include "module.hpp"
 
 namespace Makai::Anima::V2::Core::BinaryFormat {
-	using namespace CTL::Ex::Binary;
+	using namespace CTL::Ex::BinaryFormat;
 
 	template <class T> using Builder = Encoder<T>;
 

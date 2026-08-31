@@ -1,12 +1,12 @@
 #ifndef CTL_EX_BINARY_CORE_H
 #define CTL_EX_BINARY_CORE_H
 
-#include "../../../ctl/exnamespace.hpp"
-#include "../../../ctl/ctl.hpp"
+#include "../../ctl/exnamespace.hpp"
+#include "../../ctl/ctl.hpp"
 
 CTL_EX_NAMESPACE_BEGIN
 
-namespace Binary {
+namespace BinaryFormat {
 	using IReadable = IInput<Bytes<>>;
 
 	struct [[CTL_PACKED_STRUCT]] Version {
