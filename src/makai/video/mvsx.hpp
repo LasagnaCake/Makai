@@ -97,9 +97,11 @@ namespace Makai::Video::V2D::MVSX {
 			uint64	log2Length: 8;
 		};
 
-		template<class T> struct [[CTL_PACKED_STRUCT]] Section: MVSX::Section {
+		template<class T> struct [[CTL_PACKED_STRUCT]] Section {
 			T format;
 		};
+
+		scstring<10> const magic = "Makai::VSX";
 
 		uint64		width;
 		uint64		height;

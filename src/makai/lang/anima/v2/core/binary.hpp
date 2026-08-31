@@ -9,7 +9,8 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	using ByteReader = Reader;
 	using ByteWriter = Writer;
 
-	template <class T> using Builder = Encoder<T>;
+	template <class T> using Data = CTL::Ex::BinaryFormat::Data<T>;
+	using Text = CTL::Ex::BinaryFormat::Text;
 
 	using VersionInfo = CTL::Ex::BinaryFormat::Version;
 
@@ -106,6 +107,8 @@ namespace Makai::Anima::V2::Core::BinaryFormat {
 	struct Error {
 		String message;
 	};
+
+	using Builder = Encoder<FileStructure>;
 
 	Result<Core::Module, Error>	fromBytes(Bytes<> const& source);
 	Result<Bytes<>, Error>		toBytes(Core::Module const& source, bool const strip = false);

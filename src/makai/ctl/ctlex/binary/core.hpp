@@ -33,9 +33,11 @@ namespace BinaryFormat {
 		Bytes<>	input;
 		usize	pointer = 0;
 
-		Bytes<> read(usize const count) override {
+		bool isOpen() const override {return true;}
+
+		Nullable<Bytes<>> tryRead(usize const count) override {
 			if (pointer > input.size())
-				return {};
+				return null;
 			pointer += count;
 			if (pointer > input.size())
 				return input.sliced(pointer - count, -1);
@@ -54,6 +56,8 @@ namespace BinaryFormat {
 	struct Writer: IWritable {
 		Bytes<>&	output;
 		usize		pointer = 0;
+
+		bool isOpen() const override {return true;}
 
 		usize position() const override {return pointer;}
 
@@ -196,7 +200,7 @@ namespace BinaryFormat {
 			source.go(start);
 			auto block = source.read(size);
 			if (block.size() != size) return null;
-			return wrap<Nullable>(listFromBytes<T>(block));
+			return wrap<Nullable>(Convert::toList<T>(block));
 		}
 	};
 

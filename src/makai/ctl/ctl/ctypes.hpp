@@ -224,6 +224,12 @@ template<class T> using in		= T const&;
 /// @brief Syntatic sugar for `T&`. Indicates a variable is a reference that can be read from, and written to.
 template<class T> using inout	= T&;
 
+/// @brief Syntatic sugar for a static C array `T[N]`.
+template <class T, usize N> using carr	= As<T[N]>;
+
+/// @brief Syntatic sugar for a dynamic C array `T[]`.
+template <class T> using dcarr	= As<T[]>;
+
 using i8 =		int8;
 using i16 =		int16;
 using i32 =		int32;
@@ -240,9 +246,13 @@ using f32 =		float32;
 using f64 =		float64;
 using f128 =	float128;
 
-using scstring		= As<char const[]> const;
-using scwstring		= As<wchar const[]> const;
-using su8cstring	= As<u8char const[]> const;
+template <usize N> using scstring	= carr<char const, N>;
+template <usize N> using scwstring	= carr<wchar const, N>;
+template <usize N> using su8cstring	= carr<u8char const, N>;
+
+using dcstring		= dcarr<char const>;
+using dcwstring		= dcarr<wchar const>;
+using du8cstring	= dcarr<u8char const>;
 
 /// @brief Null value. Syntatic sugar for `nullptr`.
 constexpr nulltype const null{};

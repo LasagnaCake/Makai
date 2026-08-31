@@ -26,6 +26,7 @@ CTL_NAMESPACE_BEGIN
 namespace Base {
 	/// @brief Reference counter.
 	/// @tparam T Reference type.
+	/// @tparam _ Unique type.
 	template <class T, class _>
 	struct ReferenceCounter {
 		/// @brief Reference data.
@@ -122,7 +123,7 @@ public:
 	/// @brief New shared pointer type.
 	/// @tparam NW Whether the pointer is weak.
 	template<bool NW>
-	using NewPointerType = Shared<DataType, NW>;
+	using NewPointerType = Shared<DataType, NW, U, D>;
 
 	/// @brief Opposite shared pointer type.
 	using OtherType = NewPointerType<!WEAK>;
