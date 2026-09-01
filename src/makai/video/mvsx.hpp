@@ -13,7 +13,6 @@ namespace Makai::Video::V2D::MVSX {
 	using ImageFormat = Image::I2D::Format;
 
 	enum class AudioFormat: uint64 {
-		MV2P_INVALID = Limit::MAX<uint64>,
 		MV2P_QOA,
 		AV2P_MP3,
 		AV2P_OGG,
@@ -21,7 +20,6 @@ namespace Makai::Video::V2D::MVSX {
 	};
 
 	enum class Packing: uint64 {
-		MV2P_INVALID = Limit::MAX<uint64>,
 		/// @brief No packing (frames are stored as-is).
 		MV2P_NONE,
 		/// @brief Only first frame + difference between frames are stored. Mask is stored in the alpha channel. DOES NOT SUPPORT TRANSPARENCY.
