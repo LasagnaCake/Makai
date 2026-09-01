@@ -60,10 +60,10 @@ static void doVariable(Composer& composer, Namespace::VariableRef const& var) {
 static void doType(Composer& composer, Namespace::TypeRef const& type) {
 	if (composer.visitedTypes.contains(type)) return;
 	composer.visitedTypes[type] = true;
+	MAKAILIB_DEBUGLN_FULL("Type Name: '", type->name, "' = ", type->uses);
 	if (!type->flags.isBasic && !type->uses) return;
 	Makai::UTF8String decl;
 	decl += "@type " + type->name + " [\n ";
-	MAKAILIB_DEBUGLN_FULL("Type Name: '", type->name, "'");
 	if (type->flags.isBasic) {
 		decl += " basic<";
 		if (!type->basic)

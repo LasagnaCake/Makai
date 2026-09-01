@@ -1,6 +1,8 @@
 using import core.types
 
 module IO {
+	@Direct NEWLINE := "\n"
+
 	@Shared(lib = av2console, name = "av2/console/write_string", optional = true)
 	write :: (what: string) -> void
 
@@ -14,19 +16,6 @@ module IO {
 	writeLine :: (what: any) -> void
 
 	@Variadic
-	write :: (first: any, rest: [any]) {
-		write(first)
-		for what => rest
-			write(what)
-	}
-
-	@Variadic
-	writeLine :: (first: any, rest: [any]) {
-		write(first, rest)
-		write("\n")
-	}
-
-	@Variadic
 	write :: (first: string, rest: [any]) {
 		write(first)
 		for what => rest
@@ -34,8 +23,19 @@ module IO {
 	}
 
 	@Variadic
+	write :: (first: any, rest: [any]) {
+		write(first)
+		for what => rest
+			write(what)
+	}
+
+	@Variadic
 	writeLine :: (first: string, rest: [any]) {
-		write(first, rest)
-		write("\n")
+		write(first, rest <| NEWLINE)
+	}
+
+	@Variadic
+	writeLine :: (first: any, rest: [any]) {
+		write(first, rest <| NEWLINE)
 	}
 }

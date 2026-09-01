@@ -1238,7 +1238,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		if (auto const t = TypeDecl::stronger(lhs.type->base, rhs.type))
 			context.top()->impl->writeMainLine("op apush");
 		else context.error("Array element type mismatch!", node);
-		return {{"move top"}, t->scope.asStrong(), t, lhs.direct.undefined(), likelihood};
+		return {{"move top"}, t->scope ? t->scope.asStrong() : null, t, lhs.direct.undefined(), likelihood};
 	}
 	context.error("Type mismatch in infix expression!", node);
 }
@@ -1372,15 +1372,16 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 
 ATransformer::Result TypeRequest::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result rest;
+	Namespace::TypeRef t;
 	if (node->content == Node::Content::AV2_TANC_ARRAY)
-		return ArrayTypeDecl().transform(context, node);
-	if (node->content == Node::Content::AV2_TANC_NULLABLE_DECL)
-		return NullableTypeDecl().transform(context, node);
-	if (node->content == Node::Content::AV2_TANC_DECLARATION)
-		return StructureDecl().transform(context, node);
-	if (node->content == Node::Content::AV2_TANC_FN_PROTOTYPE)
-		return FunctionTypeDecl().transform(context, node);
-	auto const t = context.fetch(node)->type;
+		t = ArrayTypeDecl().transform(context, node).type;
+	else if (node->content == Node::Content::AV2_TANC_NULLABLE_DECL)
+		t = NullableTypeDecl().transform(context, node).type;
+	else if (node->content == Node::Content::AV2_TANC_DECLARATION)
+		t = StructureDecl().transform(context, node).type;
+	else if (node->content == Node::Content::AV2_TANC_FN_PROTOTYPE)
+		t = FunctionTypeDecl().transform(context, node).type;
+	else t = context.fetch(node)->type;
 	if (!t) context.error("Type does not exist!", node);
 	++t->uses;
 	return {.type = t};

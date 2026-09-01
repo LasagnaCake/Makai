@@ -51,26 +51,25 @@ namespace Makai::Video::V2D::MVSX {
 		};
 
 		struct [[CTL_FLAG_STRUCT(uint64)]] Flags {
-			uint64: 0;
+			uint64 blocky: 1;
 		};
 
 		struct [[CTL_PACKED_STRUCT]] Block {
 			struct [[CTL_FLAG_STRUCT(uint64)]] Flags {
-				uint64 hasSubBlocks:				1;
-				uint64 solidColor:					1;
-				uint64 backgroundColorIsBaseColor:	1;
+				uint64 hasSubBlocks:	1;
+				uint64 solidColor:		1;
 			};
 			Flags	flags;
-			Color8	background;
 			Data	data;
 		};
 
 		Mode				mode;
 		Flags				flags;
 		HeaderTable<Block>	blocks;
+		Color8				background;
 	};
 
-	struct [[CTL_PACKED_STRUCT]] Audio {
+	struct [[CTL_PACKED_STRUCT]] Track {
 		Text	language;
 		Data	data;
 	};
@@ -107,11 +106,11 @@ namespace Makai::Video::V2D::MVSX {
 
 		Packing		packing;
 
-		ImageFormat imageFormat;
-		AudioFormat audioFormat;
+		ImageFormat	imageFormat;
+		AudioFormat	audioFormat;
 
 		HeaderTable<Frame>		video;
-		HeaderTable<Audio>		audio;
+		HeaderTable<Track>		audio;
 		HeaderTable<Subtitles>	subtitles;
 	};
 }
