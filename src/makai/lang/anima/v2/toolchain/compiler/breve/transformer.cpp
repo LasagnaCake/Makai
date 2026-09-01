@@ -11,7 +11,7 @@
 
  */
 
-// Ignore the ugly .raw() calls
+// Ignore the ugly .asStrong() calls
 
 namespace Core = Makai::Anima::V2::Core;
 
@@ -62,11 +62,11 @@ static ATransformer::Result expandVariable(
 		else if (parent && parent->property)
 			expandProperty(context, node, path, *parent->property, true);
 		else if (stack) context.top()->impl->writeMainLine("push", var.consume(node));
-		ATransformer::Result out = {{"move top"}, var.scope.raw(), var.type.raw()};
-		out.parent = var.fieldOf.raw();
+		ATransformer::Result out = {{"move top"}, var.scope.asStrong(), var.type.asStrong()};
+		out.parent = var.fieldOf.asStrong();
 		return out;
 	} else
-		return {var.consume(node), var.scope.raw(), var.type.raw()};
+		return {var.consume(node), var.scope.asStrong(), var.type.asStrong()};
 }
 
 static ATransformer::Result expandProperty(
@@ -91,7 +91,7 @@ static ATransformer::Result expandProperty(
 	else if (parent && parent->property)
 		expandProperty(context, node, path, *parent->property, true);
 	context.top()->impl->writeMainLine("call", get->entry);
-	return {{"move top"}, prop.scope.raw(), get->result};
+	return {{"move top"}, prop.scope.asStrong(), get->result};
 }
 
 static Makai::Nullable<Makai::UTF8String> addToStack(
@@ -111,7 +111,7 @@ static Makai::Nullable<Makai::UTF8String> addToStack(
 		return ns->variable->consume(node);
 	} else if (ns->property) {
 		auto const ov = ns->property->getter->overloadFromTypes(
-			Makai::List<Namespace::TypeRef>::from(ns->type.raw())
+			Makai::List<Namespace::TypeRef>::from(ns->type.asStrong())
 		);
 		if (!ov)
 			return null;
@@ -141,14 +141,14 @@ static ATransformer::Result resolveSubfield(
 			auto const f = ns->variable->type->fields[sub];
 			context.top()->impl->writeMainLine("push", ns->variable->consume(node));
 			if (node->forAssignment)
-				return {{"move top"}, f->scope.raw(), f->type.raw(), {}, ssize(f->id), ns->variable->type.raw()};
+				return {{"move top"}, f->scope.asStrong(), f->type.asStrong(), {}, ssize(f->id), ns->variable->type.asStrong()};
 			context.top()->impl->writeMainLine("at [", f->id, "]");
-			return {{f->passBy + " top"}, f->scope.raw(), f->type.raw(), {}, ssize(f->id), ns->variable->type.raw()};
+			return {{f->passBy + " top"}, f->scope.asStrong(), f->type.asStrong(), {}, ssize(f->id), ns->variable->type.asStrong()};
 		}
 		if (ns->variable->type->scope->subspaces.contains(sub)) {
 			auto const f = ns->variable->type->scope->subspaces[sub];
-			if (f->function) return {.source = ns->variable->consume(node), .scope = f, .type = ns->variable->type.raw()};
-			if (f->variable && f->variable->staticEntity) return {.source = {f->variable->consume(node)}, .scope = f, .type = f->variable->type.raw()};
+			if (f->function) return {.source = ns->variable->consume(node), .scope = f, .type = ns->variable->type.asStrong()};
+			if (f->variable && f->variable->staticEntity) return {.source = {f->variable->consume(node)}, .scope = f, .type = f->variable->type.asStrong()};
 			context.error("Invalid expression!", node);
 		}
 		context.error("Invalid expression!", node);
@@ -157,7 +157,7 @@ static ATransformer::Result resolveSubfield(
 		if (ns->property->type->fields.contains(sub)) {
 			auto const f = ns->property->type->fields[sub];
 			auto const ov = ns->property->getter->overloadFromTypes(
-				Makai::List<Namespace::TypeRef>::from(ns->type.raw())
+				Makai::List<Namespace::TypeRef>::from(ns->type.asStrong())
 			);
 			if (!ov)
 				return {.scope = ns};
@@ -173,9 +173,9 @@ static ATransformer::Result resolveSubfield(
 			if (f->function) return {.scope = f};
 			if (f->variable) {
 				if (f->variable->context > ExecutionContext::AV2_TCB_EC_RUNTIME)
-					return {.source = {f->variable->consume(node)}, .scope = f, .type = f->variable->type.raw(), .direct = f->variable->value};
+					return {.source = {f->variable->consume(node)}, .scope = f, .type = f->variable->type.asStrong(), .direct = f->variable->value};
 				if (f->variable->staticEntity)
-					return {.source = {f->variable->consume(node)}, .scope = f, .type = f->variable->type.raw()};
+					return {.source = {f->variable->consume(node)}, .scope = f, .type = f->variable->type.asStrong()};
 			}
 			context.error("Invalid expression!", node);
 		}
@@ -257,7 +257,7 @@ static ATransformer::Result infixResolve(ATransformer::Context& context, Node::I
 			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type, type));
 			if (!ov) continue;
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return {{"move top"}, ov->result->scope.raw(), ov->result};
+			return {{"move top"}, ov->result->scope.asStrong(), ov->result};
 		}
 	context.error("Invalid operator for type!", node);
 }
@@ -273,7 +273,7 @@ static ATransformer::Result prefixResolve(ATransformer::Context& context, Node::
 		) {
 			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type));
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return {{"move top"}, ov->result->scope.raw(), ov->result};
+			return {{"move top"}, ov->result->scope.asStrong(), ov->result};
 		}
 	context.error("Invalid operator for type!", node);
 }
@@ -289,7 +289,7 @@ static ATransformer::Result postfixResolve(ATransformer::Context& context, Node:
 		) {
 			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type));
 			context.top()->impl->writeMainLine("call", ov->entry);
-			return {{"move top"}, ov->result->scope.raw(), ov->result};
+			return {{"move top"}, ov->result->scope.asStrong(), ov->result};
 		}
 	context.error("Invalid operator for type!", node);
 }
@@ -326,7 +326,7 @@ Makai::UTF8StringList ATransformer::Context::pathOf(Node::Instance const& node) 
 	if (!node)
 		return Makai::UTF8StringList();
 	// CPP::Debug::breakpoint();
-	MAKAILIB_DEBUGLN_FULL("NODE_ADDR_", node.raw());
+	MAKAILIB_DEBUGLN_FULL("NODE_ADDR_", node.asStrong());
 	if (node->content == Node::Content::AV2_TANC_NAME) {
 		MAKAILIB_DEBUGLN_FULL("------ Left:", node->value.getString());
 		return Makai::UTF8StringList::from(node->value.getString());
@@ -424,7 +424,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!", node);
 	else if (var.type->flags.hasNoResult)
 		context.error("Variables cannot have discardable types!", node);
-	return {{"ref " + var.getSource()}, scope, var.type.raw(), direct};
+	return {{"ref " + var.getSource()}, scope, var.type.asStrong(), direct};
 }
 
 ATransformer::Result Aliasing::transform(Context& context, Node::Instance const& node) {
@@ -979,11 +979,11 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 	) {
 		context.top()->impl->writeMainLine(node->base.text.sliced(0, -3));
 		auto const retType = node->base.text == "typeof" ? context.basicType("type") : context.basicType("uint64");
-		return {{"move top"}, retType->scope.raw(), retType, 1};
+		return {{"move top"}, retType->scope.asStrong(), retType, 1};
 	}
 	if (val.type->basic) {
 		context.top()->impl->writeMainLine("op", bopName(context, node));
-		return {{"move top"}, val.type->scope.raw(), val.type, val.direct.undefined(), val.likelihood + likelihoodOf(node)};
+		return {{"move top"}, val.type->scope.asStrong(), val.type, val.direct.undefined(), val.likelihood + likelihoodOf(node)};
 	} else return prefixResolve(context, node, val.type);
 }
 
@@ -1029,7 +1029,7 @@ ATransformer::Result PostfixExpression::transform(Context& context, Node::Instan
 	if (val.isCompilable() && node->base.text != "typeof") {
 		auto const result = uopDirectResolve(val.direct, node->base);
 		if (!result.isUndefined())
-			return {{result.toString() + " " + directName(context, result.type())->basicNumberName()}, val.type->scope.raw(), directName(context, result.type()), result, val.likelihood};
+			return {{result.toString() + " " + directName(context, result.type())->basicNumberName()}, val.type->scope.asStrong(), directName(context, result.type()), result, val.likelihood};
 	}
 	if (val.shouldBePushed()) {
 		if (
@@ -1045,7 +1045,7 @@ ATransformer::Result PostfixExpression::transform(Context& context, Node::Instan
 	if (val.type->basic) {
 		context.top()->impl->writeMainLine("op", uopName(context, node) + asFastOpQualifier(*val.type->basic));
 		context.top()->impl->writeMainLine("pop");
-		return {{"move top"}, val.type->scope.raw(), val.type, val.direct.undefined(), val.likelihood};
+		return {{"move top"}, val.type->scope.asStrong(), val.type, val.direct.undefined(), val.likelihood};
 	} else {
 		auto const result = postfixResolve(context, node, val.type);
 		context.top()->impl->writeMainLine("pop");
@@ -1111,7 +1111,7 @@ ATransformer::Result specialDirectResolve(
 		else context.error("Value cannot be converted to the given type!", node);
 	} else if (kw == "is") {
 		auto const match = value.type == type;
-		return {{Makai::toString(match)}, context.basicType("bool")->scope.raw(), context.basicType("bool"), match};
+		return {{Makai::toString(match)}, context.basicType("bool")->scope.asStrong(), context.basicType("bool"), match};
 	} else context.error("Unsupported direct operation!", node);
 	return out;
 }
@@ -1156,13 +1156,13 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		if (node->base.text == "is") {
 			auto const retType = context.basicType("bool");
 			context.top()->impl->writeMainLine(node->base.text, t.type->name);
-			return {{"move top"}, retType->scope.raw(), retType};
+			return {{"move top"}, retType->scope.asStrong(), retType};
 		}
 		auto const retType = t.type;
 		if (t.type->basic != Core::BasicType::AV2_BT_ANY && !TypeDecl::stronger(t.type, retType))
 			context.error("Value's type cannot be converted to given type!", node);
 		context.top()->impl->writeMainLine(node->base.text, t.type->name);
-		return {{"move top"}, retType->scope.raw(), retType};
+		return {{"move top"}, retType->scope.asStrong(), retType};
 	}
 	auto const rhs = expr.transform(context, node->rightSide);
 	if (rhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->rightSide);
@@ -1183,7 +1183,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 			result = directCast(result, *TypeDecl::stronger(lhs.type, rhs.type)->basic);
 			return {
 				{result.toString() + " " + directName(context, result.type())->basicNumberName()},
-				directName(context, result.type())->scope.raw(),
+				directName(context, result.type())->scope.asStrong(),
 				directName(context, result.type()),
 				result,
 				likelihood
@@ -1215,7 +1215,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 			context.impl()->writeMainLine("@target", sseOr);
 		auto const t = TypeDecl::stronger(lhs.type, rhs.type);
 		if (!t) context.error("Type mismatch in infix expression!", node);
-		return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
+		return {{"move top"}, t->scope.asStrong(), t, lhs.direct.undefined(), likelihood};
 	} else if (auto const t = TypeDecl::stronger(lhs.type, rhs.type)) {
 		MAKAILIB_DEBUGLN_FULL("Stronger: ", t->name);
 		if (t->flags.isBasic) {
@@ -1223,13 +1223,13 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node) + asFastOpQualifier(*t->basic, rhs));
 			else
 				context.top()->impl->writeMainLine(comparison ? "cmp" : "op", bopName(context, node));
-			return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
+			return {{"move top"}, t->scope.asStrong(), t, lhs.direct.undefined(), likelihood};
 		} else if (t->flags.isEnum && comparison) {
 			if (lhs.type->base->basic == rhs.type->base->basic)
 				context.top()->impl->writeMainLine("cmp", bopName(context, node) + asFastOpQualifier(*t->base->basic, rhs));
 			else
 				context.top()->impl->writeMainLine("cmp", bopName(context, node));
-			return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
+			return {{"move top"}, t->scope.asStrong(), t, lhs.direct.undefined(), likelihood};
 		} else return infixResolve(context, node, t);
 	} else if (
 		lhs.type->flags.isArray
@@ -1238,7 +1238,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		if (auto const t = TypeDecl::stronger(lhs.type->base, rhs.type))
 			context.top()->impl->writeMainLine("op apush");
 		else context.error("Array element type mismatch!", node);
-		return {{"move top"}, t->scope.raw(), t, lhs.direct.undefined(), likelihood};
+		return {{"move top"}, t->scope.asStrong(), t, lhs.direct.undefined(), likelihood};
 	}
 	context.error("Type mismatch in infix expression!", node);
 }
@@ -1267,7 +1267,7 @@ ATransformer::Result Direct::transform(Context& context, Node::Instance const& n
 		return {.source = {"nil"}, .direct = null};
 	else context.error("Invalid constant!", node);
 	out.source		= value;
-	out.scope		= type->scope.raw();
+	out.scope		= type->scope.asStrong();
 	out.type		= type;
 	out.direct		= node->value;
 	return out;
@@ -1281,10 +1281,10 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 		if (!ns)
 			context.error("Symbol does not exist!", node);
 		if (!ns->isPublic()) context.error("Variable is not public!", node);
-		result.source = addToStack(context, ns.raw(), node);
+		result.source = addToStack(context, ns.asStrong(), node);
 		if (ns->variable) {
-			result.type		= ns->variable->type.raw();
-			result.scope	= ns->variable->scope.raw();
+			result.type		= ns->variable->type.asStrong();
+			result.scope	= ns->variable->scope.asStrong();
 			if (ns->variable->isCompiled())
 				result.direct = ns->variable->value;
 		} else result.scope = ns;
@@ -1814,7 +1814,7 @@ ATransformer::Result Import::transform(Context& context, Node::Instance const& n
 	auto const subinter = importer(fpath);
 	// This is for testing purposes (probably (I don't know if I'll replace it))
 	if (!subinter.content) return {};
-	for (auto& [name, imp]: context.root->subspaces["  T0_IMPORTS"]->subspaces)
+	for (auto& [name, imp]: context.root->subspaces["0__@T0_IMPORTS"]->subspaces)
 		if (imp == subinter.content) return {.scope = subinter.content};
 	context.registerImport(subinter.content);
 	return {.scope = subinter.content};
@@ -1982,7 +1982,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 			context.functionStack.back()->variant.context = ExecutionContext::AV2_TCB_EC_RUNTIME;
 		else context.error("Cannot call indirect functions inside mixed or direct functions!", node);
 	}
-	return {.source = {"move top"}, .scope = ov.result->scope.raw(), .type = ov.result, .mayBeEmpty = Makai::Cast::as<bool>(ov.result->flags.hasNoResult)};
+	return {.source = {"move top"}, .scope = ov.result->scope.asStrong(), .type = ov.result, .mayBeEmpty = Makai::Cast::as<bool>(ov.result->flags.hasNoResult)};
 }
 
 ATransformer::Result Subscript::transform(Context& context, Node::Instance const& node) {
@@ -2020,7 +2020,7 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 		context.top()->impl->writeMainLine("dyn at");
 	} else context.error("Expected unsigned integer here!", node->rightSide);
 	auto const t = src.type->base;
-	return {{"move top"}, t->scope.raw(), t};
+	return {{"move top"}, t->scope.asStrong(), t};
 }
 
 ATransformer::Result Array::transform(Context& context, Node::Instance const& node) {
@@ -2044,7 +2044,7 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 	auto const arr = context.arrayFor(prev);
 	if (count)
 		context.top()->impl->writeMainLine(count ? "create" : "new", arr->name);
-	return {{"move top"}, arr->scope.raw(), arr};
+	return {{"move top"}, arr->scope.asStrong(), arr};
 }
 
 ATransformer::Result Create::transform(Context& context, Node::Instance const& node) {
@@ -2103,7 +2103,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 					if (!expr.source)
 						context.error("Expected value here!", arg->rightSide);
 					auto const fx = t->fields[field.front()];
-					if (TypeDecl::stronger(expr.type, fx->type.raw()) != fx->type)
+					if (TypeDecl::stronger(expr.type, fx->type.asStrong()) != fx->type)
 						context.error("Type mismatch in field!", arg->rightSide);
 					context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", fx->id + tempStart, "]");
 					if (!expr.shouldBePushed())
@@ -2121,7 +2121,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 					if (!expr.source)
 						context.error("Expected value here!", arg);
 					auto const fx = t->fields[remap[index]];
-					if (TypeDecl::stronger(expr.type, fx->type.raw()) != fx->type)
+					if (TypeDecl::stronger(expr.type, fx->type.asStrong()) != fx->type)
 						context.error("Type mismatch in field!", arg);
 					context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", fx->id + tempStart, "]");
 					if (!expr.shouldBePushed())
@@ -2158,14 +2158,14 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 						context.top()->impl->writeMainLine("copy", *expr.source, "-> top");
 					context.top()->impl->writeMainLine("set [", *expr.source, "]");
 				}
-				return {{"move top"}, t->scope.raw(), t};
+				return {{"move top"}, t->scope.asStrong(), t};
 			}
 		}
 		context.top()->impl->writeMainLine("blit ref", count, "[", tempStart, "] -> global");
 		context.top()->impl->writeMainLine("create", opstr);
 		context.top()->impl->writeMainLine("end");
 	} else context.top()->impl->writeMainLine("new", opstr);
-	return {{"move top"}, t->scope.raw(), t};
+	return {{"move top"}, t->scope.asStrong(), t};
 }
 
 ATransformer::Result Drop::transform(Context& context, Node::Instance const& node) {
@@ -2324,7 +2324,7 @@ ATransformer::Result ForLoop::transform(Context& context, Node::Instance const& 
 		context.error("Only array for loops are currently supported!", node->middle);
 	} else {
 		if (!elemVar.type) elemVar.type = toIterate.type->base;
-		else if (TypeDecl::stronger(elemVar.type.raw(), toIterate.type->base) != elemVar.type)
+		else if (TypeDecl::stronger(elemVar.type.asStrong(), toIterate.type->base) != elemVar.type)
 			context.error("Element type is stronger than variable type!", node->middle);
 		context.top()->impl->writeMainLine("copy", toIterate.source.value(), "->", traversalVar);
 		if (toIterate.isStackTop())
@@ -2381,7 +2381,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 	auto& var = *(varScope->variable = varScope->variable.create());
 	var.fill();
 	var.id = loopScope->varc++;
-	var.type = context.basicType("uint64").raw();
+	var.type = context.basicType("uint64").asWeak();
 	var.name = "##ITERATE::" + node->name();
 	context.pop(vsn.size());
 	auto const it = Expression().transform(context, node->leftSide);
@@ -2476,13 +2476,13 @@ ATransformer::Result ArrayTypeDecl::transform(Context& context, Node::Instance c
 	if (node->children.size() > 1)
 		context.error("Arrays can only contain one type!", node);
 	auto const t = context.arrayFor(TypeRequest().transform(context, node->children.front()).type);
-	context.registerType(t->scope.raw());
+	context.registerType(t->scope.asStrong());
 	return {.type = t};
 }
 
 ATransformer::Result NullableTypeDecl::transform(Context& context, Node::Instance const& node) {
 	auto const t = context.nullableFor(TypeRequest().transform(context, node).type);
-	context.registerType(t->scope.raw());
+	context.registerType(t->scope.asStrong());
 	return {.type = t};
 }
 
@@ -2501,7 +2501,7 @@ ATransformer::Result FunctionTypeDecl::transform(Context& context, Node::Instanc
 ATransformer::Result TypeExtension::transform(Context& context, Node::Instance const& node) {
 	auto const type = TypeRequest().transform(context, node->leftSide);
 	AsNonConst<decltype(type)> trait;
-	context.scopeStack.pushBack(type.type->scope.raw());
+	context.scopeStack.pushBack(type.type->scope.asStrong());
 	if (node->middle) {
 		// TODO: This
 	}
@@ -2890,27 +2890,27 @@ static Makai::String idName(usize const id) {
 void ATransformer::Context::registerType(Namespace::Instance const& ns) {
 	static usize id = 0;
 	if (!ns) return;
-	root->subspaces["  T1_USER_TYPES"]->subspaces[ Makai::toString("#", idName(++id), "::") + ns->name] = ns;
+	root->subspaces["0__@Tx1_USER_TYPES"]->subspaces[Makai::toString("#", idName(++id), "::") + ns->name] = ns;
 }
 
 void ATransformer::Context::registerFunction(Namespace::Instance const& ns) {
 	static usize id = 0;
 	if (!ns) return;
-	root->subspaces["  T2_FUNCTIONS"]->subspaces[ Makai::toString("#", idName(++id), "::") + ns->name] = ns;
+	root->subspaces["0__@Tx2_FUNCTIONS"]->subspaces[Makai::toString("#", idName(++id), "::") + ns->name] = ns;
 }
 
 void ATransformer::Context::registerImport(Namespace::Instance const& ns) {
 	static usize id = 0;
 	if (!ns) return;
-	root->subspaces["  T0_IMPORTS"]->subspaces[ Makai::toString("#", idName(++id), "::") + ns->name] = ns;
+	root->subspaces["0__@Tx0_IMPORTS"]->subspaces[Makai::toString("#", idName(++id), "::") + ns->name] = ns;
 }
 
 ATransformer::Context::Context(): Intermediate() {
 	using enum Core::BasicType;
-	root->subspaces["  T0_IMPORTS"]		= Namespace::Instance::create("  T0_IMPORTS");
-	root->subspaces["  T1_USER_TYPES"]	= Namespace::Instance::create("  T1_USER_TYPES");
-	root->subspaces["  T2_FUNCTIONS"]	= Namespace::Instance::create("  T2_FUNCTIONS");
-	root->subspaces["  T3_TRAITS"]		= Namespace::Instance::create("  T3_TRAITS");
+	root->subspaces["0__@Tx0_IMPORTS"]		= Namespace::Instance::create("0__@Tx0_IMPORTS");
+	root->subspaces["0__@Tx1_USER_TYPES"]	= Namespace::Instance::create("0__@Tx1_USER_TYPES");
+	root->subspaces["0__@Tx2_FUNCTIONS"]	= Namespace::Instance::create("0__@Tx2_FUNCTIONS");
+	root->subspaces["0__@Tx3_TRAITS"]		= Namespace::Instance::create("0__@Tx3_TRAITS");
 }
 
 Node::Instance ATransformer::Context::evaluate(Makai::UTF8String const& eval) {
@@ -2923,48 +2923,6 @@ Node::Instance ATransformer::Context::evaluate(Makai::UTF8String const& eval) {
 	);
 	auto const parse = Parser(ctx).parse();
 	return parse;
-}
-
-void ATransformer::Context::addBasicType(Core::BasicType const type, Core::TypeFlags const flags) {
-	static usize id = 0;
-	using enum Core::BasicType;
-	UTF8String name;
-	switch (type) {
-		default: error("UHHHHHHHHHHH");
-		case AV2_BT_VOID:		name = "void";		break;
-		case AV2_BT_ANY:		name = "any";		break;
-		case AV2_BT_NULL:		name = "null";		break;
-		case AV2_BT_TYPEID:		name = "type";		break;
-		case AV2_BT_BOOL:		name = "bool";		break;
-		case AV2_BT_CHAR:		name = "char";		break;
-		case AV2_BT_INT8:		name = "int8";		break;
-		case AV2_BT_INT16:		name = "int16";		break;
-		case AV2_BT_INT32:		name = "int32";		break;
-		case AV2_BT_INT64:		name = "int64";		break;
-		case AV2_BT_UINT8:		name = "uint8";		break;
-		case AV2_BT_UINT16:		name = "uint16";	break;
-		case AV2_BT_UINT32:		name = "uint32";	break;
-		case AV2_BT_UINT64:		name = "uint64";	break;
-		case AV2_BT_REAL32:		name = "float32";	break;
-		case AV2_BT_REAL64:		name = "float64";	break;
-		case AV2_BT_REAL128:	name = "float128";	break;
-		case AV2_BT_STRING:		name = "string";	break;
-		case AV2_BT_BYTES:		name = "bytes";		break;
-		case AV2_BT_VECTOR:		name = "vector";	break;
-		case AV2_BT_MATRIX:		name = "matrix";	break;
-	}
-	if (root->subspaces.contains(name)) return;
-	auto const ns = Namespace::Instance::create();
-	root->subspaces["  T1_BASICS"]->subspaces[Makai::toString("#", idName(++id), "::") + name] = ns;
-	root->subspaces[name] = ns;
-	auto& t = *(ns->type = ns->type.create());
-	t.name = name;
-	t.basic = type;
-	t.flags = flags;
-	t.flags.isBasic = true;
-	if (type != AV2_BT_VOID && type != AV2_BT_ANY)
-		t.base = basicType("any");
-	basics[name] = ns->type;
 }
 
 Makai::Function<File(Makai::UTF8String const&)> Import::importer = [] (auto const&) -> File {

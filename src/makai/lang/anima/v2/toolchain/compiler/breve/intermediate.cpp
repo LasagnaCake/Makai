@@ -125,7 +125,7 @@ void Intermediate::addPostLine(UTF8String const& what) {
 }
 
 Function::OverloadRef Function::overloadFromVariables(List<Namespace::VariableRef> const& args, FuzzySearch const fuzz) const {
-	return overloadFromTypes(args.toList<Namespace::TypeRef>([] (auto const& e) -> Namespace::TypeRef {return e->type.raw();}), fuzz);
+	return overloadFromTypes(args.toList<Namespace::TypeRef>([] (auto const& e) -> Namespace::TypeRef {return e->type.asStrong();}), fuzz);
 }
 
 static bool const test(Namespace::TypeRef const& a, Namespace::TypeRef const& b, bool const fuzzy) {
@@ -158,7 +158,7 @@ static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> c
 		if (inVariadicRegion && !param->flags.isArray)
 			return false;
 		if (arg == param) continue;
-		if (test(arg, inVariadicRegion ? param->base : Namespace::TypeRef(param.raw()), inVariadicRegion || isFuzzy(index)))
+		if (test(arg, inVariadicRegion ? param->base : Namespace::TypeRef(param.asStrong()), inVariadicRegion || isFuzzy(index)))
 			return false;
 	}
 	return true;
@@ -383,7 +383,7 @@ static Namespace::AttributeRef createGlobalAttribute() {
 		ns->variable->global = true;
 		ns->variable->staticEntity = true;
 		auto const srcName = v["source"].getString().replace('\\', '/').replace('/', '.');
-		if (globalTypes.contains(srcName) && globalTypes[srcName] != ns->variable->type.raw())
+		if (globalTypes.contains(srcName) && globalTypes[srcName] != ns->variable->type.asStrong())
 			Transformer::ATransformer::Context::error("Global variable type mismatch!", ns->node);
 		ns->variable->source = "$" + srcName;
 	};

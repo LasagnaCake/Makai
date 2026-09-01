@@ -68,8 +68,6 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 
 			Namespace::Instance getStructScope() const;
 
-			void addBasicType(Core::BasicType const type, Core::TypeFlags const flags = {});
-
 			void registerImport(Namespace::Instance const& ns);
 			void registerType(Namespace::Instance const& ns);
 			void registerFunction(Namespace::Instance const& ns);

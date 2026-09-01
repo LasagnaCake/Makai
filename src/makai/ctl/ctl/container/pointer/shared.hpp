@@ -277,28 +277,28 @@ public:
 	/// @tparam TNew New object type.
 	/// @return Shared pointer to new object type.
 	template<Type::Container::Pointable TNew>
-	constexpr Shared<TNew, WEAK>		as() const			{return	static_cast<TNew*>(raw());			}
+	constexpr Shared<TNew, WEAK, U>		as() const			{return	static_cast<TNew*>(raw());			}
 	/// @brief Dynamically casts the shared pointer to point to a new type.
 	/// @tparam TNew New object type.
 	/// @return Shared pointer to new object type.
 	template<Type::Container::Pointable TNew>
-	constexpr Shared<TNew, WEAK>		morph() const		{return	dynamic_cast<TNew*>(raw());			}
+	constexpr Shared<TNew, WEAK, U>		morph() const		{return	dynamic_cast<TNew*>(raw());			}
 	/// @brief Reinterprets the shared pointer as a different pointer type.
 	/// @tparam TNew New object type.
 	/// @return Shared pointer to new object type.
 	template<Type::Container::Pointable TNew>
-	constexpr Shared<TNew, WEAK>		reinterpret() const	{return	reinterpret_cast<TNew*>(raw());		}
+	constexpr Shared<TNew, WEAK, U>		reinterpret() const	{return	reinterpret_cast<TNew*>(raw());		}
 	/// @brief Reinterprets the shared pointer as a pointer type with different constness and volatileness.
 	/// @tparam TNew New object type.
 	/// @return Shared pointer to new object type.
 	template<class TNew = AsNonConst<DataType>>
-	constexpr Shared<TNew, WEAK>		mutate() const		{return	const_cast<TNew*>(raw());			}
+	constexpr Shared<TNew, WEAK, U>		mutate() const		{return	const_cast<TNew*>(raw());			}
 	/// @brief Returns a weak pointer to the bound object.
 	/// @return Weak pointer to object.
-	constexpr Shared<DataType, true>	asWeak() const		{return	raw();								}
+	constexpr Shared<DataType, true, U, D>	asWeak() const		{return	raw();								}
 	/// @brief Returns a strong pointer to the bound object.
 	/// @return Strong pointer to object.
-	constexpr Shared<DataType, false>	asStrong() const	{return	raw();								}
+	constexpr Shared<DataType, false, U, D>	asStrong() const	{return	raw();								}
 	/// @brief Returns a raw pointer to the bound object.
 	/// @return Raw pointer to bound object.
 	constexpr ref<DataType>				raw() const			{return	exists() ? getPointer() : nullptr;	}
