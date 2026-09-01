@@ -1814,7 +1814,7 @@ ATransformer::Result Import::transform(Context& context, Node::Instance const& n
 	auto const subinter = importer(fpath);
 	// This is for testing purposes (probably (I don't know if I'll replace it))
 	if (!subinter.content) return {};
-	for (auto& [name, imp]: context.root->subspaces["0__@T0_IMPORTS"]->subspaces)
+	for (auto& [name, imp]: context.root->subspaces["0__@Tx0_IMPORTS"]->subspaces)
 		if (imp == subinter.content) return {.scope = subinter.content};
 	context.registerImport(subinter.content);
 	return {.scope = subinter.content};
