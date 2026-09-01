@@ -16,6 +16,74 @@ using FilterMode		= Image2D::FilterMode;
 
 using ImageData			= Image2D::ImageData;
 
+static inline uint32 createCopyBuffer() {
+	MAKAILIB_DEBUGLN_FULL("Creating copy buffer...");
+	uint id = 0;
+	glGenFramebuffers(1, &id);
+	return id;
+}
+
+static inline void copyTexture(
+	Image2D* const		src,
+	Image2D* const		dst,
+	uint32 const		srcStartX,
+	uint32 const		srcStartY,
+	uint32 const		srcEndX,
+	uint32 const		srcEndY,
+	uint32 const		dstStartX,
+	uint32 const		dstStartY,
+	uint32 const		dstEndX,
+	uint32 const		dstEndY,
+	FilterMode const&	filter = FilterMode::FM_NEAREST
+) {
+	if (!src || !dst) return;
+	static uint32 const fb = createCopyBuffer();
+	MAKAILIB_DEBUGLN_FULL("Binding copy buffer...");
+	glBindFramebuffer(GL_FRAMEBUFFER, fb);
+	MAKAILIB_DEBUGLN_FULL("Binding source...");
+	glFramebufferTexture2D(
+		GL_READ_FRAMEBUFFER,
+		GL_COLOR_ATTACHMENT0,
+		GL_TEXTURE_2D,
+		src->getID(),
+		0
+	);
+	MAKAILIB_DEBUGLN_FULL("Binding destination...");
+	glFramebufferTexture2D(
+		GL_DRAW_FRAMEBUFFER,
+		GL_COLOR_ATTACHMENT1,
+		GL_TEXTURE_2D,
+		dst->getID(),
+		0
+	);
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
+	glDrawBuffer(GL_COLOR_ATTACHMENT1);
+	MAKAILIB_DEBUGLN_FULL((glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE ? "OK" : "ERR"));
+	MAKAILIB_DEBUGLN_FULL("Copying textures...");
+	glBlitFramebuffer(
+		srcStartX, srcStartY, srcEndX, srcEndY,
+		dstStartX, dstStartY, dstEndX, dstEndY,
+		GL_COLOR_BUFFER_BIT, convert(filter)
+	);
+	MAKAILIB_DEBUGLN_FULL("Finalizing...");
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Image::blit(Frame const& from, Frame const& to) {
+	copyTexture(
+		&from.image,
+		&to.image,
+		from.start.x,
+		from.start.y,
+		from.end.x,
+		from.end.y,
+		to.start.x,
+		to.start.y,
+		to.end.x,
+		to.end.y,
+	);
+}
+
 constexpr uint32 convert(Image::ImageTarget const& target) {
 	switch (target) {
 		case Image::ImageTarget::IT_TEXTURE_2D: return GL_TEXTURE_2D;

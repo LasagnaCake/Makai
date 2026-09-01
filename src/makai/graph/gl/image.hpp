@@ -327,14 +327,14 @@ namespace Makai::Graph {
 		/// @param target Image type to create.
 		/// @return Created image.
 		[[nodiscard]]
-		static Image2D* newImage(
+		static owner<Image2D> newImage(
 			uint32 const			width,
 			uint32 const			height,
 			ComponentType const&	type		= ComponentType::CT_UBYTE,
 			ImageFormat const&		format		= ImageFormat::IF_RGBA,
 			FilterMode const&		magFilter	= FilterMode::FM_SMOOTH,
 			FilterMode const&		minFilter	= FilterMode::FM_SMS,
-			uint8* const			data		= NULL,
+			ref<uint8> const		data		= NULL,
 			ComponentLayout const&	layout		= ComponentLayout::CL_AUTO,
 			ImageTarget const&		target		= ImageTarget::IT_TEXTURE_2D
 		);
@@ -351,17 +351,33 @@ namespace Makai::Graph {
 		/// @param layout Component layout. By default, it is automatically deduced.
 		/// @param target Image type to create.
 		/// @return Passed pointer.
-		static Image2D* newImage(
-			Image2D* const			image,
+		static ref<Image2D> newImage(
+			ref<Image2D> const		image,
 			uint32 const			width,
 			uint32 const			height,
 			ComponentType const&	type		= ComponentType::CT_UBYTE,
 			ImageFormat const&		format		= ImageFormat::IF_RGBA,
 			FilterMode const&		magFilter	= FilterMode::FM_SMOOTH,
 			FilterMode const&		minFilter	= FilterMode::FM_SMS,
-			uint8* const			data		= NULL,
+			ref<uint8> const		data		= NULL,
 			ComponentLayout const&	layout		= ComponentLayout::CL_AUTO,
 			ImageTarget const&		target		= ImageTarget::IT_TEXTURE_2D
+		);
+
+		struct Region {
+			struct XY {uint32 x, y;};
+			XY start, end;
+		};
+
+		struct Frame {
+			Image2D&	image;
+			Region		region;
+		};
+
+		static void blit(
+			Frame const& from,
+			Frame const& to,
+			FilterMode const filter = FilterMode::FM_NEAREST
 		);
 
 	private:

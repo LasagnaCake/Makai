@@ -46,8 +46,12 @@ namespace Makai::Video::V2D::MVSX {
 			MV2_FM_MULTIPLY,
 			/// @brief Divide from region denoted in mask with image contents. (mix(dst, dst / src, mask))
 			MV2_FM_DIVIDE,
-			/// @brief Take the average from region denoted in mask with image contents. (mix(dst, (dst + src) * 2, mask))
+			/// @brief Take the average from region denoted in mask with image contents. (mix(dst, (dst + src) * 0.5, mask))
 			MV2_FM_AVERAGE,
+			/// @brief Subtract from image denoted in mask with destination contents. ((src * mask) - dst)
+			MV2_FM_REVERSE_SUBTRACT,
+			/// @brief Divide from image denoted in mask with destination contents. (mix(src / dst, dst, mask))
+			MV2_FM_REVERSE_DIVIDE,
 		};
 
 		struct [[CTL_FLAG_STRUCT(uint64)]] Flags {
@@ -56,9 +60,10 @@ namespace Makai::Video::V2D::MVSX {
 
 		struct [[CTL_PACKED_STRUCT]] Block {
 			struct [[CTL_FLAG_STRUCT(uint64)]] Flags {
-				uint64 hasSubBlocks:	1;
-				uint64 solidColor:		1;
+				uint64: 0;
 			};
+			uint64	x, y;
+			uint8	log2Length;
 			Flags	flags;
 			Data	data;
 		};
@@ -90,10 +95,6 @@ namespace Makai::Video::V2D::MVSX {
 	};
 
 	struct [[CTL_PACKED_STRUCT]] Header {
-		struct [[CTL_PACKED_STRUCT]] Block {
-			uint64	log2Length: 8;
-		};
-
 		template<class T> struct [[CTL_PACKED_STRUCT]] Section {
 			T format;
 		};

@@ -39,59 +39,6 @@ constexpr uint32 convert(FilterMode const& type) {
 	}
 }
 
-uint32 createCopyBuffer() {
-	MAKAILIB_DEBUGLN_FULL("Creating copy buffer...");
-	uint id = 0;
-	glGenFramebuffers(1, &id);
-	return id;
-}
-
-void copyTexture(
-	Image2D* const		src,
-	Image2D* const		dst,
-	uint32 const		srcStartX,
-	uint32 const		srcStartY,
-	uint32 const		srcEndX,
-	uint32 const		srcEndY,
-	uint32 const		dstStartX,
-	uint32 const		dstStartY,
-	uint32 const		dstEndX,
-	uint32 const		dstEndY,
-	FilterMode const&	filter = FilterMode::FM_NEAREST
-) {
-	if (!src || !dst) return;
-	static uint32 const fb = createCopyBuffer();
-	MAKAILIB_DEBUGLN_FULL("Binding copy buffer...");
-	glBindFramebuffer(GL_FRAMEBUFFER, fb);
-	MAKAILIB_DEBUGLN_FULL("Binding source...");
-	glFramebufferTexture2D(
-		GL_READ_FRAMEBUFFER,
-		GL_COLOR_ATTACHMENT0,
-		GL_TEXTURE_2D,
-		src->getID(),
-		0
-	);
-	MAKAILIB_DEBUGLN_FULL("Binding destination...");
-	glFramebufferTexture2D(
-		GL_DRAW_FRAMEBUFFER,
-		GL_COLOR_ATTACHMENT1,
-		GL_TEXTURE_2D,
-		dst->getID(),
-		0
-	);
-	glReadBuffer(GL_COLOR_ATTACHMENT0);
-	glDrawBuffer(GL_COLOR_ATTACHMENT1);
-	MAKAILIB_DEBUGLN_FULL((glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE ? "OK" : "ERR"));
-	MAKAILIB_DEBUGLN_FULL("Copying textures...");
-	glBlitFramebuffer(
-		srcStartX, srcStartY, srcEndX, srcEndY,
-		dstStartX, dstStartY, dstEndX, dstEndY,
-		GL_COLOR_BUFFER_BIT, convert(filter)
-	);
-	MAKAILIB_DEBUGLN_FULL("Finalizing...");
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
 Texture2D Texture2D::fromJSON(JSON::Value img, String const& sourcepath) {
 	Texture2D texture;
 	if (img["data"].isObject() && img["data"]["path"].isString() && !img["data"]["path"].get<String>().empty()) {
@@ -386,10 +333,14 @@ Texture2D& Texture2D::makeUnique(bool const filter) {
 		NULL,
 		image->attributes.layout
 	);
-	copyTexture(
-		(Image2D*)image, (Image2D*)newImg,
-		0, 0, image->attributes.width, image->attributes.height,
-		0, 0, image->attributes.width, image->attributes.height,
+	Image::blit(
+		{
+			*image,
+			{0, 0, image->attributes.width, image->attributes.height}
+		}, {
+			*newImg,
+			{0, 0, image->attributes.width, image->attributes.height}
+		}
 		filter ? FilterMode::FM_SMOOTH : FilterMode::FM_NEAREST
 	);
 	image = newImg;
@@ -412,10 +363,14 @@ Texture2D& Texture2D::copyFrom(
 ) {
 	if (!exists()) return *this;
 	// Copy data
-	copyTexture(
-		(Image2D*)other.image, (Image2D*)image,
-		startX, startY, endX, endY,
-		0, 0, image->attributes.width, image->attributes.height,
+	Image::blit(
+		{
+			*image,
+			{startX, startY, endX, endY}
+		}, {
+			*other.image,
+			{0, 0, other.image->attributes.width, other.image->attributes.height}
+		}
 		filter ? FilterMode::FM_SMOOTH : FilterMode::FM_NEAREST
 	);
 	// Regenerate mipmaps
