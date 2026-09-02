@@ -66,6 +66,10 @@ struct CFile {
 
 	constexpr ref<FILE> handle() const {return file;}
 
+	bool atEnd() const {
+		return feof(file);
+	}
+
 private:
 	ref<FILE> file = nullptr;
 };

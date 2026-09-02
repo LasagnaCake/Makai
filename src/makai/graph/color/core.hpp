@@ -12,6 +12,10 @@ namespace Makai::Graph::Color {
 		uint8 g;
 		uint8 b;
 		uint8 a;
+
+		constexpr Vector4 normalize() const {
+			return Vector4(r, g, b, a) / 255;
+		}
 	};
 
 	/// @brief Partial implementations.

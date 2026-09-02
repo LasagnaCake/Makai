@@ -32,7 +32,7 @@ namespace Makai::Graph {
 		static Texture2D fromJSON(JSON::Value img, String const& sourcepath = "");
 
 		/// @brief Default constructor.
-		Texture2D(): image(new Image2D()) {}
+		Texture2D(): image(image.create()) {}
 
 		/// @brief Default constructor.
 		Texture2D(nulltype): Texture2D() {}

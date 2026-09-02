@@ -11,6 +11,7 @@ struct IStream {
 
 	constexpr virtual bool isOpen() const		= 0;
 	constexpr virtual usize position() const	= 0;
+	constexpr virtual bool atEnd() const		= 0;
 };
 
 template <class T, class TData = typename T::DataType>
@@ -18,6 +19,15 @@ struct IInputStream: IStream, IInput<T> {
 	virtual ~IInputStream() {}
 
 	constexpr virtual Nullable<T> tryRead(usize const count) = 0;
+
+	constexpr virtual usize tryReadInto(ref<TData> const where, usize const count) {
+		if (auto const v = tryRead(count)) {
+			auto const vv = v.value();
+			MX::memcpy(where, vv.data(), vv.size());
+			return vv.size();
+		}
+		return 0;
+	}
 
 	constexpr virtual Nullable<T> tryReadAll(usize const chunk = 1024) {
 		if (!isOpen()) return null;
@@ -68,8 +78,7 @@ struct IInputStream: IStream, IInput<T> {
 	}
 
 	constexpr virtual void readInto(ref<TData> const where, usize const count) {
-		auto const v = read(count);
-		MX::memcpy(where, v.data(), count);
+		tryReadInto(where, count);
 	}
 };
 
@@ -84,6 +93,8 @@ struct IOutputStream: IStream, IOutput<T> {
 	constexpr friend IOutputStream& operator|(IInputStream<T>& val, IOutputStream& self) {
 		self.write(val.readAll());
 	}
+
+	bool atEnd() const override {return false;}
 };
 
 template <class TInputStream, class TOutputStream>

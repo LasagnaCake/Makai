@@ -22,19 +22,21 @@ namespace Makai::Image::I2D {
 		uint8 b: 1;
 		uint8 a: 1;
 
-		constexpr static RGBA()	{return Channel{1, 1, 1, 1};	}
-		constexpr static RGB()	{return Channel{1, 1, 1, 0};	}
-		constexpr static RA()	{return Channel{1, 0, 0, 1};	}
-		constexpr static LA()	{return RA();					}
+		constexpr static MI2C_RGBA()	{return Channel{1, 1, 1, 1};	}
+		constexpr static MI2C_RGB()		{return Channel{1, 1, 1, 0};	}
+		constexpr static MI2C_RA()		{return Channel{1, 0, 0, 1};	}
+		constexpr static MI2C_LA()		{return MI2C_RA();				}
 	};
 
 	struct Attributes {
 		uint64	width		= 0;
 		uint64	height		= 0;
-		Channel	channels	= Channel::RGBA();
+		Channel	channels	= Channel::MI2C_RGBA();
 	};
 
 	struct Image : Attributes {
 		Bytes<>	data;
 	};
 }
+
+#endif

@@ -144,19 +144,10 @@ Texture2D& Texture2D::create(
 ) {
 	if (exists()) return *this;
 	if (!image)
-		image = Image2D::newImage(
-			width,
-			height,
-			type,
-			format,
-			minFilter,
-			magFilter,
-			data,
-			layout
-		);
-	else if (image && !image->exists())
+		image = image.create();
+	if (!image->exists())
 		Image2D::newImage(
-			(Image2D*)image,
+			&*image,
 			width,
 			height,
 			type,
@@ -257,7 +248,7 @@ Texture2D& Texture2D::create(
 
 Texture2D& Texture2D::destroy() {
 	if (!exists()) return *this;
-	image.unbind();
+	image = nullptr;
 	return *this;
 }
 
@@ -323,7 +314,9 @@ Texture2D& Texture2D::make(
 
 Texture2D& Texture2D::makeUnique(bool const filter) {
 	if (!exists()) return *this;
-	Image2D* newImg = Image2D::newImage(
+	auto const newImg = image.create();
+	Image2D::newImage(
+		image.raw(),
 		image->attributes.width,
 		image->attributes.height,
 		image->attributes.type,
@@ -333,7 +326,7 @@ Texture2D& Texture2D::makeUnique(bool const filter) {
 		NULL,
 		image->attributes.layout
 	);
-	Image::blit(
+	Image2D::blit(
 		{
 			*image,
 			{0, 0, image->attributes.width, image->attributes.height}
@@ -363,7 +356,7 @@ Texture2D& Texture2D::copyFrom(
 ) {
 	if (!exists()) return *this;
 	// Copy data
-	Image::blit(
+	Image2D::blit(
 		{
 			*image,
 			{startX, startY, endX, endY}
@@ -386,10 +379,15 @@ Texture2D& Texture2D::copyFrom(
 ) {
 	if (!exists()) return *this;
 	// Copy data
-	copyTexture(
-		(Image2D*)other.image, (Image2D*)image,
-		0, 0, other.image->attributes.width, other.image->attributes.height,
-		0, 0, image->attributes.width, image->attributes.height,
+	Image2D::blit(
+		{
+			*other.image
+			{0, 0, other.image->attributes.width, other.image->attributes.height}
+		},
+		{
+			*image,
+			{0, 0, image->attributes.width, image->attributes.height}
+		},
 		filter ? FilterMode::FM_SMOOTH : FilterMode::FM_NEAREST
 	);
 	// Regenerate mipmaps

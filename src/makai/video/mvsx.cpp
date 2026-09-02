@@ -59,11 +59,13 @@ bool Decoder::nextFrame() {
 	auto [_, hh] = header.open();
 	if (auto const fh = hh.video.getEntry(in, current)) {
 		auto const frame = fh.value();
-		construct(buffers[inEvenFrame], frame);
+		if (!construct(buffers[inEvenFrame], frame))
+		 return false;
 		if (frame.type == Frame::Type::MV2_FT_DELTA_MASKED) {
 			++current;
 			if (auto const fh = hh.video.getEntry(in, current))
-				construct(mask, fh.value());
+				if (!construct(mask, fh.value()))
+					return false;
 		} else return false;
 		decode(frame);
 	} else return false;
@@ -151,21 +153,22 @@ void Decoder::decode(Frame const& frame) {
 
 // TODO: Break this pyramid of doom
 
-void Decoder::construct(Box<Makai::Graph::Image2D>& image, Frame const& frame) {
+bool Decoder::construct(Box<Makai::Graph::Image2D>& image, Frame const& frame) {
 	auto [_, ii] = image.open();
 	auto [_, bb] = block.open();
-	ii.fill({frame.r / 255.0, frame.g / 255.0, frame.b / 255.0, frame.a / 255.0});
+	ii.fill(frame.background.normalize());
 	for (usize i = 0; i < frame.block.size; ++i) {
 		if (auto const bh = frame.block.getEntry(in, i)) {
 			auto const block = bh.value();
-			if (auto const d = block.data.fromBytes(in)) {
-				if (block.flags.solidColor) {
+			if (block.flags.solidColor) {
 					block.make(
 						block.region.width,
 						block.region.height
-					).fill({block.r / 255.0, block.g / 255.0, block.b / 255.0, block.a / 255.0});
-				} else {
-					auto const data = Makai::Image::I2D::decode(d.value(), block.format);
+					).fill(block.background.normalize());
+			} else {
+				auto sin = InputSubstream<Bytes<>>(in, block.data.start, block.data.size);
+				if (auto const img = Makai::Image::I2D::decodeStream(sin, block.format)) {
+					auto const image = img.value();
 					block.make(
 						block.region.width,
 						block.region.height,
@@ -173,20 +176,21 @@ void Decoder::construct(Box<Makai::Graph::Image2D>& image, Frame const& frame) {
 						Graph::Image2D::ImageFormat::IF_RGBA,
 						Graph::Image2D::FilterMode::FM_SMOOTH,
 						Graph::Image2D::FilterMode::FM_SMOOTH,
-						data.data()
+						image.data.data()
 					);
-				}
-				Makai::Graph::Image2D::blit(
-					{
-						bb,
-						{0, 0, block.region.width, block.region.height}
-					},
-					{
-						ii,
-						{block.region.x, block.region.y, block.region.width, block.region.height}
-					}
-				);
+				} else return false;
 			}
-		}
+			Makai::Graph::Image2D::blit(
+				{
+					bb,
+					{0, 0, block.region.width, block.region.height}
+				},
+				{
+					ii,
+					{block.region.x, block.region.y, block.region.width, block.region.height}
+				}
+			);
+		} else return false;
 	}
+	return true;
 }

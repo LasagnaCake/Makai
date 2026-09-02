@@ -40,6 +40,10 @@ struct InputMemoryStream: IInputStream<Bytes<>> {
 		return buffer.size();
 	}
 
+	constexpr bool atEnd() const override {
+		return pointer >= buffer.size();
+	}
+
 private:
 	usize		pointer = 0;
 	ByteSpan<>	buffer;

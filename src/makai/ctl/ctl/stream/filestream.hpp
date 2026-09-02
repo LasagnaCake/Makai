@@ -55,6 +55,10 @@ struct InputFileStream: IInputStream<T> {
 		return file.isOpen();
 	}
 
+	constexpr bool atEnd() const override {
+		return file.atEnd();
+	}
+
 private:
 	CFile file;
 };
@@ -99,6 +103,10 @@ struct OutputFileStream: IOutputStream<T> {
 
 	constexpr bool isOpen() const override {
 		return file.isOpen();
+	}
+
+	constexpr bool atEnd() const override {
+		return file.atEnd();
 	}
 
 private:

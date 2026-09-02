@@ -16,6 +16,18 @@ using FilterMode		= Image2D::FilterMode;
 
 using ImageData			= Image2D::ImageData;
 
+constexpr uint32 convert(FilterMode const& type) {
+	switch (type) {
+		default:
+		case FilterMode::FM_NEAREST:	return GL_NEAREST;
+		case FilterMode::FM_SMOOTH:		return GL_LINEAR;
+		case FilterMode::FM_NMN:		return GL_NEAREST_MIPMAP_NEAREST;
+		case FilterMode::FM_NMS:		return GL_NEAREST_MIPMAP_LINEAR;
+		case FilterMode::FM_SMN:		return GL_LINEAR_MIPMAP_NEAREST;
+		case FilterMode::FM_SMS:		return GL_LINEAR_MIPMAP_LINEAR;
+	}
+}
+
 static inline uint32 multiPurposeFrameBuffer() {
 	MAKAILIB_DEBUGLN_FULL("Creating copy buffer...");
 	uint id = 0;
@@ -69,27 +81,29 @@ static inline void copyTexture(
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Image2D::blit(Frame const& from, Frame const& to) {
+void Image2D::blit(Frame const& from, Frame const& to, FilterMode const filter) {
 	copyTexture(
 		&from.image,
 		&to.image,
-		from.start.x,
-		from.start.y,
-		from.end.x,
-		from.end.y,
-		to.start.x,
-		to.start.y,
-		to.end.x,
-		to.end.y,
+		from.region.start.x,
+		from.region.start.y,
+		from.region.end.x,
+		from.region.end.y,
+		to.region.start.x,
+		to.region.start.y,
+		to.region.end.x,
+		to.region.end.y,
+		filter
 	);
 }
 
 Image2D& Image2D::fill(Vector4 const& color) {
 	static uint32 const fb = multiPurposeFrameBuffer();
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb);
-	glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, id, 0);
+	glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, getID(), 0);
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
-	glClearBufferfv(GL_COLOR, 0, &color);
+	glClearBufferfv(GL_COLOR, 0, color.data);
+	return *this;
 }
 
 constexpr uint32 convert(Image::ImageTarget const& target) {
@@ -148,18 +162,6 @@ constexpr uint32 convert(ComponentLayout const& type) {
 		case ComponentLayout::CL_RGBA:		return GL_RGBA;
 		case ComponentLayout::CL_RGBA_16F:	return GL_RGBA16F;
 		case ComponentLayout::CL_D24_S8:	return GL_DEPTH24_STENCIL8;
-	}
-}
-
-constexpr uint32 convert(FilterMode const& type) {
-	switch (type) {
-		default:
-		case FilterMode::FM_NEAREST:	return GL_NEAREST;
-		case FilterMode::FM_SMOOTH:		return GL_LINEAR;
-		case FilterMode::FM_NMN:		return GL_NEAREST_MIPMAP_NEAREST;
-		case FilterMode::FM_NMS:		return GL_NEAREST_MIPMAP_LINEAR;
-		case FilterMode::FM_SMN:		return GL_LINEAR_MIPMAP_NEAREST;
-		case FilterMode::FM_SMS:		return GL_LINEAR_MIPMAP_LINEAR;
 	}
 }
 

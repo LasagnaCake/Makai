@@ -50,6 +50,8 @@ namespace BinaryFormat {
 
 		usize position() const override {return pointer;}
 
+		bool atEnd() const override {return pointer >= input.size();}
+
 		Reader(Bytes<> const& input): input(input) {}
 	};
 

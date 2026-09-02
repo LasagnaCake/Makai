@@ -126,13 +126,13 @@ namespace Makai::Video::V2D::MVSX {
 
 		struct Subtitle {
 			struct Entry {
-				uint64	frameStart, duration;
-				Color8	foreground, background;
-				uint64	fontID;
-				Region	region;
-				int8	hjust;
-				int8	vjust;
-				String	text;
+				uint64		frameStart, duration;
+				Color8		foreground, background;
+				uint64		fontID;
+				Region		region;
+				int8		hjust;
+				int8		vjust;
+				UTF8String	text;
 			};
 			String		language;
 			List<Entry>	entries;
@@ -169,7 +169,7 @@ namespace Makai::Video::V2D::MVSX {
 
 		Audio::Engine engine;
 
-		void construct(Box<Graph::Image2D>& image, Frame const& frame);
+		bool construct(Box<Graph::Image2D>& image, Frame const& frame);
 
 		Shader shader;
 	};
