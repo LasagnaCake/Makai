@@ -16,7 +16,7 @@ using FilterMode		= Image2D::FilterMode;
 
 using ImageData			= Image2D::ImageData;
 
-static inline uint32 createCopyBuffer() {
+static inline uint32 multiPurposeFrameBuffer() {
 	MAKAILIB_DEBUGLN_FULL("Creating copy buffer...");
 	uint id = 0;
 	glGenFramebuffers(1, &id);
@@ -37,7 +37,7 @@ static inline void copyTexture(
 	FilterMode const&	filter = FilterMode::FM_NEAREST
 ) {
 	if (!src || !dst) return;
-	static uint32 const fb = createCopyBuffer();
+	static uint32 const fb = multiPurposeFrameBuffer();
 	MAKAILIB_DEBUGLN_FULL("Binding copy buffer...");
 	glBindFramebuffer(GL_FRAMEBUFFER, fb);
 	MAKAILIB_DEBUGLN_FULL("Binding source...");
@@ -69,7 +69,7 @@ static inline void copyTexture(
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Image::blit(Frame const& from, Frame const& to) {
+void Image2D::blit(Frame const& from, Frame const& to) {
 	copyTexture(
 		&from.image,
 		&to.image,
@@ -82,6 +82,14 @@ void Image::blit(Frame const& from, Frame const& to) {
 		to.end.x,
 		to.end.y,
 	);
+}
+
+Image2D& Image2D::fill(Vector4 const& color) {
+	static uint32 const fb = multiPurposeFrameBuffer();
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb);
+	glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, id, 0);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+	glClearBufferfv(GL_COLOR, 0, &color);
 }
 
 constexpr uint32 convert(Image::ImageTarget const& target) {

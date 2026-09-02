@@ -1235,7 +1235,8 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		lhs.type->flags.isArray
 	&&	node->base.type == LTS_TT_STREAM_INSERT
 	) {
-		if (auto const t = TypeDecl::stronger(lhs.type->base, rhs.type))
+		Namespace::TypeRef t = lhs.type;
+		if (auto const _ = TypeDecl::stronger(lhs.type->base, rhs.type))
 			context.top()->impl->writeMainLine("op apush");
 		else context.error("Array element type mismatch!", node);
 		return {{"move top"}, t->scope ? t->scope.asStrong() : null, t, lhs.direct.undefined(), likelihood};

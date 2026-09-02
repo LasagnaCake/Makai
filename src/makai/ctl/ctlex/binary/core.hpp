@@ -108,6 +108,12 @@ namespace BinaryFormat {
 			MX::memmove(&out, block.data(), sz);
 			return out;
 		}
+
+		static Nullable<T> fetch(IReadable& source) {
+			auto const head = build(source);
+			if (!head) return null;
+			return Header<T>(head.value()).fromBytes(source);
+		}
 	};
 	template <class T, auto CONVERT = [] (Bytes<> const&) -> Nullable<T> {return null;}>
 	struct [[CTL_PACKED_STRUCT]] Table: Entry {
@@ -115,7 +121,7 @@ namespace BinaryFormat {
 		constexpr static auto const convert = CONVERT;
 
 		template <class TFunc = decltype(convert)>
-		Nullable<T> readFromSource(IReadable& source, usize const index, TFunc const convert = CONVERT) const
+		Nullable<T> getEntry(IReadable& source, usize const index, TFunc const convert = CONVERT) const
 		requires (
 			Type::Functional<TFunc, Nullable<T>(Bytes<> const&)>
 		or	Type::Functional<TFunc, T(Bytes<> const&)>
@@ -140,7 +146,7 @@ namespace BinaryFormat {
 			List<T> out;
 			auto const sz = (size / sizeof(Entry));
 			for (usize i = 0; i < sz; ++i)
-				if (auto const v = readFromSource(source, i))
+				if (auto const v = getEntry(source, i))
 					out.pushBack(v.value());
 				else return null;
 			return wrap<Nullable>(out);

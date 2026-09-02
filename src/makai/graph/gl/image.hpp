@@ -380,6 +380,8 @@ namespace Makai::Graph {
 			FilterMode const filter = FilterMode::FM_NEAREST
 		);
 
+		Image2D& fill(Vector4 const& color);
+
 	private:
 		void saveImageToFile(
 			String const&	path,

@@ -16,9 +16,6 @@ enum Packing {
 	MV2P_NONE,
 	MV2P_DELTA_ALPHA,
 	MV2P_DELTA_MASKED,
-	MV2P_BLOCK,
-	MV2P_BLOCK_DELTA_ALPHA,
-	MV2P_BLOCK_DELTA_MASKED,
 };
 
 enum Mode {
@@ -51,10 +48,8 @@ vec4 apply(vec4 src, vec4 src, vec4 mask) {
 vec4 process(vec4 dst, vec4 src, vec4 mask) {
     switch (packing) {
         case MV2P_NONE: return dst;
-        case MV2P_DELTA_ALPHA:
-        case MV2P_BLOCK_DELTA_ALPHA: return apply(dst, src, mask.aaaa);
-        case MV2P_DELTA_MASKED:
-        case MV2P_BLOCK_DELTA_MASKED: return apply(dst, src, mask);
+        case MV2P_DELTA_ALPHA: return apply(vec4(dst.xyz, 1), vec4(src.xyz, 1), mask.wwww);
+        case MV2P_DELTA_MASKED: return apply(dst, src, mask);
     }
 }
 
@@ -64,9 +59,7 @@ void main() {
             next = sample(current, fragment);
         break;
         case MV2P_DELTA_ALPHA:
-        case MV2P_BLOCK_DELTA_ALPHA:
         case MV2P_DELTA_MASKED:
-        case MV2P_BLOCK_DELTA_MASKED:
             next = process(
                 sample(current,     fragment),
                 sample(previous,    fragment),

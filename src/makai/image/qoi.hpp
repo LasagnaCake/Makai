@@ -1,9 +1,8 @@
-#ifndef MAKAILIB_IMAGE_CORE_H
-#define MAKAILIB_IMAGE_CORE_H
+#ifndef MAKAILIB_IMAGE_QOI_H
+#define MAKAILIB_IMAGE_QOI_H
 
-#include "../compat/ctl.hpp"
+#include "core.hpp"
 #include "../graph/color/color.hpp"
-#include "get.hpp"
 
 namespace Makai::Image::I2D::QOI {
 	using Color8 = Graph::Color::Color8;
@@ -16,3 +15,5 @@ namespace Makai::Image::I2D::QOI {
 		uint8		space		= 1;
 	};
 }
+
+#endif

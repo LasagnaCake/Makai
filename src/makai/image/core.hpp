@@ -2,7 +2,7 @@
 #define MAKAILIB_IMAGE_CORE_H
 
 #include "../compat/ctl.hpp"
-#include "get.hpp"
+#include "../file/get.hpp"
 
 namespace Makai::Image::I2D {
 	enum class Format: uint64 {

@@ -2,9 +2,9 @@
 #define MAKAILIB_VIDEO_MVSX_H
 
 #include "../compat/ctl.hpp"
-#include "../image/core.hpp"
+#include "../image/image.hpp"
 #include "../graph/color/color.hpp"
-#include "get.hpp"
+#include "core.hpp"
 
 namespace Makai::Video::V2D::MVSX {
 	using namespace CTL::Ex::BinaryFormat;
@@ -19,22 +19,21 @@ namespace Makai::Video::V2D::MVSX {
 		AV2P_WAV
 	};
 
-	enum class Packing: uint64 {
-		/// @brief No packing (frames are stored as-is).
-		MV2P_NONE,
-		/// @brief Only first frame + difference between frames are stored. Mask is stored in the alpha channel. DOES NOT SUPPORT TRANSPARENCY.
-		MV2P_DELTA_ALPHA,
-		/// @brief Only first frame + difference between frames are stored. Mask is stored before the actual frame. SUPPORTS TRANSPARENCY.
-		MV2P_DELTA_MASKED,
-		/// @brief Block-based packing.
-		MV2P_BLOCK,
-		/// @brief Delta-Alpha storage with block packing.
-		MV2P_BLOCK_DELTA_ALPHA,
-		/// @brief Delta-Masked storage with block packing.
-		MV2P_BLOCK_DELTA_MASKED,
+	struct [[CTL_PACKED_STRUCT]] Region {
+		uint64 x, y;
+		uint64 width, height;
 	};
 
 	struct [[CTL_PACKED_STRUCT]] Frame {
+		enum class Type: uint64 {
+			/// @brief Normal frame.
+			MV2_FT_NONE,
+			/// @brief Derive from previous frame. Mask is stored in the alpha channel. DOES NOT SUPPORT TRANSPARENCY.
+			MV2_FT_DELTA_ALPHA,
+			/// @brief Derive from previous frame. Mask is stored afrer the delta frame. SUPPORTS TRANSPARENCY.
+			MV2_FT_DELTA_MASKED,
+		};
+
 		enum class Mode: uint16 {
 			/// @brief Mix in region denoted in mask with image contents. (src * mask + dst * (1 - mask))
 			MV2_FM_MIX,
@@ -55,28 +54,33 @@ namespace Makai::Video::V2D::MVSX {
 		};
 
 		struct [[CTL_FLAG_STRUCT(uint64)]] Flags {
-			uint64 blocky: 1;
+			uint64: 0;
 		};
 
 		struct [[CTL_PACKED_STRUCT]] Block {
 			struct [[CTL_FLAG_STRUCT(uint64)]] Flags {
-				uint64: 0;
+				uint64 solidColor: 1;
 			};
-			uint64	x, y;
-			uint8	log2Length;
-			Flags	flags;
-			Data	data;
+
+			ImageFormat	format;
+			Region		region;
+			Flags		flags;
+			Color8		background;
+			Data		data;
 		};
 
+		Type				type;
 		Mode				mode;
 		Flags				flags;
-		HeaderTable<Block>	blocks;
 		Color8				background;
+		HeaderTable<Block>	blocks;
 	};
 
 	struct [[CTL_PACKED_STRUCT]] Track {
-		Text	language;
-		Data	data;
+		AudioFormat	format;
+		uint64		timeOffset;
+		Text		language;
+		Data		data;
 	};
 
 	struct [[CTL_PACKED_STRUCT]] Subtitles {
@@ -84,10 +88,9 @@ namespace Makai::Video::V2D::MVSX {
 			uint64 frameStart, duration;
 			Color8 foreground, background;
 			uint64 fontID;
-			uint64 x, y;
-			uint64 width, height;
-			int8 hjust: 3;
-			int8 vjust: 3;
+			Region region;
+			int8 hjust: 2;
+			int8 vjust: 2;
 		};
 
 		Text				language;
@@ -105,13 +108,25 @@ namespace Makai::Video::V2D::MVSX {
 		uint64		height;
 		uint64		framerate;
 
-		Packing		packing;
-
-		ImageFormat	imageFormat;
-		AudioFormat	audioFormat;
-
 		HeaderTable<Frame>		video;
 		HeaderTable<Track>		audio;
 		HeaderTable<Subtitles>	subtitles;
+	};
+
+	struct Decoder: ADecoder {
+		void reset()					override;
+		bool finished()					override;
+		bool nextFrame()				override;
+		Graph::Image2D& currentFrame()	override;
+
+	private:
+		usize current = 0;
+		Header header;
+		bool even = false;
+		Graph::Image2D buffer[2];
+		Graph::Image2D block;
+		Graph::Image2D mask;
+
+		void construct(Graph::Image2D& image, Frame const& frame);
 	};
 }
