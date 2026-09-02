@@ -3,6 +3,7 @@
 
 #include "../compat/ctl.hpp"
 #include "../image/image.hpp"
+#include "../audio/audio.hpp"
 #include "../graph/graph.hpp"
 #include "core.hpp"
 
@@ -116,6 +117,27 @@ namespace Makai::Video::V2D::MVSX {
 	};
 
 	struct Decoder: ADecoder, private Graph::Blendable {
+		struct Track {
+			AudioFormat	format;
+			uint64		timeOffset;
+			String		language;
+			StringList	entries;
+		};
+
+		struct Subtitle {
+			struct Entry {
+				uint64	frameStart, duration;
+				Color8	foreground, background;
+				uint64	fontID;
+				Region	region;
+				int8	hjust;
+				int8	vjust;
+				String	text;
+			};
+			String		language;
+			List<Entry>	entries;
+		};
+
 		Decoder(BinaryFormat::IReadable& in);
 		virtual ~Decoder();
 
@@ -125,8 +147,15 @@ namespace Makai::Video::V2D::MVSX {
 		bool finished() const			override;
 		bool nextFrame()				override;
 
-		void readInto(Graph::Image2D& image) const		override;
-		void readInto(Graph::Texture& texture) const	override;
+		usize frameCount() const;
+		void readFrameInto(Graph::Image2D& image) const		override;
+		void readFrameInto(Graph::Texture& texture) const	override;
+
+		usize trackCount() const;
+		Instance<Sound> track(usize const index) const;
+
+		usize subtitleCount() const;
+		Subtitle subtitle(usize const index) const;
 
 	private:
 		void decode(Frame const& frame);
@@ -137,6 +166,8 @@ namespace Makai::Video::V2D::MVSX {
 		carr<Box<Graph::Image2D>, 2>	buffers;
 		Box<Graph::Image2D>				block;
 		Box<Graph::Image2D>				mask;
+
+		Audio::Engine engine;
 
 		void construct(Box<Graph::Image2D>& image, Frame const& frame);
 

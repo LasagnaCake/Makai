@@ -4,13 +4,13 @@
 #include "../compat/ctl.hpp"
 #include "core.hpp"
 
-/// @brief Audio facilities. 
+/// @brief Audio facilities.
 namespace Makai::Audio {
 	/// @brief Audio engine.
 	struct Engine;
 
 	using APeriodicAudioEvent = APeriodic<Engine>;
-	
+
 	/// @brief Audio engine.
 	struct Engine: private Component<Engine>, APeriodicAudioEvent, ILoud {
 		using typename Component<Engine>::Resource;
@@ -90,7 +90,7 @@ namespace Makai::Audio {
 		);
 
 		using Component<Engine>::exists;
-	
+
 	private:
 		using Component<Engine>::instance;
 	};
@@ -102,7 +102,7 @@ namespace Makai::Audio {
 
 		/// @brief Destructor.
 		virtual ~Group();
-	
+
 		/// @brief Copy assignment operator (deleted).
 		Group& operator=(Group const& other)	= delete;
 		/// @brief Move assignment operator (deleted).
@@ -128,7 +128,7 @@ namespace Makai::Audio {
 		friend struct Engine;
 		friend struct Engine::Resource;
 	};
-	
+
 	struct Engine::Sound: private Component<Engine::Sound>, ILoud, IClonable<Instance<Engine::Sound>> {
 		using typename Component<Sound>::Resource;
 

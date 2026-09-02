@@ -72,7 +72,7 @@ bool Decoder::nextFrame() {
 	return true;
 }
 
-void Decoder::readInto(Graph::Image2D& image) {
+void Decoder::readFrameInto(Graph::Image2D& image) {
 	auto [_, ff] = buffer[inEvenFrame].open();
 	auto [_, hh] = header.open();
 	Makai::Graph::Image2D::blit(
@@ -91,7 +91,7 @@ Attributes Decoder::attributes() const {
 	return {header.value()};
 }
 
-void Decoder::readInto(Graph::Texture2D& texture) {
+void Decoder::readFrameInto(Graph::Texture2D& texture) {
 	readInto(texture.getImage());
 }
 
