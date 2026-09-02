@@ -120,6 +120,8 @@ namespace Makai::Video::V2D::MVSX {
 		Graph::Image2D& currentFrame()	override;
 
 	private:
+		void decode();
+
 		usize current = 0;
 		Header header;
 		bool even = false;

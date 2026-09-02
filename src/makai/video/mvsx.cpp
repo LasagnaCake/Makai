@@ -33,9 +33,45 @@ void Decoder::reset() {
 bool Decoder::nextFrame() {
 	if (current >= video.size) return false;
 	if (auto const fh = header.video.getEntry(in, current)) {
+		auto const frame = fh.value();
+		construct(buffer[even], frame);
+		if (frame.type == Frame::Type::MV2_FT_DELTA_MASKED) {
+			++current;
+			if (auto const fh = header.video.getEntry(in, current))
+				construct(mask, fh.value());
+		}
 	}
+	decode();
 	++even;
 	++current;
+}
+
+Makai::Graph::Image2D& Decoder::currentFrame() {
+	return buffer[even];
+}
+
+static inline uint32 multiPurposeFrameBuffer() {
+	MAKAILIB_DEBUGLN_FULL("Creating copy buffer...");
+	uint id = 0;
+	glGenFramebuffers(1, &id);
+	return id;
+}
+
+void Decoder::decode() {
+	static uint32 const decoder = multiPurposeFrameBuffer();
+	glBindFramebuffer(GL_FRAMEBUFFER, decoder);
+	glFramebufferTexture2D(
+		GL_DRAW_FRAMEBUFFER,
+		GL_COLOR_ATTACHMENT0,
+		GL_TEXTURE_2D,
+		buffer[!even].getID(),
+		0
+	);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+	buffer[even].use(0);
+	buffer[!even].use(1);
+	// TODO: the rest of the owl
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Decoder::construct(Makai::Graph::Image2D& image, Frame const& frame) {
@@ -45,7 +81,6 @@ void Decoder::construct(Makai::Graph::Image2D& image, Frame const& frame) {
 			auto const block = bh.value();
 			if (auto const d = block.data.fromBytes(in)) {
 				if (block.flags.solidColor) {
-					auto const data = Makai::Image::I2D::decode(d.value(), block.format);
 					block.make(
 						block.region.width,
 						block.region.height
