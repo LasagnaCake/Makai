@@ -6,13 +6,11 @@
 
 namespace Makai::Image::I2D {
 	enum class Format: uint64 {
-		MI2F_UNKNOWN,
 		MI2F_TGA,
 		MI2F_PNG,
 		MI2F_JPG,
 		MI2F_BMP,
 		MI2F_QOI,
-		MI2F_INVALID = Limit::MAX<uint64>,
 	};
 
 	[[gnu::aligned(1)]]
