@@ -275,6 +275,14 @@ namespace Makai::Graph {
 		/// @return Image contents.
 		ImageData getData() const;
 
+		/// @brief Returns the image's width.
+		/// @return Image width.
+		uint32 width() const;
+
+		/// @brief Returns the image's height.
+		/// @return Image height.
+		uint32 height() const;
+
 		/// @brief Saves the image to disk.
 		/// @param path Path to save image to.
 		/// @param quality Image quality.

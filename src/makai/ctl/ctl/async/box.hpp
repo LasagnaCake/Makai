@@ -7,6 +7,7 @@
 #include "../adapter/comparator.hpp"
 #include "../typetraits/traits.hpp"
 #include "mutex.hpp"
+#include "lock.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -74,6 +75,12 @@ public:
 	DataType value() const {
 		this->wait();
 		return data;
+	}
+
+	/// @brief Returns a scope-bound synchronization structure containing a reference to the value.
+	/// @return Synced structure.
+	auto open() {
+		return synchronize(*this, data);
 	}
 
 	/// @brief Safely compares values.

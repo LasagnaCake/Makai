@@ -3,7 +3,7 @@
 
 #include "../compat/ctl.hpp"
 #include "../image/image.hpp"
-#include "../graph/color/color.hpp"
+#include "../graph/graph.hpp"
 #include "core.hpp"
 
 namespace Makai::Video::V2D::MVSX {
@@ -97,38 +97,49 @@ namespace Makai::Video::V2D::MVSX {
 		HeaderTable<Entry>	entries;
 	};
 
-	struct [[CTL_PACKED_STRUCT]] Header {
+	struct [[CTL_PACKED_STRUCT]] Attributes {
+		uint64		width;
+		uint64		height;
+		uint64		framerate;
+	};
+
+	struct [[CTL_PACKED_STRUCT]] Header: Attributes {
 		template<class T> struct [[CTL_PACKED_STRUCT]] Section {
 			T format;
 		};
 
 		scstring<10> const magic = "Makai::VSX";
 
-		uint64		width;
-		uint64		height;
-		uint64		framerate;
-
 		HeaderTable<Frame>		video;
 		HeaderTable<Track>		audio;
 		HeaderTable<Subtitles>	subtitles;
 	};
 
-	struct Decoder: ADecoder {
+	struct Decoder: ADecoder, private Graph::Blendable {
+		Decoder(BinaryFormat::IReadable& in);
+		virtual ~Decoder();
+
+		Attributes attributes() const;
+
 		void reset()					override;
-		bool finished()					override;
+		bool finished() const			override;
 		bool nextFrame()				override;
-		Graph::Image2D& currentFrame()	override;
+
+		void readInto(Graph::Image2D& image) const		override;
+		void readInto(Graph::Texture& texture) const	override;
 
 	private:
-		void decode();
+		void decode(Frame const& frame);
 
-		usize current = 0;
-		Header header;
-		bool even = false;
-		Graph::Image2D buffer[2];
-		Graph::Image2D block;
-		Graph::Image2D mask;
+		Atomic<usize>					current = 0;
+		Atomic<bool>					inEvenFrame = false;
+		Box<Header>						header;
+		carr<Box<Graph::Image2D>, 2>	buffers;
+		Box<Graph::Image2D>				block;
+		Box<Graph::Image2D>				mask;
 
-		void construct(Graph::Image2D& image, Frame const& frame);
+		void construct(Box<Graph::Image2D>& image, Frame const& frame);
+
+		Shader shader;
 	};
 }

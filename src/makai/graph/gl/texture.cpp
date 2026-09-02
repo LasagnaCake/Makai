@@ -442,6 +442,10 @@ Image2D::Attributes Texture2D::attributes() const {
 	return image->attributes;
 }
 
+Image2D& Texture2D::getImage() {
+	return *image;
+}
+
 Texture2D& Texture2D::enable(uint8 const slot) {
 	image->use(slot);
 	return *this;

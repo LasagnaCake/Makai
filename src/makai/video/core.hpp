@@ -21,12 +21,14 @@ namespace Makai::Video::V2D {
 	};
 
 	struct ADecoder {
-		IVideoStream(BinaryFormat::IReadable& in): in(in) {}
+		ADecoder(BinaryFormat::IReadable& in): in(in) {}
 
 		void reset()					= 0;
 		bool finished()					= 0;
 		bool nextFrame()				= 0;
 		Graph::Image2D& currentFrame()	= 0;
+
+		virtual ~ADecoder() {}
 
 	protected:
 		BinaryFormat::IReadable& in;

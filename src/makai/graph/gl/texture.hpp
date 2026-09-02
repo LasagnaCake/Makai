@@ -11,7 +11,7 @@ namespace Makai::Graph {
 	class Texture2D {
 	public:
 		/// @brief Underlying image instance.
-		using Image2DInstance = Instance<Image2D>;
+		using Image2DInstance = AtomicCell<Image2D>;
 
 		/// @brief Texture wrapping mode.
 		enum class WrapMode {
@@ -324,6 +324,10 @@ namespace Makai::Graph {
 		/// @brief Returns the underlying image's attributes.
 		/// @return Image attributes.
 		Image2D::Attributes attributes() const;
+
+		/// @brief Returns the underlying image.
+		/// @return Image.
+		Image2D& getImage();
 
 		/// @brief Enables the underlying image to be used in the shader.
 		/// @param slot Image slot to bind to. By default, it is slot zero.

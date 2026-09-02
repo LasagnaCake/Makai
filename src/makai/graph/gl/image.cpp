@@ -333,6 +333,15 @@ ImageData Image2D::getData() const {
 	return imgdat;
 }
 
+uint32 Image2D::width() const {
+	return attributes.width;
+}
+
+
+uint32 Image2D::height() const {
+	return attributes.height;
+}
+
 Image2D const& Image2D::saveToFile(String const& path, uint8 const quality, ImageFileType const& type) const {
 	saveImageToFile(path, quality, type);
 	return *this;

@@ -40,11 +40,11 @@ struct Synchronized: Typed<T>, SelfIdentified<Synchronized<T>> {
 	}
 
 	SelfType& set(DataType const& newValue) {
-		canRead = false;
 		mutex.lock();
+		canRead = false;
 		value = newValue;
-		mutex.unlock();
 		canRead = true;
+		mutex.unlock();
 		return *this;
 	}
 

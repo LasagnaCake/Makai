@@ -5,6 +5,7 @@
 #include "../templates.hpp"
 #include "../typetraits/traits.hpp"
 #include "../typetraits/verify.hpp"
+#include "../container/pair.hpp"
 #include "mutex.hpp"
 
 CTL_NAMESPACE_BEGIN
@@ -60,10 +61,13 @@ private:
 	void operator delete[](pointer);
 };
 
-
 /// @brief Creates a scope lock for a given mutex.
 template<Type::Derived<Mutex> TMutex = Mutex>
 constexpr ScopeLock<TMutex> lock(TMutex& mutex) {return {mutex};}
+
+/// @brief Creates a scope lock for a given mutex.
+template<Type::Derived<Mutex> TMutex = Mutex, class TValue>
+constexpr KeyValuePair<ScopeLock<TMutex>, TValue> synchronize(TMutex& mutex, TValue& value) {return {{mutex}, value};}
 
 CTL_NAMESPACE_END
 

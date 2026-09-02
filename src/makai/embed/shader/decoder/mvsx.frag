@@ -4,7 +4,7 @@
 
 precision mediump float;
 
-in vec2 fragment;
+layout (location = 0) in vec2 fragment;
 
 layout (location = 0) out vec4 next;
 

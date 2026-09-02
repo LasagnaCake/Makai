@@ -19,6 +19,12 @@ define embed
 	@$(CPP_COMPILER) -o buffer.vert.shader.o -c shader.vert.s $(LEAN)
 	@$(CPP_COMPILER) -o buffer.frag.shader.o -c shader.frag.s $(LEAN)
 	@cd ..
+	@cd codec
+	@echo "Removing old buffer shaders..."
+	@rm -f *.shader.o
+	@echo "Embedding codec shaders..."
+	@$(CPP_COMPILER) -o codec.frag.shader.o -c shader.frag.s $(LEAN)
+	@cd ..
 	@echo "Removing old shader packs..."
 	@rm -f *.$@.$(strip $(1)).o
 	@echo "Packing $(strip $(1))..."
