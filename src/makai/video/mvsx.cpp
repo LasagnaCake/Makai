@@ -16,8 +16,13 @@ extern int mkEmbed_MVSXShaderFrag_Size;
 String const MVSX_FRAG		= String(mkEmbed_MVSXShaderFrag, mkEmbed_MVSXShaderFrag_Size);
 
 struct Decoder::Impl {
-	Graph::Shader shader;
-	GLuint vao, vbo, fbo;
+	Graph::Shader					shader;
+	GLuint							vao, vbo, fbo;
+	carr<Box<Graph::Image2D>, 2>	buffers;
+	Box<Graph::Image2D>				block;
+	Box<Graph::Image2D>				mask
+
+	bool construct(Box<Graph::Image2D>& image, Frame const& frame);
 };
 
 Decoder::Decoder(BinaryFormat::IReadable& in): ADecoder(in) {
@@ -41,7 +46,7 @@ void Decoder::reset() {
 	if (auto const head = BinaryFormat::Header<Header>::fetch(in)) {
 		auto [_1, hh] = header.open();
 		hh = head.value();
-		for (auto& buffer: buffers) {
+		for (auto& buffer: impl->buffers) {
 			auto [_2, bb] = buffer.open();
 			bb.create(
 				hh.width,
@@ -52,7 +57,7 @@ void Decoder::reset() {
 				Graph::Image2D::FilterMode::FM_SMOOTH
 			);
 		}
-		auto [_3, mm] = mask.open();
+		auto [_3, mm] = impl->mask.open();
 		mm.create(
 			hh.width,
 			hh.height,
@@ -72,12 +77,12 @@ bool Decoder::nextFrame() {
 	if (current >= hh.video.size) return false;
 	if (auto const fh = hh.video.getEntry(in, current)) {
 		auto const frame = fh.value();
-		if (!construct(buffers[inEvenFrame], frame))
+		if (!impl->construct(buffers[inEvenFrame], frame))
 		 return false;
 		if (frame.type == Frame::Type::MV2_FT_DELTA_MASKED) {
 			++current;
 			if (auto const fh = hh.video.getEntry(in, current))
-				if (!construct(mask, fh.value()))
+				if (!impl->construct(mask, fh.value()))
 					return false;
 		} else return false;
 		if (frame.type != Frame::Type::MV2_FT_NONE)
@@ -109,25 +114,6 @@ void Decoder::go(usize const frame) {
 
 bool Decoder::finished() {return false;}
 
-void Decoder::readFrameInto(Graph::Image2D& image) {
-	auto [_1, ff] = buffers[inEvenFrame].open();
-	auto [_2, hh] = header.open();
-	Makai::Graph::Image2D::blit(
-		{
-			ff,
-			{0, 0, hh.width, hh.height}
-		},
-		{
-			image,
-			{0, 0, image.width(), image.height()}
-		}
-	);
-}
-
-void Decoder::readFrameInto(Graph::Texture2D& texture) {
-	readFrameInto(texture.getImage());
-}
-
 usize Decoder::frameCount() {
 	auto const& [_, hh] = header.open();
 	return hh.viewableFrames;
@@ -135,7 +121,7 @@ usize Decoder::frameCount() {
 
 Span<byte const> Decoder::currentFrame() {
 	if (cache.size()) return {cache.cbegin(), cache.cend()};
-	auto const& [_, bb] = buffers[!inEvenFrame].open();
+	auto const& [_, bb] = impl->buffers[!inEvenFrame].open();
 	cache = bb.getData().data;
 	return {cache.cbegin(), cache.cend()};
 }
@@ -162,8 +148,8 @@ void Decoder::decode(Frame const& frame) {
 		{0, 1},
 		{1, 1}
 	};
-	auto [_0, src] = buffers[inEvenFrame].open();
-	auto [_1, dst] = buffers[!inEvenFrame].open();
+	auto [_0, src] = impl->buffers[inEvenFrame].open();
+	auto [_1, dst] = impl->buffers[!inEvenFrame].open();
 	glBindFramebuffer(GL_FRAMEBUFFER, impl->fbo);
 	glFramebufferTexture2D(
 		GL_DRAW_FRAMEBUFFER,
@@ -178,7 +164,7 @@ void Decoder::decode(Frame const& frame) {
 	Graph::API::setClearColor(frame.background.normalize());
 	Graph::API::clear(Graph::API::Buffer::GAB_COLOR);
 	if (frame.type == Frame::Type::MV2_FT_DELTA_MASKED) {
-		auto [_2, mm] = mask.open();
+		auto [_2, mm] = impl->mask.open();
 		mm.use(2);
 	}
 	impl->shader.enable();
@@ -213,7 +199,7 @@ void Decoder::decode(Frame const& frame) {
 
 // TODO: Break this pyramid of doom
 
-bool Decoder::construct(Box<Makai::Graph::Image2D>& image, Frame const& frame) {
+bool Decoder::Impl::construct(Box<Makai::Graph::Image2D>& image, Frame const& frame) {
 	auto [_, ii] = image.open();
 	auto [_, bb] = block.open();
 	ii.fill(frame.background.normalize());

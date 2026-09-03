@@ -162,9 +162,6 @@ namespace Makai::Video::V2D::MVSX {
 		usize subtitleCount();
 		Subtitle subtitle(usize const index);
 
-		void readFrameInto(Graph::Image2D& image);
-		void readFrameInto(Graph::Texture2D& texture);
-
 	private:
 		Bytes<> cache;
 
@@ -173,13 +170,8 @@ namespace Makai::Video::V2D::MVSX {
 		Atomic<usize>					current = 0;
 		Atomic<bool>					inEvenFrame = false;
 		Box<Header>						header;
-		carr<Box<Graph::Image2D>, 2>	buffers;
-		Box<Graph::Image2D>				block;
-		Box<Graph::Image2D>				mask;
 
 		Audio::Engine engine;
-
-		bool construct(Box<Graph::Image2D>& image, Frame const& frame);
 
 		struct Impl;
 		owner<Impl> impl;
