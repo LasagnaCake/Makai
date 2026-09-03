@@ -7,25 +7,27 @@
 
 namespace Makai::Video::V2D {
 	enum class Container {
-		MV2F_INVALID = -1,
-		MV2F_UNKNOWN,
 		/// @brief Quite OK Video.
-		MV2F_QOV,
+		MV2C_QOV,
 		/// @brief Makai Video Storage & eXcgange format.
-		MV2F_MVSX,
-	};
-
-	struct Attributes {
-		Container container;
+		MV2C_MVSX,
 	};
 
 	struct ADecoder {
+		struct Info {
+			Container container;
+			uint64 width = 0, height = 0;
+			uint64 frameCount		= 0;
+			uint64 frameRate		= 60;
+		};
+
 		ADecoder(BinaryFormat::IReadable& in): in(in) {}
 
-		void reset()					= 0;
-		bool finished()					= 0;
-		bool nextFrame()				= 0;
-		Graph::Image2D& currentFrame()	= 0;
+		virtual void reset()					= 0;
+		virtual bool finished()					= 0;
+		virtual bool nextFrame()				= 0;
+		virtual Info videoInfo()				= 0;
+		virtual Span<byte const> currentFrame()	= 0;
 
 		virtual ~ADecoder() {}
 
@@ -33,3 +35,5 @@ namespace Makai::Video::V2D {
 		BinaryFormat::IReadable& in;
 	};
 }
+
+#endif

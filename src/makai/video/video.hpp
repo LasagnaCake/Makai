@@ -2,6 +2,7 @@
 #define MAKAILIB_VIDEO_H
 
 #include "core.hpp"
+#include "mvsx.hpp"
 
 namespace Video = Makai::Video;
 

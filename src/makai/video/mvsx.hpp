@@ -67,7 +67,7 @@ namespace Makai::Video::V2D::MVSX {
 			Region		region;
 			Flags		flags;
 			Color8		background;
-			Data		data;
+			Data<byte>	data;
 		};
 
 		Type				type;
@@ -81,7 +81,7 @@ namespace Makai::Video::V2D::MVSX {
 		AudioFormat	format;
 		uint64		timeOffset;
 		Text		language;
-		Data		data;
+		Data<byte>	data;
 	};
 
 	struct [[CTL_PACKED_STRUCT]] Subtitles {
@@ -109,7 +109,7 @@ namespace Makai::Video::V2D::MVSX {
 			T format;
 		};
 
-		scstring<10> const magic = "Makai::VSX";
+		scstring<12> const magic = "Makai::MVSX";
 
 		HeaderTable<Frame>		video;
 		HeaderTable<Track>		audio;
@@ -143,21 +143,28 @@ namespace Makai::Video::V2D::MVSX {
 
 		Attributes attributes() const;
 
-		void reset()					override;
-		bool finished() const			override;
-		bool nextFrame()				override;
+		void				reset()			override;
+		bool				finished()		override;
+		bool				nextFrame()		override;
+		Span<byte const>	currentFrame()	override;
+
+		Info videoInfo() override;
 
 		usize frameCount() const;
-		void readFrameInto(Graph::Image2D& image) const		override;
-		void readFrameInto(Graph::Texture& texture) const	override;
+		void readFrameInto(Graph::Image2D& image) override;
 
 		usize trackCount() const;
-		Instance<Sound> track(usize const index) const;
+		Instance<Audio::Sound> track(usize const index) const;
 
 		usize subtitleCount() const;
 		Subtitle subtitle(usize const index) const;
 
+		void readFrameInto(Graph::Image2D& image);
+		void readFrameInto(Graph::Texture2D& texture);
+
 	private:
+		Bytes<> cache;
+
 		void decode(Frame const& frame);
 
 		Atomic<usize>					current = 0;
@@ -171,6 +178,9 @@ namespace Makai::Video::V2D::MVSX {
 
 		bool construct(Box<Graph::Image2D>& image, Frame const& frame);
 
-		Shader shader;
+		Graph::Shader shader;
+		uint32 vao, vbo, fbo;
 	};
 }
+
+#endif

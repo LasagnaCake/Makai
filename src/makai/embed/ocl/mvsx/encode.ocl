@@ -1,0 +1,93 @@
+#define Image uchar4*
+
+struct Image {
+	constant uchar4*	pixels;
+	uint2				size;
+};
+
+enum FilterEffext {
+	FX_MIX,
+	FX_ADD,
+	FX_SUBTRACT,
+	FX_MULTIPLY,
+	FX_DIVIDE,
+	FX_AVERAGE,
+	FX_REVERSE_SUBTRACT,
+	FX_REVERSE_DIVIDE,
+};
+
+enum Mode {
+	MODE_NONE,
+	MODE_ALPHA,
+	MODE_MASK
+};
+
+constant Image src, mask;
+
+global Image dst;
+
+constant FilterEffect effect;
+constant Mode mode;
+
+kernel void blit(
+	uint2 srcPos,
+	uint2 dstPos,
+	uint2 region
+) {
+	for (uint x = 0; x < size.x; ++x)
+		if (x >= src.size.x || x > dst.size.x) continue;
+		else for (uint y = 0; y < size.y; ++y) {
+			if (y >= src.size.y || y > dst.size.y) continue;
+			uint srcAt = (x + srcPos.x) * region.x + y + srcPos.y;
+			uint dstAt = (x + dstPos.x) * region.x + y + dstPos.y;
+			dst.pixels[dstAt] = src.pixels[srcAt];
+		}
+}
+
+uint4 filter(uchar4 src, uchar4 dst, uchar4 mask, FilterEffect effect) {
+	switch (effect) {
+        case MV2_FM_MIX: return lerp(src, dst, mask);
+        case MV2_FM_ADD: return dst + src * mask;
+        case MV2_FM_SUBTRACT: return dst - src * mask;
+        case MV2_FM_MULTIPLY: return lerp(dst, src * dst, mask);
+        case MV2_FM_DIVIDE: return lerp(dst, src / dst, mask);
+        case MV2_FM_AVERAGE: return lerp(dst, (src + dst) * 0.5, mask);
+        case MV2_FM_REVERSE_SUBTRACT: return dst * mask - src;
+        case MV2_FM_REVERSE_DIVIDE: return lerp(dst, dst / src, mask);
+    }
+}
+
+void process_da() {
+	for (uint x = 0; x < dst.size.x; ++x)
+		for (uint y = 0; y < dst.size.y; ++y) {
+			uint pixel = x * region.x + y;
+			dst.pixels[pixel] = filter(uchar4(src.pixels[pixel].xyz, 1), uchar4(dst.pixels[pixel].xyz, 1), dst.pixels[pixel].w, effect);
+		}
+}
+
+void process_dm() {
+	for (uint x = 0; x < dst.size.x; ++x)
+		for (uint y = 0; y < dst.size.y; ++y) {
+			uint pixel = x * region.x + y;
+			dst.pixels[pixel] = filter(src.pixels[pixel], dst.pixels[pixel], mask.pixels[pixel], effect);
+		}
+}
+
+void process_none() {
+	for (uint x = 0; x < dst.size.x; ++x)
+		for (uint y = 0; y < dst.size.y; ++y)  {
+			uint pixel = x * region.x + y;
+			dst.pixels[pixel] = src.pixels[pixel];
+		}
+}
+
+kernel void proces(
+	Mode mode,
+	FilterEffect effect
+) {
+	switch (mode) {
+		case MODE_NONE: return process_none(src, dst, size);
+		case MODE_ALPHA: return process_da(src, dst, size);
+		case MODE_MASK: return process_dm(src, dst, mask, size);
+	}
+}

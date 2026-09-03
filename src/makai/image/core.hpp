@@ -20,10 +20,10 @@ namespace Makai::Image::I2D {
 		uint8 b: 1;
 		uint8 a: 1;
 
-		constexpr static MI2C_RGBA()	{return Channel{1, 1, 1, 1};	}
-		constexpr static MI2C_RGB()		{return Channel{1, 1, 1, 0};	}
-		constexpr static MI2C_RA()		{return Channel{1, 0, 0, 1};	}
-		constexpr static MI2C_LA()		{return MI2C_RA();				}
+		constexpr static Channel MI2C_RGBA()	{return Channel{1, 1, 1, 1};	}
+		constexpr static Channel MI2C_RGB()		{return Channel{1, 1, 1, 0};	}
+		constexpr static Channel MI2C_RA()		{return Channel{1, 0, 0, 1};	}
+		constexpr static Channel MI2C_LA()		{return MI2C_RA();				}
 	};
 
 	struct Attributes {
