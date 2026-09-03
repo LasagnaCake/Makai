@@ -24,12 +24,19 @@ SDL			= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2$(LIBFILE_TYPE)
 SDLNET		= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2_net.a
 CRYPTOPP	= lib/cryptopp/lib/$(LIBFILE_SRC)/libcryptopp.a
 CURL		= lib/curl/lib/$(LIBFILE_SRC)/libcurl$(LIBFILE_TYPE)
+#OPENSSL		= lib/openssl/lib/$(LIBFILE_SRC)/openssl$(LIBFILE_TYPE)
 PCRE2_8		= lib/pcre2/lib/$(LIBFILE_SRC)/libpcre2-8.a
 PCRE2_16	= lib/pcre2/lib/$(LIBFILE_SRC)/libpcre2-16.a
 PCRE2_32	= lib/pcre2/lib/$(LIBFILE_SRC)/libpcre2-32.a
 PCRE2_POSIX	= lib/pcre2/lib/$(LIBFILE_SRC)/libpcre2-posix.a
-#OPENSSL		= lib/openssl/lib/$(LIBFILE_SRC)/openssl$(LIBFILE_TYPE)
-#
+OCL			= lib/OpenCL/lib/$(LIBFILE_SRC)/libOpenCL$(LIBFILE_TYPE)
+OCL_EXT		= lib/OpenCL/lib/$(LIBFILE_SRC)/libOpenCLExt.a
+OCL_UTIL	= lib/OpenCL/lib/$(LIBFILE_SRC)/libOpenCLUtils$(LIBFILE_TYPE)
+OCL_UTILCPP	= lib/OpenCL/lib/$(LIBFILE_SRC)/libOpenCLUtilsCpp$(LIBFILE_TYPE)
+
+BASE_LIBS := cryptopp:$(CRYPTOPP) sdl-net:$(SDLNET)
+BASE_LIBS += pcre2-8:$(PCRE2_8) pcre2-16:$(PCRE2_16) pcre2-32:$(PCRE2_32) pcre2-posix:$(PCRE2_POSIX)
+BASE_LIBS += ocl:$(OCL) ocl-ext:$(OCL_EXT) ocl-util:$(OCL_UTIL) ocl-util-cpp:$(OCL_UTILCPP)
 
 define ART_SDK_DEBPKG
 Package: art-sdk
@@ -80,8 +87,6 @@ LINK_EXTERN :=link-extern
 EXTERN_AR_STEP :=ar
 DO_TOOLING := tooling $(DEBX)
 endif
-
-BASE_LIBS := cryptopp:$(CRYPTOPP) sdl-net:$(SDLNET) pcre2-8:$(PCRE2_8) pcre2-16:$(PCRE2_16) pcre2-32:$(PCRE2_32) pcre2-posix:$(PCRE2_POSIX)
 
 ifeq ($(os),win)
 define MOVE_DLL

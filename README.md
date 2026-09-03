@@ -90,6 +90,7 @@ In a single line: pacman -S mingw-w64-x86_64-toolchain make mingw-w64-x86_64-7zi
 - GCC (13+) 
 - Make
 - libgl1-mesa-dev
+- libopencl1
 
 ## How to use
 

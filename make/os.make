@@ -1,6 +1,6 @@
 link-static = $(foreach lib,$(1), $(shell pkg-config --libs $(lib)))
 
-SHARELIB := libcurl libSDL2
+SHARELIB := libcurl libSDL2 libopencl1
 
 ifeq ($(os),win)
 link-shared = $(foreach lib,$(1), $(shell pkg-config --libs "$(strip $(lib)).dll"))
@@ -15,4 +15,4 @@ export OS_LIBS :=
 export ADDLIBS := $(call link-shared, $(SHARELIB))
 export DYNLIB_TYPE :=so
 endif
-export LITE_BUILD_REQS := $(call link-static, libcrypto++ SDL2_net) $(call link-shared, $(SHARELIB))
+export LITE_BUILD_REQS := $(call link-static, libcrypto++ SDL2_net libopencl1) $(call link-shared, $(SHARELIB))

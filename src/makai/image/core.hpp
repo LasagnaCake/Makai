@@ -13,7 +13,6 @@ namespace Makai::Image::I2D {
 		MI2F_QOI,
 	};
 
-	[[gnu::aligned(1)]]
 	struct [[CTL_FLAG_STRUCT(uint8)]] Channel {
 		uint8 r: 1;
 		uint8 g: 1;

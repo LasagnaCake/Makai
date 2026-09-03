@@ -1,0 +1,174 @@
+enum FilterEffext {
+	FX_MIX,
+	FX_ADD,
+	FX_SUBTRACT,
+	FX_MULTIPLY,
+	FX_DIVIDE,
+	FX_AVERAGE,
+	FX_REVERSE_SUBTRACT,
+	FX_REVERSE_DIVIDE,
+};
+
+enum Mode {
+	MODE_NONE,
+	MODE_ALPHA,
+	MODE_MASK
+};
+
+constant image2d_t src, mask;
+
+global image2d_t dst;
+
+constant FilterEffect effect;
+constant Mode mode;
+
+float4 src_read(uint2 pixel) {
+	return read_imagef(src, pixel);
+}
+
+void src_write(uint2 pixel, float4 value) {
+	write_imagef(src, pixel, value);
+}
+
+float4 dst_read(uint2 pixel) {
+	return read_imagef(src, pixel);
+}
+
+void dst_write(uint2 pixel, float4 value) {
+	write_imagef(src, pixel, value);
+}
+
+float4 mask_read(uint2 pixel) {
+	return read_imagef(src, pixel);
+}
+
+void mask_write(uint2 pixel, float4 value) {
+	write_imagef(src, pixel, value);
+}
+
+bool in_bounds(uint2 pixel, int2 rect) {
+	return (
+		pixel.x < rect.x
+	&&	pixel.y < rect.y
+	)
+}
+
+float4 lerp(float4 src, float4 dst, float4 mask) {
+	return src + (dst - src) * mask;
+}
+
+float4 filter(float4 src, float4 dst, float4 mask) {
+	switch (effect) {
+        case MV2_FM_MIX: return lerp(dst, src, mask);
+        case MV2_FM_ADD: return dst + src * mask;
+        case MV2_FM_SUBTRACT: return dst - src * mask;
+        case MV2_FM_MULTIPLY: return lerp(dst, src * dst, mask);
+        case MV2_FM_DIVIDE: return lerp(dst, src / dst, mask);
+        case MV2_FM_AVERAGE: return lerp(dst, (src + dst) * 0.5, mask);
+        case MV2_FM_REVERSE_SUBTRACT: return dst * mask - src;
+        case MV2_FM_REVERSE_DIVIDE: return lerp(dst, dst / src, mask);
+    }
+}
+
+void process_delta_alpha() {
+	int2 sd = get_image_dim(src);
+	int2 dd = get_image_dim(dst);
+	for (uint x = 0; x < dst.size.x; ++x)
+		for (uint y = 0; y < dst.size.y; ++y) {
+			uint2 pixel = uint2(x, y);
+			if (!in_bounds(pixel, sd)) continue;
+			if (!in_bounds(pixel, dd)) continue;
+			dest_write(
+				pixel,
+				filter(
+					float4(src_read(pixel).xyz, 1),
+					float4(dst_read(pixel).xyz, 1),
+					src_read(pixel).wwww
+				)
+			);
+			dst.pixels[pixel] = ;
+		}
+}
+
+void process_delta_mask() {
+	int2 sd = get_image_dim(src);
+	int2 dd = get_image_dim(dst);
+	int2 md = get_image_dim(mask);
+	for (uint x = 0; x < dst.size.x; ++x)
+		for (uint y = 0; y < dst.size.y; ++y) {
+			uint2 pixel = uint2(x, y);
+			if (!in_bounds(pixel, sd)) continue;
+			if (!in_bounds(pixel, dd)) continue;
+			if (!in_bounds(pixel, md)) continue;
+			dst_write(
+				pixel,
+				filter(
+					src_read(pixel),
+					dst_read(pixel),
+					mask_read(pixel)
+				)
+			)
+		}
+}
+
+void process_none() {
+	int2 sd = get_image_dim(src);
+	int2 dd = get_image_dim(dst);
+	for (uint x = 0; x < dst.size.x; ++x)
+		for (uint y = 0; y < dst.size.y; ++y)  {
+			uint2 pixel = uint2(x, y);
+			if (!in_bounds(pixel, sd)) continue;
+			if (!in_bounds(pixel, dd)) continue;
+			dst_write(pixel, src_read(pixel));
+		}
+}
+
+// ---- Kernels ----
+
+kernel void mvsxCopyToSource() {
+	size = get_image_dim(src);
+	for (uint x = 0; x < size.x; ++x)
+		for (uint y = 0; y < size.y; ++y) {
+			uint2 pixel = uint2(x, y);
+			src_write(pixel, dst_read(pixel));
+		}
+}
+
+kernel void mvsxBlitBlock(
+	constant uint2 srcPos,
+	constant uint2 dstPos,
+	constant uint2 region
+) {
+	int2 sd = get_image_dim(srcPos);
+	int2 dd = get_image_dim(dstPos);
+	for (uint x = 0; x < size.x; ++x)
+		for (uint y = 0; y < size.y; ++y) {
+			uint2 src_at = uint2(x + src.x, y + src.y);
+			uint2 dst_at = uint2(x + dst.x, y + dst.y);
+			if (!in_bounds(src_at, sd)) continue;
+			if (!in_bounds(dst_at, dd)) continue;
+			dst_write(dst_at, src_read(src_at));
+		}
+}
+
+kernel void mvsxFillRegion(
+	constant uint2 pos,
+	constant uint2 region,
+	constant float4 color
+) {
+	int2 dd = get_image_dim(dst);
+	for (uint x = 0; x < size.x; ++x)
+		for (uint y = 0; y < size.y; ++y) {
+			uint2 src_at = uint2(x + pos.x, y + pos.y);
+			if (!in_bounds(dst_at, dd)) continue;
+			dst_write(dst_at, color);
+		}
+}
+
+kernel void mvsxProcessFrame() {
+	switch (mode) {
+		case MODE_NONE:		return process_none(src, dst);
+		case MODE_ALPHA:	return process_delta_alpha(src, dst);
+		case MODE_MASK:		return process_delta_mask(src, dst, mask);
+	}
+}

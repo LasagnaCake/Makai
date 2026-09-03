@@ -72,7 +72,7 @@ public:
 
 	/// @brief Safely acquires the stored value.
 	/// @return Stored value.
-	DataType value() const {
+	DataType value() {
 		this->wait();
 		return data;
 	}

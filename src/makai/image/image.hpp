@@ -3,6 +3,7 @@
 
 #include "core.hpp"
 #include "qoi.hpp"
+#include "decode.hpp"
 
 namespace MkImage = Makai::Image;
 

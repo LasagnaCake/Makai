@@ -256,7 +256,7 @@ Image2D& Image2D::create(
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
 	FilterMode const&		minFilter,
-	uint8* const			data,
+	uint8 const* const		data,
 	ComponentLayout const&	layout
 ) {
 	if (exists()) return *this;
@@ -271,7 +271,7 @@ Image2D& Image2D::make(
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
 	FilterMode const&		minFilter,
-	uint8* const			data,
+	uint8 const* const		data,
 	ComponentLayout const&	layout
 ) {
 	destroy();
@@ -369,7 +369,7 @@ Image2D* Image2D::newImage(
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
 	FilterMode const&		minFilter,
-	uint8* const			data,
+	uint8 const* const		data,
 	ComponentLayout const&	layout,
 	ImageTarget const&		target
 ) {
@@ -385,7 +385,7 @@ Image2D* Image2D::newImage(
 	ImageFormat const&		format,
 	FilterMode const&		magFilter,
 	FilterMode const&		minFilter,
-	uint8* const			data,
+	uint8 const* const		data,
 	ComponentLayout const&	layout,
 	ImageTarget const&		target
 ) {

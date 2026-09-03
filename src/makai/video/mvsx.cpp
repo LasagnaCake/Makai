@@ -1,5 +1,7 @@
 #include "mvsx.hpp"
 #include "../graph/gl/glapiloader.cc"
+#include <CL/cl.h>
+#include "../graph/graph.hpp"
 
 using namespace Makai;
 using namespace Makai::Video::V2D::MVSX;
@@ -13,22 +15,30 @@ extern int mkEmbed_MVSXShaderFrag_Size;
 //String const MVSX_VERT	= String(mkEmbed_MVSXShaderVert, mkEmbed_MVSXShaderVert_Size);
 String const MVSX_FRAG		= String(mkEmbed_MVSXShaderFrag, mkEmbed_MVSXShaderFrag_Size);
 
-Decoder::Decoder(BinaryFormat::IReadable& in): ADecoder(in), shader(MVSX_FRAG, Graph::ShaderType::ST_FRAGMENT) {
-	glGenBuffers(1, &vbo);
-	glGenVertexArrays(1, &vao);
-	glGenFramebuffers(1, &fbo);
+struct Decoder::Impl {
+	Graph::Shader shader;
+	GLuint vao, vbo, fbo;
+};
+
+Decoder::Decoder(BinaryFormat::IReadable& in): ADecoder(in) {
+	impl = new Impl;
+	glGenBuffers(1, &impl->vbo);
+	glGenVertexArrays(1, &impl->vao);
+	glGenFramebuffers(1, &impl->fbo);
+	impl->shader = Graph::Shader(MVSX_FRAG, Graph::ShaderType::ST_FRAGMENT);
 }
 
 Decoder::~Decoder() {
-	glDeleteBuffers(1, &vbo);
-	glDeleteVertexArrays(1, &vao);
-	glDeleteFramebuffers(1, &fbo);
+	glDeleteBuffers(1, &impl->vbo);
+	glDeleteVertexArrays(1, &impl->vao);
+	glDeleteFramebuffers(1, &impl->fbo);
+	delete impl;
 }
 
 void Decoder::reset() {
 	cache.clear();
 	in.go(0);
-	if (auto const head = Header::fetch<Header>(in)) {
+	if (auto const head = BinaryFormat::Header<Header>::fetch(in)) {
 		auto [_1, hh] = header.open();
 		hh = head.value();
 		for (auto& buffer: buffers) {
@@ -70,17 +80,37 @@ bool Decoder::nextFrame() {
 				if (!construct(mask, fh.value()))
 					return false;
 		} else return false;
-		decode(frame);
+		if (frame.type != Frame::Type::MV2_FT_NONE)
+			decode(frame);
+		else inEvenFrame = !inEvenFrame;
 	} else return false;
 	inEvenFrame = !inEvenFrame;
 	++current;
 	return true;
 }
 
+void Decoder::go(usize const frame) {
+	usize ffwd = 0;
+	auto [_, hh] = header.open();
+	for (current = frame; current.value() > 0; --current)
+		if (auto const fh = hh.video.getEntry(in, current)) {
+			auto const frame = fh.value();
+			if(frame.type != Frame::Type::MV2_FT_NONE) {
+				--current;
+				if (!frame.flags.isPartOfFrame)
+					++ffwd;
+			} else {
+				break;
+			}
+		} else break;
+	for (;ffwd > 0; --ffwd)
+		nextFrame();
+}
+
 bool Decoder::finished() {return false;}
 
 void Decoder::readFrameInto(Graph::Image2D& image) {
-	auto [_1, ff] = buffer[inEvenFrame].open();
+	auto [_1, ff] = buffers[inEvenFrame].open();
 	auto [_2, hh] = header.open();
 	Makai::Graph::Image2D::blit(
 		{
@@ -95,7 +125,12 @@ void Decoder::readFrameInto(Graph::Image2D& image) {
 }
 
 void Decoder::readFrameInto(Graph::Texture2D& texture) {
-	readInto(texture.getImage());
+	readFrameInto(texture.getImage());
+}
+
+usize Decoder::frameCount() {
+	auto const& [_, hh] = header.open();
+	return hh.viewableFrames;
 }
 
 Span<byte const> Decoder::currentFrame() {
@@ -105,7 +140,7 @@ Span<byte const> Decoder::currentFrame() {
 	return {cache.cbegin(), cache.cend()};
 }
 
-Attributes Decoder::attributes() const {
+Attributes Decoder::attributes() {
 	return {header.value()};
 }
 
@@ -115,7 +150,7 @@ Decoder::Info Decoder::videoInfo() {
 		Container::MV2C_MVSX,
 		hh.width,
 		hh.height,
-		hh.frames.size,
+		hh.viewableFrames,
 		hh.framerate
 	};
 }
@@ -129,7 +164,7 @@ void Decoder::decode(Frame const& frame) {
 	};
 	auto [_0, src] = buffers[inEvenFrame].open();
 	auto [_1, dst] = buffers[!inEvenFrame].open();
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, impl->fbo);
 	glFramebufferTexture2D(
 		GL_DRAW_FRAMEBUFFER,
 		GL_COLOR_ATTACHMENT0,
@@ -140,23 +175,24 @@ void Decoder::decode(Frame const& frame) {
 	glDrawBuffer(GL_COLOR_ATTACHMENT0);
 	src.use(0);
 	dst.use(1);
-	Graph::API::setClearColor(frame.background);
+	Graph::API::setClearColor(frame.background.normalize());
 	Graph::API::clear(Graph::API::Buffer::GAB_COLOR);
 	if (frame.type == Frame::Type::MV2_FT_DELTA_MASKED) {
 		auto [_2, mm] = mask.open();
 		mm.use(2);
 	}
-	shader["previous"](0, 1, (frame.type == Frame::Type::MV2_FT_DELTA_MASKED) + 1);
-	shader["packing"](enumcast(frame.type), enumcast(frame.mode));
+	impl->shader.enable();
+	impl->shader["previous"](0, 1, (frame.type == Frame::Type::MV2_FT_DELTA_MASKED) + 1);
+	impl->shader["packing"](uint32(frame.type), uint32(frame.mode));
 	useBlendMode();
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, impl->vbo);
 	glBufferData(
 		GL_ARRAY_BUFFER,
 		sizeof(uvx) * sizeof(float),
 		uvx,
 		GL_STATIC_DRAW
 	);
-	glBindVertexArray(vao);
+	glBindVertexArray(impl->vao);
 	glVertexAttribPointer(
 		0,
 		2,
@@ -181,21 +217,21 @@ bool Decoder::construct(Box<Makai::Graph::Image2D>& image, Frame const& frame) {
 	auto [_, ii] = image.open();
 	auto [_, bb] = block.open();
 	ii.fill(frame.background.normalize());
-	for (usize i = 0; i < frame.block.size; ++i) {
-		if (auto const bh = frame.block.getEntry(in, i)) {
-			auto const block = bh.value();
-			if (block.flags.solidColor) {
-					block.make(
-						block.region.width,
-						block.region.height
-					).fill(block.background.normalize());
+	for (usize i = 0; i < frame.blocks.size; ++i) {
+		if (auto const bh = frame.blocks.getEntry(in, i)) {
+			auto const fblock = bh.value();
+			if (fblock.flags.solidColor) {
+					bb.make(
+						fblock.region.width,
+						fblock.region.height
+					).fill(fblock.background.normalize());
 			} else {
-				auto sin = InputSubstream<Bytes<>>(in, block.data.start, block.data.size);
-				if (auto const img = Makai::Image::I2D::decodeStream(sin, block.format)) {
+				auto sin = InputSubstream<Bytes<>>(in, fblock.data.start, fblock.data.size);
+				if (auto const img = Makai::Image::I2D::decodeStream(sin, fblock.format)) {
 					auto const image = img.value();
-					block.make(
-						block.region.width,
-						block.region.height,
+					bb.make(
+						fblock.region.width,
+						fblock.region.height,
 						Graph::Image2D::ComponentType::CT_UBYTE,
 						Graph::Image2D::ImageFormat::IF_RGBA,
 						Graph::Image2D::FilterMode::FM_SMOOTH,
@@ -207,11 +243,11 @@ bool Decoder::construct(Box<Makai::Graph::Image2D>& image, Frame const& frame) {
 			Makai::Graph::Image2D::blit(
 				{
 					bb,
-					{0, 0, block.region.width, block.region.height}
+					{0, 0, fblock.region.width, fblock.region.height}
 				},
 				{
 					ii,
-					{block.region.x, block.region.y, block.region.width, block.region.height}
+					{fblock.region.x, fblock.region.y, fblock.region.width, fblock.region.height}
 				}
 			);
 		} else return false;

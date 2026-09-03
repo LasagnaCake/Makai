@@ -84,6 +84,7 @@ export INC_XML2JSON		= $(call libpath, xml2json/include)
 export INC_JSON2XML		= $(call libpath, json2xml)
 export INC_PCRE2		= $(call libpath, pcre2/include)
 export INC_MINIAUDIO	= $(call libpath, miniaudio) $(call libpath, minivorbis)
+export INC_OPENCL		= $(call libpath, OpenCL/include)
 
 export INC_MAKAI		= $(call corepath, include)
 

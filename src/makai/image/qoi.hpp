@@ -6,7 +6,7 @@
 
 namespace Makai::Image::I2D::QOI {
 	using Color8 = Graph::Color::Color8;
-	struct  [[CTL_PACKED_STRUCT]] Header {
+	struct [[CTL_PACKED_STRUCT]] Header {
 		scstring<4> const	magic = {'q', 'o', 'i', 'f'};
 		uint32				width;
 		uint32				height;

@@ -3,7 +3,7 @@ include $(ROOT)/make/core.make
 
 override prefix := $(call concat, $(prefix), video)
 
-INCLUDES := $(INC_OPENGL) $(INC_STB)
+INCLUDES := $(INC_OPENGL) $(INC_STB) $(INC_SDL) $(INC_OPENCL)
 
 .PHONY: debug release all
 .ONESHELL:

@@ -4,7 +4,7 @@
 #include "../compat/ctl.hpp"
 #include "../image/image.hpp"
 #include "../audio/audio.hpp"
-#include "../graph/graph.hpp"
+#include "../graph/color/color.hpp"
 #include "core.hpp"
 
 namespace Makai::Video::V2D::MVSX {
@@ -12,6 +12,8 @@ namespace Makai::Video::V2D::MVSX {
 
 	using Color8 = Graph::Color::Color8;
 	using ImageFormat = Image::I2D::Format;
+
+	using CTL::Ex::BinaryFormat::Data;
 
 	enum class AudioFormat: uint64 {
 		MV2P_QOA,
@@ -21,8 +23,8 @@ namespace Makai::Video::V2D::MVSX {
 	};
 
 	struct [[CTL_PACKED_STRUCT]] Region {
-		uint64 x, y;
-		uint64 width, height;
+		uint32 x, y;
+		uint32 width, height;
 	};
 
 	struct [[CTL_PACKED_STRUCT]] Frame {
@@ -55,7 +57,7 @@ namespace Makai::Video::V2D::MVSX {
 		};
 
 		struct [[CTL_FLAG_STRUCT(uint64)]] Flags {
-			uint64: 0;
+			uint64 isPartOfFrame: 1;
 		};
 
 		struct [[CTL_PACKED_STRUCT]] Block {
@@ -99,8 +101,8 @@ namespace Makai::Video::V2D::MVSX {
 	};
 
 	struct [[CTL_PACKED_STRUCT]] Attributes {
-		uint64		width;
-		uint64		height;
+		uint32		width;
+		uint32		height;
 		uint64		framerate;
 	};
 
@@ -110,6 +112,8 @@ namespace Makai::Video::V2D::MVSX {
 		};
 
 		scstring<12> const magic = "Makai::MVSX";
+
+		uint64 viewableFrames = 0;
 
 		HeaderTable<Frame>		video;
 		HeaderTable<Track>		audio;
@@ -141,23 +145,22 @@ namespace Makai::Video::V2D::MVSX {
 		Decoder(BinaryFormat::IReadable& in);
 		virtual ~Decoder();
 
-		Attributes attributes() const;
+		Attributes attributes();
 
-		void				reset()			override;
-		bool				finished()		override;
-		bool				nextFrame()		override;
-		Span<byte const>	currentFrame()	override;
+		void				reset()					override;
+		bool				finished()				override;
+		bool				nextFrame()				override;
+		usize				frameCount()			override;
+		Span<byte const>	currentFrame()			override;
+		void				go(usize const frame)	override;
 
 		Info videoInfo() override;
 
-		usize frameCount() const;
-		void readFrameInto(Graph::Image2D& image) override;
+		usize trackCount();
+		Instance<Audio::Sound> track(usize const index);
 
-		usize trackCount() const;
-		Instance<Audio::Sound> track(usize const index) const;
-
-		usize subtitleCount() const;
-		Subtitle subtitle(usize const index) const;
+		usize subtitleCount();
+		Subtitle subtitle(usize const index);
 
 		void readFrameInto(Graph::Image2D& image);
 		void readFrameInto(Graph::Texture2D& texture);
@@ -178,8 +181,8 @@ namespace Makai::Video::V2D::MVSX {
 
 		bool construct(Box<Graph::Image2D>& image, Frame const& frame);
 
-		Graph::Shader shader;
-		uint32 vao, vbo, fbo;
+		struct Impl;
+		owner<Impl> impl;
 	};
 }
 

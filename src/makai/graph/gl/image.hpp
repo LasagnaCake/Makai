@@ -242,7 +242,7 @@ namespace Makai::Graph {
 			ImageFormat const&		format		= ImageFormat::IF_RGBA,
 			FilterMode const&		magFilter	= FilterMode::FM_SMOOTH,
 			FilterMode const&		minFilter	= FilterMode::FM_SMS,
-			uint8* const			data		= nullptr,
+			ref<uint8 const> const	data		= nullptr,
 			ComponentLayout const&	layout		= ComponentLayout::CL_AUTO
 		);
 
@@ -263,7 +263,7 @@ namespace Makai::Graph {
 			ImageFormat const&		format		= ImageFormat::IF_RGBA,
 			FilterMode const&		magFilter	= FilterMode::FM_SMOOTH,
 			FilterMode const&		minFilter	= FilterMode::FM_SMS,
-			uint8* const			data		= nullptr,
+			ref<uint8 const> const	data		= nullptr,
 			ComponentLayout const&	layout		= ComponentLayout::CL_AUTO
 		);
 
@@ -342,7 +342,7 @@ namespace Makai::Graph {
 			ImageFormat const&		format		= ImageFormat::IF_RGBA,
 			FilterMode const&		magFilter	= FilterMode::FM_SMOOTH,
 			FilterMode const&		minFilter	= FilterMode::FM_SMS,
-			ref<uint8> const		data		= NULL,
+			ref<uint8 const> const	data		= NULL,
 			ComponentLayout const&	layout		= ComponentLayout::CL_AUTO,
 			ImageTarget const&		target		= ImageTarget::IT_TEXTURE_2D
 		);
@@ -367,7 +367,7 @@ namespace Makai::Graph {
 			ImageFormat const&		format		= ImageFormat::IF_RGBA,
 			FilterMode const&		magFilter	= FilterMode::FM_SMOOTH,
 			FilterMode const&		minFilter	= FilterMode::FM_SMS,
-			ref<uint8> const		data		= NULL,
+			ref<uint8 const> const	data		= NULL,
 			ComponentLayout const&	layout		= ComponentLayout::CL_AUTO,
 			ImageTarget const&		target		= ImageTarget::IT_TEXTURE_2D
 		);

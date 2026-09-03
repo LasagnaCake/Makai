@@ -24,12 +24,20 @@ namespace Makai::Video::V2D {
 		ADecoder(BinaryFormat::IReadable& in): in(in) {}
 
 		virtual void reset()					= 0;
+		virtual void go(usize const frame)		= 0;
 		virtual bool finished()					= 0;
 		virtual bool nextFrame()				= 0;
 		virtual Info videoInfo()				= 0;
+		virtual usize frameCount()				= 0;
 		virtual Span<byte const> currentFrame()	= 0;
 
 		virtual ~ADecoder() {}
+
+		ADecoder(ADecoder&&)		= delete;
+		ADecoder(ADecoder const&)	= delete;
+
+		ADecoder& operator=(ADecoder&&)			= delete;
+		ADecoder& operator=(ADecoder const&)	= delete;
 
 	protected:
 		BinaryFormat::IReadable& in;

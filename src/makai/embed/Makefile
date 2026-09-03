@@ -10,3 +10,4 @@ release: embed
 
 embed:
 	$(call submake-any, shader)
+	$(call submake-any, ocl)

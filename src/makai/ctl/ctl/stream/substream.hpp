@@ -11,7 +11,7 @@ struct InputSubstream: IInputStream<T> {
 
 	InputSubstream() {}
 
-	InputSubstream(IInputStream<T> const& stream, usize const begin, usize const end): stream(stream), pointer(start), start(begin), stop(end) {
+	InputSubstream(IInputStream<T>& stream, usize const begin, usize const end): stream(stream), pointer(begin), start(begin), stop(end) {
 		stream.go(start);
 	}
 
