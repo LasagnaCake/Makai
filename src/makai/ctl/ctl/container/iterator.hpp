@@ -89,6 +89,13 @@ public:
 	/// @param other `Iterator` to move from.
 	constexpr Iterator(SelfType&& other): iterand(CTL::move(other.iterand))			{}
 
+	/// @brief Copy constructor (Mutable-to-Const).
+	/// @param other `Iterator` to copy from.
+	constexpr Iterator(Iterator<DataType, REVERSE, TIndex> const& other) requires (CONSTANT): iterand(other.iterand)		{}
+	/// @brief Move constructor (Mutable-to-Const).
+	/// @param other `Iterator` to move from.
+	constexpr Iterator(Iterator<DataType, REVERSE, TIndex>&& other) requires (CONSTANT): iterand(CTL::move(other.iterand))	{}
+
 	/// @brief Copy assignment operator.
 	constexpr Iterator& operator=(Iterator const& other)	= default;
 	/// @brief Move assignment operator.

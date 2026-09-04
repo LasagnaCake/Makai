@@ -13,7 +13,7 @@ struct Context::Impl {
 Context::Deleter Component<Context>::deleter = Context::deleterFor<Context::Impl>();
 
 Context::Impl::~Impl() {
-	clReleaseContext(context);
+	if (context) clReleaseContext(context);
 }
 
 Context::Context() {
@@ -26,8 +26,4 @@ Context::Context() {
 			"Failed to create OpenCL context!",
 			CTL_CPP_PRETTY_SOURCE
 		);
-}
-
-Program Context::newProgram() {
-	return Program(*this);
 }

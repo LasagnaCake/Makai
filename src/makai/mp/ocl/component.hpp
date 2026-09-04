@@ -5,15 +5,17 @@
 
 /// @brief Open Computing Language facilities
 namespace Makai::MP::OpenCL {
-	template <class T>
+	template <Type::Class T>
 	struct Component: T {
+		friend struct T;
+
 		using Impl = typename T::Impl;
 		using Deleter = Functor<void(owner<Impl>)>;
 
 		template <class TImpl>
 		static Deleter deleterFor() {return [] (owner<TImpl> impl) {delete impl;};}
 
-	protected:
+	private:
 		friend struct Component<T>::Wrapper;
 
 		struct Wrapper {

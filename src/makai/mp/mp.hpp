@@ -4,6 +4,8 @@
 /// @brief Multiprocessing facilities
 namespace Makai::MP {}
 
+#include "ocl/ocl.hpp"
+
 namespace MkMP = Makai::MP;
 
 #endif

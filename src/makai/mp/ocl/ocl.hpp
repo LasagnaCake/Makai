@@ -4,6 +4,10 @@
 /// @brief Open Computing Language facilities
 namespace Makai::MP::OpenCL {}
 
+#include "component.hpp"
+#include "context.hpp"
+#include "program.hpp"
+
 namespace MkOpenCL = Makai::MP::OpenCL;
 
 #endif

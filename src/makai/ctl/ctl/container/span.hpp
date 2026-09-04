@@ -486,6 +486,30 @@ using ByteSpan = Span<uint8, S, TIndex, EXTENT>;
 template<usize S = DYNAMIC_SIZE, Type::Integer TIndex = usize, ExtentSize EXTENT = ExtentSize::CES_AUTO>
 using ConstByteSpan = Span<uint8 const, S, TIndex, EXTENT>;
 
+template <class T>
+constexpr Span<T> span(Iterator<T> const& begin, Iterator<T> const& end) {
+	return Span<T>::from(begin, end);
+}
+
+template<class T>
+constexpr auto span(T& value)
+requires requires (T t) {
+	{t.begin()}
+	{t.end()}
+} {
+	return span(value.begin(), value.end());
+}
+
+template<class T>
+constexpr auto span(T& value)
+requires requires (T t) {
+	{t.data()}
+	{t.size()}
+} {
+	return span(value.data(), value.size());
+}
+
 CTL_NAMESPACE_END
 
 #endif // CTL_CONTAINER_SPAN_H
+:

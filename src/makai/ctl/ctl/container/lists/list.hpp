@@ -1298,6 +1298,14 @@ public:
 	/// @return Allocator.
 	constexpr auto allocator() const	{return contents.allocator();}
 
+	template <bool C>
+	using SpanType = Meta::If<C, Span<T const, DYNAMIC_SIZE, TSize>, Span<T, DYNAMIC_SIZE, TSize>>;
+
+	/// @brief Returns a span to the list.
+	constexpr SpanType<true> span() const	{return SpanType<true>::from(*this);	}
+	/// @brief Returns a span to the list.
+	constexpr SpanType<false> span()		{return SpanType<false>::from(*this);	}
+
 	/// @brief Constructs a list from a series of values.
 	/// @tparam Types... Element types.
 	/// @param values... Values to construct from.
