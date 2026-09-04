@@ -20,7 +20,7 @@ Context::Context() {
 	impl() = new Impl;
 	cl_context_properties props;
 	cl_int err;
-	impl()->context = clCreateContext(&props, 0, NULL, NULL, NULL, &err);
+	impl().context = clCreateContext(&props, 0, NULL, NULL, NULL, &err);
 	if (err != CL_SUCCESS)
 		throw Error::FailedAction(
 			"Failed to create OpenCL context!",
