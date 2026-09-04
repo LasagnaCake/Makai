@@ -7,6 +7,23 @@
 namespace Makai::MP::OpenCL {
 	struct Context: Component<Context> {
 		struct Impl;
+
+		struct Program;
+		struct Image;
+		struct Buffer;
+		struct MemorySlice;
+
+		friend struct Context::Program;
+		friend struct Context::Image;
+		friend struct Context::Buffer;
+		friend struct Context::MemorySlice;
+
+		Context();
+
+		template<Type::Constructible<Context const&> T>
+		T create() const {
+			return T(*this);
+		}
 	};
 }
 

@@ -21,6 +21,10 @@ namespace Makai::MP::OpenCL {
 			~Wrapper() {Component::deleter(impl);}
 		};
 
+		Impl& impl() const {
+			return *wrapper->impl;
+		}
+
 		static Deleter deleter;
 		AtomicCell<Wrapper> wrapper;
 	};
