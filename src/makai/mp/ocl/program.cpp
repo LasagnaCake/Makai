@@ -25,17 +25,17 @@ Context::Impl::~Impl() {
 
 Program::Program(Context const& context) {
 	impl() = new Impl;
-	impl()->context = context;
+	impl().context = context;
 }
 
 Nullable<Program::SourceError> Program::setSource(String const& source) {
-	if (impl()->program)
+	if (impl().program)
 		return SourceError::OCL_SE_ALREADY_HAS_PROGRAM;
 	carr<cstring, 1> src{source.cstr()};
 	carr<size_t, 1> sz{source.size()};
 	cl_int err;
 	impl()->program = clCreateProgramWithSource(
-		context.impl()->context,
+		context.impl().context,
 		1,
 		src,
 		sz,
@@ -51,10 +51,10 @@ Nullable<Program::SourceError> Program::setSource(String const& source) {
 }clBuildProgram
 
 Nullable<Program::BuildError> Program::build(String const& options) {
-	if (!impl()->program)
+	if (!impl().program)
 		return BuildError::OCL_BE_NO_SOURCE_ASSIGNED;
 	auto const err = clBuildProgram(
-		impl()->program,
+		impl().program,
 		o,
 		NULL,
 		options.cstr(),
