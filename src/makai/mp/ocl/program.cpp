@@ -8,64 +8,60 @@ using Program	= Context::Program;
 using Kernel	= Context::Program::Kernel;
 using Argument	= Context::Program::Kernel::Argument;
 
-template<> struct Context::Impl {
-	cl_context context;
-
-	~Impl();
-};
-
-template<> struct Program::Impl {
+struct Program::Impl {
 	cl_program program = nullptr;
 	Context context;
 
-	~Impl();
+	pointer resource() const override {return (pointer)program;}
+
+	virtual ~Impl();
 };
 
-template<> struct Kernel::Impl {
+struct Kernel::Impl {
 	cl_kernel			kernel = nullptr;
 	Program				program;
 	ArgumentIndexMap	argIndices;
 	ArgumentNameMap		argNames;
 	String				name;
 
-	~Impl();
+	pointer resource() const override {return (pointer)kernel;}
+
+	virtual ~Impl();
 };
 
 struct Argument::Impl {
 	Kernel	kernel;
 	String	name;
 	usize	index = -1;
-	~Impl();
+
+	pointer resource() const override {return (pointer)index;}
+
+	virtual ~Impl();
 };
 
-template<> Program::Deleter Component<Program>::deleter		= Program::deleterFor<Program::Impl>();
-template<> Program::Deleter Component<Kernel>::deleter		= Program::deleterFor<Kernel::Impl>();
-template<> Program::Deleter Component<Argument>::deleter	= Program::deleterFor<Argument::Impl>();
-
-template<> Program::Impl::~Impl() {
+Program::Impl::~Impl() {
 	if (program) clReleaseProgram(program);
 }
 
-template<> Kernel::Impl::~Impl() {
+Kernel::Impl::~Impl() {
 	if (kernel) clReleaseKernel(kernel);
 }
 
-template<> Argument::Impl::~Impl() {
+Argument::Impl::~Impl() {
 }
 
-Program::Program(Context const& context) {
-	impl() = new Impl;
-	impl().context = context;
+Program::Program(Context const& context): Component(new Impl) {
+	impl(*this).context = context;
 }
 
 Nullable<Program::SourceError> Program::setSource(String const& source) {
-	if (impl().program)
+	if (impl(*this).program)
 		return SourceError::OCL_PSE_ALREADY_HAS_PROGRAM;
 	carr<cstring, 1> src{source.cstr()};
 	carr<size_t, 1> sz{source.size()};
 	cl_int err;
-	impl()->program = clCreateProgramWithSource(
-		context.impl().context,
+	impl(*this).program = clCreateProgramWithSource(
+		context.resource(),
 		1,
 		src,
 		sz,
@@ -81,10 +77,10 @@ Nullable<Program::SourceError> Program::setSource(String const& source) {
 }
 
 Nullable<Program::BuildError> Program::build(String const& options) {
-	if (!impl().program)
+	if (!impl(*this).program)
 		return BuildError::OCL_PBE_NO_SOURCE_ASSIGNED;
 	auto const err = clBuildProgram(
-		impl().program,
+		impl(*this).program,
 		o,
 		NULL,
 		options.cstr(),
@@ -106,7 +102,7 @@ Nullable<Program::BuildError> Program::build(String const& options) {
 }
 
 Result<Kernel, Kernel::SetError> Program::kernel(String const& name) const {
-	if (!impl().program)
+	if (!impl(*this).program)
 		return Kernel::SetError::OCL_PKE_PROGRAM_HAS_NOT_BEEN_BUILT;
 	Kernel kernel(*this);
 	if (auto const err = kernel.set(name))
@@ -118,13 +114,12 @@ Result<Kernel, Kernel::SetError> Program::operator[](String const& name) const {
 	return kernel(name);
 }
 
-Kernel::Kernel(Program const& program) {
-	impl() = new Impl;
-	impl().program = program;
+Kernel::Kernel(Program const& program): Component(new Impl) {
+	impl(*this).program = program;
 }
 
 Result<Kernel::Argument, Kernel::Argument::SetError> Kernel::argument(String const& name) const {
-	if (!impl().kernel)
+	if (!impl(*this).kernel)
 		return Kernel::Argument::SetError::OCL_PKASE_KERNEL_DOES_NOT_EXIST;
 	Argument arg(*this);
 	if (auto const err = arg.set(name))
@@ -133,7 +128,7 @@ Result<Kernel::Argument, Kernel::Argument::SetError> Kernel::argument(String con
 }
 
 Result<Kernel::Argument, Kernel::Argument::SetError> Kernel::argument(usize const& index) const {
-	if (!impl().kernel)
+	if (!impl(*this).kernel)
 		return Kernel::Argument::SetError::OCL_PKASE_KERNEL_DOES_NOT_EXIST;
 	Argument arg(*this);
 	if (auto const err = arg.set(index))
@@ -153,12 +148,12 @@ Nullable<Kernel::SetError> Kernel::set(String const& name) {
 	cl_int err;
 	if (name.empty())
 		return SetError::OCL_PKFE_MISSING_KERNEL_NAME;
-	impl().kernel = clCreateKernel(
-		impl().program.impl().program,
+	impl(*this).kernel = clCreateKernel(
+		impl(*this).program.resource(),
 		name.cstr(),
 		&err
 	);
-	impl().name = name;
+	impl(*this).name = name;
 	switch (err) {
 		using enum SetError;
 		case CL_SUCCESS: return null;
@@ -170,7 +165,7 @@ Nullable<Kernel::SetError> Kernel::set(String const& name) {
 	}
 	usize argSize = 0;
 	clGetKernelInfo(
-		impl().kernel,
+		impl(*this).kernel,
 		CL_KERNEL_NUM_ARGS,
 		sizeof(usize),
 		&argSize,
@@ -181,7 +176,7 @@ Nullable<Kernel::SetError> Kernel::set(String const& name) {
 		size_t sz;
 		name.reserve(1024, '\0');
 		clGetKernelArgInfo(
-			impl().kernel,
+			impl(*this).kernel,
 			i,
 			CL_KERNEL_ARG_NAME,
 			name.size(),
@@ -189,16 +184,20 @@ Nullable<Kernel::SetError> Kernel::set(String const& name) {
 			&sz
 		);
 		name.resize(sz);
-		impl().argNames[i]		= name;
-		impl().argIndices[name]	= i;
+		impl(*this).argNames[i]			= name;
+		impl(*this).argIndices[name]	= i;
 	}
 	return null;
 }
 
+Kernel::Argument::Argument(Kernel const& kernel): Component(new Impl) {
+	impl(*this).kernel = kernel;
+}
+
 Nullable<Kernel::Argument::SetError> Argument::set(String const& name) {
-	if (!impl().kernel.impl().kernel)
+	if (!kernel().resource())
 		return SetError::OCL_PKASE_KERNEL_DOES_NOT_EXIST;
-	if (!impl().kernel.impl().argIndices.contains(name))
+	if (!impl(kernel()).argIndices.contains(name))
 		return SetError::OCL_PKASE_ARGUMENT_DOES_NOT_EXIST;
 	impl().index = impl().kernel.impl().argIndices[name];
 	impl().name = name;
@@ -206,12 +205,12 @@ Nullable<Kernel::Argument::SetError> Argument::set(String const& name) {
 }
 
 Nullable<Kernel::Argument::SetError> Argument::set(usize const index) {
-	if (!impl().kernel.impl().kernel)
+	if (!kernel().resource())
 		return SetError::OCL_PKASE_KERNEL_DOES_NOT_EXIST;
-	if (!impl().kernel.impl().argNames.contains(index))
+	if (!impl(kernel()).argNames.contains(index))
 		return SetError::OCL_PKASE_ARGUMENT_DOES_NOT_EXIST;
-	impl().name = impl().kernel.impl().argNames[index];
-	impl().index = index;
+	impl(*this).name = impl(kernel()).argNames[index];
+	impl(*this).index = index;
 	return null;
 }
 
@@ -222,8 +221,8 @@ Nullable<String> Argument::name() const {
 	size_t sz;
 	name.reserve(1024, '\0');
 	clGetKernelArgInfo(
-		impl().kernel,
-		impl().index,
+		kernel().resource(),
+		impl(*this).index,
 		CL_KERNEL_ARG_TYPE_NAME,
 		name.size(),
 		name.data(),
@@ -235,35 +234,35 @@ Nullable<String> Argument::name() const {
 Nullable<String> Argument::type() const {
 	if (index == Limit::MAX<usize>)
 		return null;
-	return impl().name;
+	return impl(*this).name;
 }
 
 Nullable<usize> Argument::index() const {
 	if (index == Limit::MAX<usize>)
 		return null;
-	return impl().index;
+	return impl(*this).index;
 }
 
-Context& Contextual<Program>::context() {
-	return impl().context;
+Context Program::context() const {
+	return impl(*this).context;
 }
 
-Context& Contextual<Kernel>::context() {
+Context Kernel::context() const {
 	return program().context();
 }
 
-Program& Kernel::program() {
-	return impl().program;
+Program Kernel::program() const {
+	return impl(*this).program;
 }
 
-Context& Contextual<Argument>::context() {
+Context Argument::context() const {
 	return kernel().context();
 }
 
-Program& Argument::program() {
+Program Argument::program() const {
 	return kernel().program();
 }
 
-Kernel& Argument::kernel() {
-	return impl().kernel;
+Kernel Argument::kernel() const {
+	return impl(*this).kernel;
 }

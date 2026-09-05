@@ -5,30 +5,34 @@
 
 /// @brief Open Computing Language facilities
 namespace Makai::MP::OpenCL {
-	template <Type::Class T>
 	struct Component {
-	private:
-		friend T;
+	protected:
+		struct IResource {
+			virtual ~IResource() {}
 
-		struct Impl;
-
-		using Deleter = Functor<void(Impl*)>;
-
-		template <Type::Equal<Impl> TImpl>
-		static Deleter deleterFor() {return [] (owner<TImpl> impl) {delete impl;};}
-
-		friend struct Component<T>::Wrapper;
-
-		struct Wrapper {
-			owner<Impl> impl;
-			~Wrapper() {Component::deleter(impl);}
+			virtual pointer resource() const = 0;
 		};
 
-		Impl& impl() const {
-			return *wrapper->impl;
+		template <Type::Subclass<Component> TComponent>
+		static auto& impl(TComponent& component) {
+			return *Cast::morph<ref<typename TImpl::Impl>>(Cast::as<Component&>(component).wrapper->resource);
 		}
 
-		static Deleter deleter;
+		pointer resource() const {
+			return wrapper->resource->resource();
+		}
+
+	private:
+		struct Wrapper {
+			owner<IResource> resource;
+			~Wrapper() {delete resource;}
+		};
+
+		template <Type::Subclass<IResource> TResource>
+		Component(owner<TResource> const resource): wrapper(wrapper.create()) {
+			wrapper->resource = resource;
+		}
+
 		AtomicCell<Wrapper> wrapper;
 	};
 }

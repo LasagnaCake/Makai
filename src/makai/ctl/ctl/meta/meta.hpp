@@ -6,5 +6,6 @@
 #include "pack.hpp"
 #include "unpack.hpp"
 #include "empty.hpp"
+#include "self.hpp"
 
 #endif // CTL_META_H

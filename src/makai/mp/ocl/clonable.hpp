@@ -6,10 +6,10 @@
 /// @brief Open Computing Language facilities
 namespace Makai::MP::OpenCL {
 	template <Type::Class T>
-	struct Clonable {
-		friend T;
-
-		T clone();
+	struct Clonable: Self<T> {
+		T clone() const {
+			self().clone();
+		}
 	};
 }
 

@@ -6,8 +6,10 @@ using namespace Makai::MP::OpenCL;
 
 using Image	= Context::Image;
 
-template<> struct Image::Impl {
-	~Impl();
+struct Image::Impl: Component::IResource {
+	virtual ~Impl();
 };
 
-template<> Context::Deleter Component<Image>::deleter = Context::deleterFor<Image::Impl>();
+Image::Impl::~Impl() {
+
+}

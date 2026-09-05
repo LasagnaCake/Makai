@@ -8,33 +8,35 @@
 namespace Makai::MP::OpenCL {
 	using Program = Context::Program;
 
-	struct Context::Program: Component<Program>, Contextual<Program> {
+	struct Context::Program: Component, Contextual<Program> {
 		friend struct Contextual<Program>;
-		friend struct Component<Program>;
 
+		struct Impl;
 		struct Kernel;
 
 		friend struct Program::Kernel;
 
-		struct Kernel: Component<Kernel>, Contextual<Kernel> {
+		struct Kernel: Component, Contextual<Kernel> {
 			friend struct Contextual<Kernel>;
-			friend struct Component<Kernel>;
 
+			struct Impl;
 			struct Argument;
 
 			friend struct Kernel::Argument;
 
-			struct Argument: Component<Argument>, Contextual<Argument> {
+			struct Argument: Component, Contextual<Argument> {
 				friend struct Contextual<Argument>;
-				friend struct Component<Argument>;
+
+				struct Impl;
 
 				enum class SetError: usize {
 					OCL_PKASE_KERNEL_DOES_NOT_EXIST,
 					OCL_PKASE_ARGUMENT_DOES_NOT_EXIST,
 				};
 
-				Kernel& kernel() const;
-				Program& program() const;
+				Context context() const;
+				Kernel kernel() const;
+				Program program() const;
 
 				Nullable<String> name() const;
 				Nullable<String> type() const;
@@ -71,7 +73,8 @@ namespace Makai::MP::OpenCL {
 			Result<Argument, ArgumentError>	operator[](String const& name)	const;
 			Result<Argument, ArgumentError>	operator[](usize const index)	const;
 
-			Program& program() const;
+			Context context() const;
+			Program program() const;
 
 			Kernel(Program const& program);
 		};
@@ -95,6 +98,8 @@ namespace Makai::MP::OpenCL {
 
 		using KernelError = Kernel::SetError;
 
+		Context context() const;
+
 		Nullable<SourceError>		setSource(String const& source);
 		Nullable<SourceError>		setBinary(ConstByteSpan<> const& binary);
 
@@ -109,10 +114,6 @@ namespace Makai::MP::OpenCL {
 	};
 
 	using Kernel = Program::Kernel;
-
-	template <> Context& Contextual<Program>::context();
-	template <> Context& Contextual<Kernel>::context();
-	template <> Context& Contextual<Argument>::context();
 }
 
 #endif

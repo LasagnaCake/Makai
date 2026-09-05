@@ -7,10 +7,11 @@
 namespace Makai::MP::OpenCL {
 	using Image = Context::Image;
 
-	struct Context::Image: Component<Image>, Contextual<Image>, Clonable<Image> {
-		friend struct Contextual<Image>;
+	struct Context::Image: Component, Contextual<Image>, Clonable<Image> {
 		friend struct Component<Image>;
 		friend struct Clonable<Image>;
+
+		struct Impl;
 
 		struct [[CTL_PACKED_STRUCT]] Format {
 			enum class Order: uint32 {
@@ -117,6 +118,9 @@ namespace Makai::MP::OpenCL {
 			OCL_ICE_OUT_OF_RESOURCES,
 			OCL_ICE_OUT_OF_HOST_MEMORY,
 		};
+
+		Context context() const;
+		Image clone() const;
 
 		Nullable<CreateError> create(Properties const& props, Description const& desc);
 		Nullable<CreateError> create(Properties const& props, Description const& desc, ByteSpan<> const& data);

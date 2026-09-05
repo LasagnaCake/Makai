@@ -4,23 +4,22 @@
 using namespace Makai;
 using namespace Makai::MP::OpenCL;
 
-template<> struct Context::Impl {
-	cl_context context;
+struct Context::Impl: Component::IResource {
+	cl_context context = nullptr;
 
-	~Impl();
+	pointer resource() const override {return (pointer)context;}
+
+	virtual ~Impl();
 };
 
-template<> Context::Deleter Component<Context>::deleter = Context::deleterFor<Context::Impl>();
-
-template<> Context::Impl::~Impl() {
+Context::Impl::~Impl() {
 	if (context) clReleaseContext(context);
 }
 
-Context::Context() {
-	impl() = new Impl;
+Context::Context(): Component(new Impl) {
 	cl_context_properties props;
 	cl_int err;
-	impl().context = clCreateContext(&props, 0, NULL, NULL, NULL, &err);
+	impl(*this).context = clCreateContext(&props, 0, NULL, NULL, NULL, &err);
 	if (err != CL_SUCCESS)
 		throw Error::FailedAction(
 			"Failed to create OpenCL context!",

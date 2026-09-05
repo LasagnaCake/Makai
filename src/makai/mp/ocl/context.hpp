@@ -6,7 +6,7 @@
 
 /// @brief Open Computing Language facilities
 namespace Makai::MP::OpenCL {
-	struct Context: Component<Context> {
+	struct Context: Component {
 		struct Program;
 		struct Image;
 		struct Buffer;
@@ -25,9 +25,15 @@ namespace Makai::MP::OpenCL {
 		friend struct Context::Event;
 		friend struct Context::CommandQueue;
 
+		struct Impl;
+
 		Context();
 
-		template <class T> struct Contextual: T {Context& context() const;};
+		template <class T> struct Contextual: Self<T> {
+			Context context() const {
+				self().context();
+			}
+		};
 
 		template<Type::Constructible<Context const&> T>
 		T create() const {
