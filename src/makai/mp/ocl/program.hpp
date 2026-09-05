@@ -12,8 +12,6 @@ namespace Makai::MP::OpenCL {
 		friend struct Contextual<Program>;
 		friend struct Component<Program>;
 
-		struct Impl;
-
 		struct Kernel;
 
 		friend struct Program::Kernel;
@@ -21,8 +19,6 @@ namespace Makai::MP::OpenCL {
 		struct Kernel: Component<Kernel>, Contextual<Kernel> {
 			friend struct Contextual<Kernel>;
 			friend struct Component<Kernel>;
-
-			struct Impl;
 
 			struct Argument;
 
@@ -36,8 +32,6 @@ namespace Makai::MP::OpenCL {
 					OCL_PKASE_KERNEL_DOES_NOT_EXIST,
 					OCL_PKASE_ARGUMENT_DOES_NOT_EXIST,
 				};
-
-				struct Impl;
 
 				Kernel& kernel() const;
 				Program& program() const;

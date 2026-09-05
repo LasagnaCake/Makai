@@ -30,13 +30,18 @@ PCRE2_16	= lib/pcre2/lib/$(LIBFILE_SRC)/libpcre2-16.a
 PCRE2_32	= lib/pcre2/lib/$(LIBFILE_SRC)/libpcre2-32.a
 PCRE2_POSIX	= lib/pcre2/lib/$(LIBFILE_SRC)/libpcre2-posix.a
 OCL			= lib/OpenCL/lib/$(LIBFILE_SRC)/libOpenCL$(LIBFILE_TYPE)
+ifeq ($(os),win)
 OCL_EXT		= lib/OpenCL/lib/$(LIBFILE_SRC)/libOpenCLExt.a
 OCL_UTIL	= lib/OpenCL/lib/$(LIBFILE_SRC)/libOpenCLUtils$(LIBFILE_TYPE)
 OCL_UTILCPP	= lib/OpenCL/lib/$(LIBFILE_SRC)/libOpenCLUtilsCpp$(LIBFILE_TYPE)
+endif
 
 BASE_LIBS := cryptopp:$(CRYPTOPP) sdl-net:$(SDLNET)
 BASE_LIBS += pcre2-8:$(PCRE2_8) pcre2-16:$(PCRE2_16) pcre2-32:$(PCRE2_32) pcre2-posix:$(PCRE2_POSIX)
-BASE_LIBS += ocl:$(OCL) ocl-ext:$(OCL_EXT) ocl-util:$(OCL_UTIL) ocl-util-cpp:$(OCL_UTILCPP)
+BASE_LIBS += ocl:$(OCL)
+ifeq ($(os),win)
+BASE_LIBS += ocl-ext:$(OCL_EXT) ocl-util:$(OCL_UTIL) ocl-util-cpp:$(OCL_UTILCPP)
+endif
 
 define ART_SDK_DEBPKG
 Package: art-sdk

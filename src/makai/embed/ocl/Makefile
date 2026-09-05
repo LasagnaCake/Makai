@@ -10,7 +10,7 @@ define embed
 	@echo "Embedding MVSX codec utilities..."
 	@cd mvsx
 	@rm -f *.ocl.o
-	@$(CPP_COMPILER) -o mvsx.decoder.ocl.o -c decoder.s $(LEAN)
+	@$(CPP_COMPILER) -o mvsx.decoder.v1.ocl.o -c decoder.v1.s $(LEAN)
 	@cd ..
 	@echo "Removing old ocl packs..."
 	@rm -f *.$@.$(strip $(1)).o

@@ -494,8 +494,8 @@ constexpr Span<T> span(Iterator<T> const& begin, Iterator<T> const& end) {
 template<class T>
 constexpr auto span(T& value)
 requires requires (T t) {
-	{t.begin()}
-	{t.end()}
+	{t.begin()};
+	{t.end()};
 } {
 	return span(value.begin(), value.end());
 }
@@ -503,8 +503,8 @@ requires requires (T t) {
 template<class T>
 constexpr auto span(T& value)
 requires requires (T t) {
-	{t.data()}
-	{t.size()}
+	{t.data()};
+	{t.size()};
 } {
 	return span(value.data(), value.size());
 }
@@ -512,4 +512,3 @@ requires requires (T t) {
 CTL_NAMESPACE_END
 
 #endif // CTL_CONTAINER_SPAN_H
-:

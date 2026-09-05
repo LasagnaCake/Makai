@@ -19,6 +19,8 @@ CompileFlags:
     - -Ilib/minivorbis
     - -Ilib/json2xml
     - -Ilib/curl/include
+    - -Ilib/pcre2/include
+    - -Ilib/OpenCL/include
     - -frelaxed-template-template-args
   Compiler: g++
   MallocTrim: true

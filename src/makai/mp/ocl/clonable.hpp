@@ -6,7 +6,9 @@
 /// @brief Open Computing Language facilities
 namespace Makai::MP::OpenCL {
 	template <Type::Class T>
-	struct Clonable: T {
+	struct Clonable {
+		friend T;
+
 		T clone();
 	};
 }

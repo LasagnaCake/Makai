@@ -12,8 +12,6 @@ namespace Makai::MP::OpenCL {
 		friend struct Component<Image>;
 		friend struct Clonable<Image>;
 
-		struct Impl;
-
 		struct [[CTL_PACKED_STRUCT]] Format {
 			enum class Order: uint32 {
 				OCL_IFO_RGBA,

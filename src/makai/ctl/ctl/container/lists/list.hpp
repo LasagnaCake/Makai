@@ -1299,7 +1299,7 @@ public:
 	constexpr auto allocator() const	{return contents.allocator();}
 
 	template <bool C>
-	using SpanType = Meta::If<C, Span<T const, DYNAMIC_SIZE, TSize>, Span<T, DYNAMIC_SIZE, TSize>>;
+	using SpanType = Meta::If<C, Span<ConstantType, DYNAMIC_SIZE, TIndex>, Span<DataType, DYNAMIC_SIZE, TIndex>>;
 
 	/// @brief Returns a span to the list.
 	constexpr SpanType<true> span() const	{return SpanType<true>::from(*this);	}

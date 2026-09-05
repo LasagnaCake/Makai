@@ -4,15 +4,15 @@
 using namespace Makai;
 using namespace Makai::MP::OpenCL;
 
-struct Context::Impl {
+template<> struct Context::Impl {
 	cl_context context;
 
 	~Impl();
 };
 
-Context::Deleter Component<Context>::deleter = Context::deleterFor<Context::Impl>();
+template<> Context::Deleter Component<Context>::deleter = Context::deleterFor<Context::Impl>();
 
-Context::Impl::~Impl() {
+template<> Context::Impl::~Impl() {
 	if (context) clReleaseContext(context);
 }
 

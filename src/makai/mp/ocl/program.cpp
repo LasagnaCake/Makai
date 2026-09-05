@@ -8,20 +8,20 @@ using Program	= Context::Program;
 using Kernel	= Context::Program::Kernel;
 using Argument	= Context::Program::Kernel::Argument;
 
-struct Context::Impl {
+template<> struct Context::Impl {
 	cl_context context;
 
 	~Impl();
 };
 
-struct Program::Impl {
+template<> struct Program::Impl {
 	cl_program program = nullptr;
 	Context context;
 
 	~Impl();
 };
 
-struct Kernel::Impl {
+template<> struct Kernel::Impl {
 	cl_kernel			kernel = nullptr;
 	Program				program;
 	ArgumentIndexMap	argIndices;
@@ -38,17 +38,19 @@ struct Argument::Impl {
 	~Impl();
 };
 
-Program::Deleter Component<Program>::deleter = Program::deleterFor<Program::Impl>();
+template<> Program::Deleter Component<Program>::deleter		= Program::deleterFor<Program::Impl>();
+template<> Program::Deleter Component<Kernel>::deleter		= Program::deleterFor<Kernel::Impl>();
+template<> Program::Deleter Component<Argument>::deleter	= Program::deleterFor<Argument::Impl>();
 
-Program::Impl::~Impl() {
+template<> Program::Impl::~Impl() {
 	if (program) clReleaseProgram(program);
 }
 
-Kernel::Impl::~Impl() {
+template<> Kernel::Impl::~Impl() {
 	if (kernel) clReleaseKernel(kernel);
 }
 
-Argument::Impl::~Impl() {
+template<> Argument::Impl::~Impl() {
 }
 
 Program::Program(Context const& context) {

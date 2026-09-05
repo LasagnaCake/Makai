@@ -5,8 +5,10 @@
 namespace Makai::MP::OpenCL {}
 
 #include "component.hpp"
+#include "clonable.hpp"
 #include "context.hpp"
 #include "program.hpp"
+#include "image.hpp"
 
 namespace MkOpenCL = Makai::MP::OpenCL;
 
