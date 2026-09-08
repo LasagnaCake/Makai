@@ -19,6 +19,15 @@ namespace Color {
 		return ((2<<ch)-1);
 	}
 
+	template <class... Ts>
+	consteval usize largest(usize const x, Ts const... values) {
+		if constexpr (sizeof...(Ts) == 0)
+			return x;
+		else if constexpr (sizeof...(Ts) == 1)
+			return CTL::Math::max(x, values...);
+		else return CTL::Math::max(x, largest(values...));
+	}
+
 	enum class ChannelOrder: uint8 {
 		CCO_RGB = 0x40,
 		CCO_BGR,
@@ -54,7 +63,7 @@ namespace Color {
 		}
 	};
 
-	template <usize RS, usize GS = RS, usize BS = GS, Type::Unsigned TChannel = Channel<W>>
+	template <usize RS, usize GS = RS, usize BS = GS, Type::Unsigned TChannel = Channel<largest(RS, GS, BS)>>
 	struct [[CTL_PACKED_STRUCT]] TColorI<ChannelOrder::CCO_RGB, RS, GS, BS, TChannel>, Colorable<TColorI<ChannelOrder::RGB, RS, GS, BS, TChannel>> {
 		constexpr auto ORDER const = ChannelOrder::RGB;
 
@@ -69,7 +78,7 @@ namespace Color {
 		);
 	};
 
-	template <usize RS, usize GS = RS, usize BS = GS, usize AS = BS, Type::Unsigned TChannel = Channel<W>>
+	template <usize RS, usize GS = RS, usize BS = GS, usize AS = BS, Type::Unsigned TChannel = Channel<largest(RS, GS, BS, AS)>>
 	struct [[CTL_PACKED_STRUCT]] TColorI<ChannelOrder::CCO_RGBA, RS, GS, BS, AS, TChannel>, Colorable<TColorI<ChannelOrder::RGBA, RS, GS, BS, AS, TChannel>>{
 		TChannel r: RS;
 		TChannel g: GS;
