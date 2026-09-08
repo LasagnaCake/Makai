@@ -7,6 +7,10 @@
 namespace Makai::MP::OpenCL {
 	template <Type::Class T>
 	struct Clonable: Self<T> {
+		using Self = Self<T>;
+
+		using Self::self;
+
 		T clone() const {
 			self().clone();
 		}

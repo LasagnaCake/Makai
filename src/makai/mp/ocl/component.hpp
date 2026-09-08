@@ -15,11 +15,16 @@ namespace Makai::MP::OpenCL {
 
 		template <Type::Subclass<Component> TComponent>
 		static auto& impl(TComponent& component) {
-			return *Cast::morph<ref<typename TImpl::Impl>>(Cast::as<Component&>(component).wrapper->resource);
+			return *Cast::morph<ref<typename TComponent::Impl>>(component.wrapper->resource);
 		}
 
 		pointer resource() const {
 			return wrapper->resource->resource();
+		}
+
+		template <Type::Subclass<IResource> TResource>
+		Component(owner<TResource> const resource): wrapper(wrapper.create()) {
+			wrapper->resource = resource;
 		}
 
 	private:
@@ -27,11 +32,6 @@ namespace Makai::MP::OpenCL {
 			owner<IResource> resource;
 			~Wrapper() {delete resource;}
 		};
-
-		template <Type::Subclass<IResource> TResource>
-		Component(owner<TResource> const resource): wrapper(wrapper.create()) {
-			wrapper->resource = resource;
-		}
 
 		AtomicCell<Wrapper> wrapper;
 	};

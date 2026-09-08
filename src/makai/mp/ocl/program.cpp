@@ -8,16 +8,18 @@ using Program	= Context::Program;
 using Kernel	= Context::Program::Kernel;
 using Argument	= Context::Program::Kernel::Argument;
 
-struct Program::Impl {
+struct Program::Impl: Program::IResource {
 	cl_program program = nullptr;
 	Context context;
 
 	pointer resource() const override {return (pointer)program;}
 
 	virtual ~Impl();
+
+	Impl();
 };
 
-struct Kernel::Impl {
+struct Kernel::Impl: Program::IResource {
 	cl_kernel			kernel = nullptr;
 	Program				program;
 	ArgumentIndexMap	argIndices;
@@ -27,9 +29,11 @@ struct Kernel::Impl {
 	pointer resource() const override {return (pointer)kernel;}
 
 	virtual ~Impl();
+
+	Impl();
 };
 
-struct Argument::Impl {
+struct Argument::Impl: Program::IResource {
 	Kernel	kernel;
 	String	name;
 	usize	index = -1;
@@ -37,6 +41,8 @@ struct Argument::Impl {
 	pointer resource() const override {return (pointer)index;}
 
 	virtual ~Impl();
+
+	Impl();
 };
 
 Program::Impl::~Impl() {
@@ -61,7 +67,7 @@ Nullable<Program::SourceError> Program::setSource(String const& source) {
 	carr<size_t, 1> sz{source.size()};
 	cl_int err;
 	impl(*this).program = clCreateProgramWithSource(
-		context.resource(),
+		(cl_context)context().resource(),
 		1,
 		src,
 		sz,
@@ -89,21 +95,21 @@ Nullable<Program::BuildError> Program::build(String const& options) {
 	switch (err) {
 		using enum BuildError;
 		case CL_SUCCESS: return null;
-		case CL_BUILD_PROGRAM_FAILURE:		return OCL_PBE_FAILED_TO_BUILD;
-		case CL_INVALID_BINARY:				return OCL_PBE_INVALID_BINARY;
-		case CL_INVALID_OPERATION:			return OCL_PBE_PROGRAM_HAS_BEEN_BUILT_ALREADY;
-		case CL_BE_INVALID_BINARY:			return OCL_PBE_INVALID_BINARY;
-		case CL_BE_INVALID_BUILD_OPTIONS:	return OCL_PBE_INVALID_BUILD_OPTIONS;
-		case CL_BE_COMPILER_NOT_AVAILABLE:	return OCL_PBE_COMPILER_NOT_AVAILABLE;
-		case CL_OUT_OF_RESOURCES:			return OCL_PBE_OUT_OF_RESOURCES;
-		case CL_OUT_OF_HOST_MEMORY:			return OCL_PBE_OUT_OF_HOST_MEMORY;
+		case CL_BUILD_PROGRAM_FAILURE:	return OCL_PBE_FAILED_TO_BUILD;
+		case CL_INVALID_BINARY:			return OCL_PBE_INVALID_BINARY;
+		case CL_INVALID_OPERATION:		return OCL_PBE_PROGRAM_HAS_BEEN_BUILT_ALREADY;
+		case CL_INVALID_BINARY:			return OCL_PBE_INVALID_BINARY;
+		case CL_INVALID_BUILD_OPTIONS:	return OCL_PBE_INVALID_BUILD_OPTIONS;
+		case CL_COMPILER_NOT_AVAILABLE:	return OCL_PBE_COMPILER_NOT_AVAILABLE;
+		case CL_OUT_OF_RESOURCES:		return OCL_PBE_OUT_OF_RESOURCES;
+		case CL_OUT_OF_HOST_MEMORY:		return OCL_PBE_OUT_OF_HOST_MEMORY;
 	}
 	return null;
 }
 
 Result<Kernel, Kernel::SetError> Program::kernel(String const& name) const {
 	if (!impl(*this).program)
-		return Kernel::SetError::OCL_PKE_PROGRAM_HAS_NOT_BEEN_BUILT;
+		return Kernel::SetError::OCL_PKSE_PROGRAM_HAS_NOT_BEEN_BUILT;
 	Kernel kernel(*this);
 	if (auto const err = kernel.set(name))
 		return *err;
@@ -149,7 +155,7 @@ Nullable<Kernel::SetError> Kernel::set(String const& name) {
 	if (name.empty())
 		return SetError::OCL_PKFE_MISSING_KERNEL_NAME;
 	impl(*this).kernel = clCreateKernel(
-		impl(*this).program.resource(),
+		(cl_program)program().resource(),
 		name.cstr(),
 		&err
 	);
@@ -199,8 +205,8 @@ Nullable<Kernel::Argument::SetError> Argument::set(String const& name) {
 		return SetError::OCL_PKASE_KERNEL_DOES_NOT_EXIST;
 	if (!impl(kernel()).argIndices.contains(name))
 		return SetError::OCL_PKASE_ARGUMENT_DOES_NOT_EXIST;
-	impl().index = impl().kernel.impl().argIndices[name];
-	impl().name = name;
+	impl(*this).index = impl().kernel.impl().argIndices[name];
+	impl(*this).name = name;
 	return null;
 }
 
@@ -215,13 +221,13 @@ Nullable<Kernel::Argument::SetError> Argument::set(usize const index) {
 }
 
 Nullable<String> Argument::name() const {
-	if (index == Limit::MAX<usize>)
+	if (index() == Limit::MAX<usize>)
 		return null;
 	String name;
 	size_t sz;
 	name.reserve(1024, '\0');
 	clGetKernelArgInfo(
-		kernel().resource(),
+		(cl_kernel)kernel().resource(),
 		impl(*this).index,
 		CL_KERNEL_ARG_TYPE_NAME,
 		name.size(),
@@ -232,13 +238,13 @@ Nullable<String> Argument::name() const {
 }
 
 Nullable<String> Argument::type() const {
-	if (index == Limit::MAX<usize>)
+	if (index() == Limit::MAX<usize>)
 		return null;
 	return impl(*this).name;
 }
 
 Nullable<usize> Argument::index() const {
-	if (index == Limit::MAX<usize>)
+	if (index() == Limit::MAX<usize>)
 		return null;
 	return impl(*this).index;
 }

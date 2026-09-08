@@ -30,6 +30,10 @@ namespace Makai::MP::OpenCL {
 		Context();
 
 		template <class T> struct Contextual: Self<T> {
+			using Self = Self<T>;
+
+			using Self::self;
+
 			Context context() const {
 				self().context();
 			}
