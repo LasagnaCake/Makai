@@ -12,5 +12,6 @@
 #include "calendar/calendar.hpp"
 #include "cli/cli.hpp"
 #include "binary/binary.hpp"
+#include "color/color.hpp"
 
 #endif // CTL_EX_H

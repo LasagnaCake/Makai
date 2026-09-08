@@ -46,6 +46,8 @@ namespace Makai::MP::OpenCL {
 
 				Nullable<SetError> set(String const& name);
 				Nullable<SetError> set(usize const index);
+
+				Argument();
 			};
 
 			enum class SetError: usize {
@@ -77,6 +79,8 @@ namespace Makai::MP::OpenCL {
 			Program program() const;
 
 			Kernel(Program const& program);
+
+			Kernel();
 		};
 
 		enum class SourceError: usize {
@@ -111,6 +115,8 @@ namespace Makai::MP::OpenCL {
 		Result<Kernel, KernelError>	operator[](String const& name)	const;
 
 		Program(Context const& context);
+
+		Program();
 	};
 
 	using Kernel = Program::Kernel;

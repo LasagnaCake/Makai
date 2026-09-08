@@ -4,13 +4,12 @@
 #include "../compat/ctl.hpp"
 #include "../image/image.hpp"
 #include "../audio/audio.hpp"
-#include "../graph/color/color.hpp"
 #include "core.hpp"
 
 namespace Makai::Video::V2D::MVSX {
 	using namespace CTL::Ex::BinaryFormat;
 
-	using Color8 = Graph::Color::Color8;
+	using Color8 = Color::RGBAi8;
 	using ImageFormat = Image::I2D::Format;
 
 	using CTL::Ex::BinaryFormat::Data;
@@ -120,7 +119,7 @@ namespace Makai::Video::V2D::MVSX {
 		HeaderTable<Subtitles>	subtitles;
 	};
 
-	struct Decoder: ADecoder, private Graph::Blendable {
+	struct Decoder: ADecoder {
 		struct Track {
 			AudioFormat	format;
 			uint64		timeOffset;

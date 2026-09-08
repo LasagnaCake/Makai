@@ -2,13 +2,13 @@
 #define MAKAILIB_MP_OCL_IMAGE_H
 
 #include "component.hpp"
+#include "context.hpp"
 
 /// @brief Open Computing Language facilities
 namespace Makai::MP::OpenCL {
 	using Image = Context::Image;
 
 	struct Context::Image: Component, Contextual<Image>, Clonable<Image> {
-		friend struct Component<Image>;
 		friend struct Clonable<Image>;
 
 		struct Impl;

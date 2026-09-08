@@ -1,5 +1,5 @@
 #include "program.hpp"
-#include <CL/cl.h>
+#include "clhelper.cc"
 
 using namespace Makai;
 using namespace Makai::MP::OpenCL;
@@ -56,7 +56,10 @@ Kernel::Impl::~Impl() {
 Argument::Impl::~Impl() {
 }
 
-Program::Program(Context const& context): Component(new Impl) {
+Program::Program(): Component(new Impl) {
+}
+
+Program::Program(Context const& context): Program() {
 	impl(*this).context = context;
 }
 
@@ -87,16 +90,16 @@ Nullable<Program::BuildError> Program::build(String const& options) {
 		return BuildError::OCL_PBE_NO_SOURCE_ASSIGNED;
 	auto const err = clBuildProgram(
 		impl(*this).program,
-		o,
+		0,
 		NULL,
 		options.cstr(),
+		NULL,
 		NULL
 	);
 	switch (err) {
 		using enum BuildError;
 		case CL_SUCCESS: return null;
 		case CL_BUILD_PROGRAM_FAILURE:	return OCL_PBE_FAILED_TO_BUILD;
-		case CL_INVALID_BINARY:			return OCL_PBE_INVALID_BINARY;
 		case CL_INVALID_OPERATION:		return OCL_PBE_PROGRAM_HAS_BEEN_BUILT_ALREADY;
 		case CL_INVALID_BINARY:			return OCL_PBE_INVALID_BINARY;
 		case CL_INVALID_BUILD_OPTIONS:	return OCL_PBE_INVALID_BUILD_OPTIONS;
@@ -120,7 +123,10 @@ Result<Kernel, Kernel::SetError> Program::operator[](String const& name) const {
 	return kernel(name);
 }
 
-Kernel::Kernel(Program const& program): Component(new Impl) {
+Kernel::Kernel(): Component(new Impl) {
+}
+
+Kernel::Kernel(Program const& program): Kernel() {
 	impl(*this).program = program;
 }
 
@@ -133,7 +139,7 @@ Result<Kernel::Argument, Kernel::Argument::SetError> Kernel::argument(String con
 	return arg;
 }
 
-Result<Kernel::Argument, Kernel::Argument::SetError> Kernel::argument(usize const& index) const {
+Result<Kernel::Argument, Kernel::Argument::SetError> Kernel::argument(usize const index) const {
 	if (!impl(*this).kernel)
 		return Kernel::Argument::SetError::OCL_PKASE_KERNEL_DOES_NOT_EXIST;
 	Argument arg(*this);
@@ -146,14 +152,14 @@ Result<Kernel::Argument, Kernel::Argument::SetError> Kernel::operator[](String c
 	return argument(name);
 }
 
-Result<Kernel::Argument, Kernel::Argument::SetError> Kernel::operator[](usize const& index) const {
-	return argument(name);
+Result<Kernel::Argument, Kernel::Argument::SetError> Kernel::operator[](usize const index) const {
+	return argument(index);
 }
 
 Nullable<Kernel::SetError> Kernel::set(String const& name) {
 	cl_int err;
 	if (name.empty())
-		return SetError::OCL_PKFE_MISSING_KERNEL_NAME;
+		return SetError::OCL_PKSE_MISSING_KERNEL_NAME;
 	impl(*this).kernel = clCreateKernel(
 		(cl_program)program().resource(),
 		name.cstr(),
@@ -165,23 +171,25 @@ Nullable<Kernel::SetError> Kernel::set(String const& name) {
 		case CL_SUCCESS: return null;
 		case CL_INVALID_PROGRAM_EXECUTABLE:	return OCL_PKSE_PROGRAM_HAS_NOT_BEEN_BUILT;
 		case CL_INVALID_KERNEL_NAME:		return OCL_PKSE_KERNEL_DOES_NOT_EXIST;
-		case CL_INVALID_KERNEL_DEFINITION:	return OCL_PKSE_MALFORMED_KERNEL_NAME;
+		case CL_INVALID_KERNEL_DEFINITION:	return OCL_PKSE_MALFORMED_KERNEL;
 		case CL_OUT_OF_RESOURCES:			return OCL_PKSE_OUT_OF_RESOURCES;
 		case CL_OUT_OF_HOST_MEMORY:			return OCL_PKSE_OUT_OF_HOST_MEMORY;
 	}
 	usize argSize = 0;
-	clGetKernelInfo(
+	usize _ = 0;
+	err = clGetKernelInfo(
 		impl(*this).kernel,
 		CL_KERNEL_NUM_ARGS,
 		sizeof(usize),
 		&argSize,
-		&err
+		NULL
 	);
+	if (err != CL_SUCCESS) return SetError::OCL_PKSE_MALFORMED_KERNEL;
 	for (usize i = 0; i < argSize; ++i) {
 		String name;
 		size_t sz;
 		name.reserve(1024, '\0');
-		clGetKernelArgInfo(
+		err = clGetKernelArgInfo(
 			impl(*this).kernel,
 			i,
 			CL_KERNEL_ARG_NAME,
@@ -189,6 +197,7 @@ Nullable<Kernel::SetError> Kernel::set(String const& name) {
 			name.data(),
 			&sz
 		);
+		if (err != CL_SUCCESS) break;
 		name.resize(sz);
 		impl(*this).argNames[i]			= name;
 		impl(*this).argIndices[name]	= i;
@@ -196,16 +205,20 @@ Nullable<Kernel::SetError> Kernel::set(String const& name) {
 	return null;
 }
 
-Kernel::Argument::Argument(Kernel const& kernel): Component(new Impl) {
+Kernel::Argument::Argument(): Component(new Impl) {
+}
+
+Kernel::Argument::Argument(Kernel const& kernel): Argument() {
 	impl(*this).kernel = kernel;
 }
 
 Nullable<Kernel::Argument::SetError> Argument::set(String const& name) {
 	if (!kernel().resource())
 		return SetError::OCL_PKASE_KERNEL_DOES_NOT_EXIST;
-	if (!impl(kernel()).argIndices.contains(name))
+	auto const k = kernel();
+	if (!impl(k).argIndices.contains(name))
 		return SetError::OCL_PKASE_ARGUMENT_DOES_NOT_EXIST;
-	impl(*this).index = impl().kernel.impl().argIndices[name];
+	impl(*this).index = impl(k).argIndices[name];
 	impl(*this).name = name;
 	return null;
 }
@@ -213,9 +226,10 @@ Nullable<Kernel::Argument::SetError> Argument::set(String const& name) {
 Nullable<Kernel::Argument::SetError> Argument::set(usize const index) {
 	if (!kernel().resource())
 		return SetError::OCL_PKASE_KERNEL_DOES_NOT_EXIST;
-	if (!impl(kernel()).argNames.contains(index))
+	auto const k = kernel();
+	if (!impl(k).argNames.contains(index))
 		return SetError::OCL_PKASE_ARGUMENT_DOES_NOT_EXIST;
-	impl(*this).name = impl(kernel()).argNames[index];
+	impl(*this).name = impl(k).argNames[index];
 	impl(*this).index = index;
 	return null;
 }
@@ -244,7 +258,7 @@ Nullable<String> Argument::type() const {
 }
 
 Nullable<usize> Argument::index() const {
-	if (index() == Limit::MAX<usize>)
+	if (impl(*this).index == Limit::MAX<usize>)
 		return null;
 	return impl(*this).index;
 }

@@ -306,7 +306,7 @@ JSON::Value Scene::getSceneDefinition(
 	#define _FOG_JSON_VALUE(FOG_TYPE)\
 		JSON::Entry {#FOG_TYPE, JSON::Object {\
 			JSON::Entry{"enabled", world.FOG_TYPE.enabled},\
-			JSON::Entry{"color", Color::toHexCodeString(world.FOG_TYPE.color, false, true)},\
+			JSON::Entry{"color", Color::toHexString(world.FOG_TYPE.color, false, true)},\
 			JSON::Entry{"start", world.FOG_TYPE.start},\
 			JSON::Entry{"stop", world.FOG_TYPE.stop},\
 			JSON::Entry{"strength", world.FOG_TYPE.strength}\
@@ -315,7 +315,7 @@ JSON::Value Scene::getSceneDefinition(
 		_FOG_JSON_VALUE(nearFog),
 		_FOG_JSON_VALUE(farFog),
 		JSON::Entry{"ambient", JSON::Object {
-			JSON::Entry{"color", Color::toHexCodeString(world.ambient.color, true, true)},
+			JSON::Entry{"color", Color::toHexString(world.ambient.color, true, true)},
 			JSON::Entry{"strength", world.ambient.strength}
 		}}
 	};

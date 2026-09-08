@@ -1,5 +1,5 @@
 #include "context.hpp"
-#include <CL/cl.h>
+#include "clhelper.cc"
 
 using namespace Makai;
 using namespace Makai::MP::OpenCL;

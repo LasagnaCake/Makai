@@ -67,7 +67,7 @@ inline ObjectMaterial fromDefinition(JSON::Value def, String const& definitionFo
 	try {
 		auto& dmat = def;
 		// Set color
-		mat.color = Color::fromJSON(dmat["color"]);
+		mat.color = Color::fromDynamicValue(dmat["color"]).orElse(Color::WHITE);
 		// Set color & shading params
 		#define _SET_BOOL_PARAM(PARAM) if(dmat[#PARAM].isBool()) mat.PARAM = dmat[#PARAM].get<bool>()
 		_SET_BOOL_PARAM(shaded);
@@ -143,8 +143,8 @@ inline ObjectMaterial fromDefinition(JSON::Value def, String const& definitionFo
 			mat.gradient.channel	= dmat["gradient"]["channel"].get<unsigned int>();
 			auto dgbegin	= dmat["gradient"]["begin"];
 			auto dgend		= dmat["gradient"]["end"];
-			mat.gradient.begin	= Color::fromJSON(dgbegin);
-			mat.gradient.end	= Color::fromJSON(dgend);
+			mat.gradient.begin	= Color::fromDynamicValue(dgbegin).orElse(Color::WHITE);
+			mat.gradient.end	= Color::fromDynamicValue(dgend).orElse(Color::WHITE);
 			mat.gradient.invert	= dmat["gradient"]["invert"].get<bool>();
 		}
 		// Set instances
@@ -177,7 +177,7 @@ inline JSON::Value toDefinition(
 	JSON::Value def;
 	// Define object
 	def = JSON::Object{
-		JSON::Entry{"color", Color::toHexCodeString(mat.color, false, true)},
+		JSON::Entry{"color", Color::toHexString(mat.color, false, true)},
 		JSON::Entry{"shaded", mat.shaded},
 		JSON::Entry{"illuminated", mat.illuminated},
 		JSON::Entry{"hue", mat.hue},
@@ -193,8 +193,8 @@ inline JSON::Value toDefinition(
 		JSON::Entry{"gradient", JSON::Object{
 			JSON::Entry{"enabled", mat.gradient.enabled},
 			JSON::Entry{"channel", mat.gradient.channel},
-			JSON::Entry{"begin", Color::toHexCodeString(mat.gradient.begin, false, true)},
-			JSON::Entry{"end", Color::toHexCodeString(mat.gradient.end, false, true)},
+			JSON::Entry{"begin", Color::toHexString(mat.gradient.begin, false, true)},
+			JSON::Entry{"end", Color::toHexString(mat.gradient.end, false, true)},
 			JSON::Entry{"invert", mat.gradient.invert}
 		}},
 		JSON::Entry{"debugView", (uint32)mat.debug}

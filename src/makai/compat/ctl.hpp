@@ -27,6 +27,11 @@ namespace Makai {
 		using namespace CTL::Ex::Data;
 	//	using namespace CTL::Data;
 	}
+	/// @brief Color space facilities.
+	namespace Color {
+		using namespace CTL::Ex::Color;
+	//	using namespace CTL::Color;
+	}
 	/// @brief Regular expression facilities.
 	namespace Regex {
 		using namespace CTL::Regex;

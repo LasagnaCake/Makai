@@ -3,7 +3,6 @@
 
 #include "../compat/ctl.hpp"
 #include "../image/core.hpp"
-#include "../graph/gl/image.hpp"
 
 namespace Makai::Video::V2D {
 	enum class Container {
