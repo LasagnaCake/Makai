@@ -55,7 +55,7 @@ namespace Color {
 	};
 
 	template <usize RS, usize GS = RS, usize BS = GS, Type::Unsigned TChannel = Channel<W>>
-	struct [[CTL_PACKED_STRUCT]] TColorI<ChannelOrder::RGB, RS, GS, BS, TChannel>, Colorable<TColorI<ChannelOrder::RGB, RS, GS, BS, TChannel>> {
+	struct [[CTL_PACKED_STRUCT]] TColorI<ChannelOrder::CCO_RGB, RS, GS, BS, TChannel>, Colorable<TColorI<ChannelOrder::RGB, RS, GS, BS, TChannel>> {
 		constexpr auto ORDER const = ChannelOrder::RGB;
 
 		TChannel r: RS;
@@ -70,7 +70,7 @@ namespace Color {
 	};
 
 	template <usize RS, usize GS = RS, usize BS = GS, usize AS = BS, Type::Unsigned TChannel = Channel<W>>
-	struct [[CTL_PACKED_STRUCT]] TColorI<ChannelOrder::RGBA, RS, GS, BS, AS, TChannel>, Colorable<TColorI<ChannelOrder::RGBA, RS, GS, BS, AS, TChannel>>{
+	struct [[CTL_PACKED_STRUCT]] TColorI<ChannelOrder::CCO_RGBA, RS, GS, BS, AS, TChannel>, Colorable<TColorI<ChannelOrder::RGBA, RS, GS, BS, AS, TChannel>>{
 		TChannel r: RS;
 		TChannel g: GS;
 		TChannel b: BS;
@@ -84,37 +84,37 @@ namespace Color {
 		);
 	};
 
-	using RGBAi2		= TColorI<ChannelOrder::RGBA, 2>;
-	using RGBAi3		= TColorI<ChannelOrder::RGBA, 3>;
-	using RGBAi8b2321	= TColorI<ChannelOrder::RGBA, 2, 3, 2, 1>;
-	using RGBAi4		= TColorI<ChannelOrder::RGBA, 4>;
-	using RGBAi5		= TColorI<ChannelOrder::RGBA, 5>;
-	using RGBAi16b5551	= TColorI<ChannelOrder::RGBA, 5, 5, 5, 1>;
-	using RGBAi16b4543	= TColorI<ChannelOrder::RGBA, 4, 5, 4, 3>;
-	using RGBAi6		= TColorI<ChannelOrder::RGBA, 6>;
-	using RGBAi8		= TColorI<ChannelOrder::RGBA, 8>;
-	using RGBAi12		= TColorI<ChannelOrder::RGBA, 12>;
-	using RGBAi16		= TColorI<ChannelOrder::RGBA, 16>;
-	using RGBAi24		= TColorI<ChannelOrder::RGBA, 24>;
-	using RGBAi32		= TColorI<ChannelOrder::RGBA, 32>;
-	using RGBAi48		= TColorI<ChannelOrder::RGBA, 48>;
-	using RGBAi64		= TColorI<ChannelOrder::RGBA, 64>;
+	using RGBAi2		= TColorI<ChannelOrder::CCO_RGBA, 2>;
+	using RGBAi3		= TColorI<ChannelOrder::CCO_RGBA, 3>;
+	using RGBAi8b2321	= TColorI<ChannelOrder::CCO_RGBA, 2, 3, 2, 1>;
+	using RGBAi4		= TColorI<ChannelOrder::CCO_RGBA, 4>;
+	using RGBAi5		= TColorI<ChannelOrder::CCO_RGBA, 5>;
+	using RGBAi16b5551	= TColorI<ChannelOrder::CCO_RGBA, 5, 5, 5, 1>;
+	using RGBAi16b4543	= TColorI<ChannelOrder::CCO_RGBA, 4, 5, 4, 3>;
+	using RGBAi6		= TColorI<ChannelOrder::CCO_RGBA, 6>;
+	using RGBAi8		= TColorI<ChannelOrder::CCO_RGBA, 8>;
+	using RGBAi12		= TColorI<ChannelOrder::CCO_RGBA, 12>;
+	using RGBAi16		= TColorI<ChannelOrder::CCO_RGBA, 16>;
+	using RGBAi24		= TColorI<ChannelOrder::CCO_RGBA, 24>;
+	using RGBAi32		= TColorI<ChannelOrder::CCO_RGBA, 32>;
+	using RGBAi48		= TColorI<ChannelOrder::CCO_RGBA, 48>;
+	using RGBAi64		= TColorI<ChannelOrder::CCO_RGBA, 64>;
 
-	using RGBi2			= TColorI<ChannelOrder::RGB, 2>;
-	using RGBi3			= TColorI<ChannelOrder::RGB, 3>;
-	using RGBi8b332		= TColorI<ChannelOrder::RGB, 3, 3, 2>;
-	using RGBi4			= TColorI<ChannelOrder::RGB, 4>;
-	using RGBi5			= TColorI<ChannelOrder::RGB, 5>;
-	using RGBi16b565	= TColorI<ChannelOrder::RGB, 5, 6, 5>;
-	using RGBi6			= TColorI<ChannelOrder::RGB, 6>;
-	using RGBi16b664	= TColorI<ChannelOrder::RGB, 6, 6, 4>;
-	using RGBi8			= TColorI<ChannelOrder::RGB, 8>;
-	using RGBi12		= TColorI<ChannelOrder::RGB, 12>;
-	using RGBi16		= TColorI<ChannelOrder::RGB, 16>;
-	using RGBi24		= TColorI<ChannelOrder::RGB, 24>;
-	using RGBi32		= TColorI<ChannelOrder::RGB, 32>;
-	using RGBi48		= TColorI<ChannelOrder::RGB, 48>;
-	using RGBi64		= TColorI<ChannelOrder::RGB, 64>;
+	using RGBi2			= TColorI<ChannelOrder::CCO_RGB, 2>;
+	using RGBi3			= TColorI<ChannelOrder::CCO_RGB, 3>;
+	using RGBi8b332		= TColorI<ChannelOrder::CCO_RGB, 3, 3, 2>;
+	using RGBi4			= TColorI<ChannelOrder::CCO_RGB, 4>;
+	using RGBi5			= TColorI<ChannelOrder::CCO_RGB, 5>;
+	using RGBi16b565	= TColorI<ChannelOrder::CCO_RGB, 5, 6, 5>;
+	using RGBi6			= TColorI<ChannelOrder::CCO_RGB, 6>;
+	using RGBi16b664	= TColorI<ChannelOrder::CCO_RGB, 6, 6, 4>;
+	using RGBi8			= TColorI<ChannelOrder::CCO_RGB, 8>;
+	using RGBi12		= TColorI<ChannelOrder::CCO_RGB, 12>;
+	using RGBi16		= TColorI<ChannelOrder::CCO_RGB, 16>;
+	using RGBi24		= TColorI<ChannelOrder::CCO_RGB, 24>;
+	using RGBi32		= TColorI<ChannelOrder::CCO_RGB, 32>;
+	using RGBi48		= TColorI<ChannelOrder::CCO_RGB, 48>;
+	using RGBi64		= TColorI<ChannelOrder::CCO_RGB, 64>;
 
 	/// @brief Partial implementations.
 	namespace Partial {
