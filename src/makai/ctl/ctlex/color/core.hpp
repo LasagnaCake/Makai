@@ -28,113 +28,205 @@ namespace Color {
 		else return CTL::Math::max(x, largest(values...));
 	}
 
-	enum class ChannelOrder: uint8 {
-		CCO_RGB = 0x40,
-		CCO_BGR,
-		CCO_RBG,
-		CCO_BRG,
-		CCO_GRB,
-		CCO_GBR,
-		CCO_RGBA = 0x80,
-		CCO_ARGB,
+	namespace Base {
+		enum class ChannelOrder: uint8 {
+			CCO_RGB = 0x40,
+			CCO_BGR,
+			CCO_RBG,
+			CCO_BRG,
+			CCO_GRB,
+			CCO_GBR,
+			CCO_RGBA = 0x80,
+			CCO_ARGB,
+		};
+
+		constexpr static usize channelCountOf(ChannelOrder const order) {
+			if (order >= ChannelOrder::CCO_RGBA)
+				return 4;
+			if (order >= ChannelOrder::CCO_RGB)
+				return 3;
+			return 2;
+			return 1;
+		}
+
+		template <class T, ChannelOrder O>
+		struct Colorable: Self<T> {
+			using Self<T>::self;
+
+			constexpr static usize const CHANNELS = channelCountOf(O);
+
+			using FloatColorType = Math::Vector<CHANNELS>;
+
+			constexpr static bool const HAS_RED		= Fold::lor(true);
+			constexpr static bool const HAS_LUMA	= Fold::lor(false);
+
+			constexpr static bool const HAS_GREEN	= Fold::lor(true);
+			constexpr static bool const HAS_CHROMA	= Fold::lor(false);
+
+			constexpr static bool const HAS_BLUE	= Fold::lor(CHANNELS >= 3);
+
+			constexpr static bool const HAS_ALPHA	= Fold::lor(CHANNELS >= 4);
+
+			constexpr FloatColorType normalized() const {
+				FloatColorType out;
+				if constexpr (HAS_RED)
+					out.r = self().r;
+				if constexpr (HAS_GREEN)
+					out.g = self().g;
+				if constexpr (HAS_BLUE)
+					out.b = self().b;
+				if constexpr (HAS_ALPHA)
+					out.a = self().a;
+				return out / T::MAX;
+			}
+
+			constexpr static T from(RGBAF color) {
+				color *= T::MAX;
+				T self;
+				if constexpr (HAS_RED)
+					self.r = color.r;
+				if constexpr (HAS_GREEN)
+					self.g = color.g;
+				if constexpr (HAS_BLUE)
+					self.b = color.b;
+				if constexpr (HAS_ALPHA)
+					self.a = color.a;
+				return self;
+			}
+
+			constexpr operator auto() const {
+				return normalized();
+			}
+
+			constexpr T& operator=(FloatColorType const& other) {
+				if constexpr (HAS_RED)
+					self().r = other.r;
+				if constexpr (HAS_GREEN)
+					self().g = other.g;
+				if constexpr (HAS_BLUE)
+					self().b = other.b;
+				if constexpr (HAS_ALPHA)
+					self().a = other.a;
+				return self();
+			}
+		};
+
+		template <ChannelOrder O, usize... CS>
+		struct [[CTL_PACKED_STRUCT]] ColorPack;
+
+		template <usize... CS>
+		struct [[CTL_PACKED_STRUCT]] MaxValuePerChannel;
+
+		template <usize RS, usize GS, usize BS>
+		struct MaxValuePerChannel<RS, GS, BS> {
+			using ChannelType = Channel<largest(RS, GS, BS)>;
+
+			constexpr static RGBF const MAX = RGBF(
+				maxof(RS),
+				maxof(GS),
+				maxof(BS)
+			);
+		};
+
+		template <usize RS, usize GS, usize BS, usize AS>
+		struct MaxValuePerChannel<RS, GS, BS, AS> {
+			using ChannelType = Channel<largest(RS, GS, BS, AS)>;
+
+			constexpr static RGBAF const MAX = RGBAF(
+				maxof(RS),
+				maxof(GS),
+				maxof(BS),
+				maxof(AS)
+			);
+		};
+
+		template <ChannelOrder CO>
+		struct PackOrder {
+			constexpr static ChannelOrder const ORDER = CO;
+		};
+
+		template <usize RS, usize GS, usize BS>
+		struct ColorPack<ChannelOrder::CCO_RGB, RS, GS, BS>:
+			Colorable<ColorPack<ChannelOrder::CCO_RGB, RS, GS, BS>, ChannelOrder::CCO_RGB>,
+		 	MaxValuePerChannel<RS, GS, BS>,
+			PackOrder<ChannelOrder::CCO_RGB> {
+			using typename MaxValuePerChannel<RS, GS, BS>::ChannelType;
+
+			ChannelType r: RS;
+			ChannelType g: GS;
+			ChannelType b: BS;
+
+			using Colorable<ColorPack<ChannelOrder::CCO_RGB, RS, GS, BS>, ChannelOrder::CCO_RGB>::operator=;
+
+			constexpr ColorPack(ChannelType const r, ChannelType const g, ChannelType const b): r(r), g(g), b(b) {}
+		};
+
+		template <usize RS, usize GS, usize BS, usize AS>
+		struct [[CTL_PACKED_STRUCT]] ColorPack<ChannelOrder::CCO_RGBA, RS, GS, BS, AS>:
+			Colorable<ColorPack<ChannelOrder::CCO_RGBA, RS, GS, BS, AS>, ChannelOrder::CCO_RGBA>,
+		 	MaxValuePerChannel<RS, GS, BS, AS>,
+			PackOrder<ChannelOrder::CCO_RGBA> {
+			using typename MaxValuePerChannel<RS, GS, BS, AS>::ChannelType;
+
+			ChannelType r: RS;
+			ChannelType g: GS;
+			ChannelType b: BS;
+			ChannelType a: AS;
+
+			using Colorable<ColorPack<ChannelOrder::CCO_RGBA, RS, GS, BS, AS>, ChannelOrder::CCO_RGBA>::operator=;
+
+			constexpr ColorPack(ChannelType const r, ChannelType const g, ChannelType const b, ChannelType const a = maxof(AS)): r(r), g(g), b(b), a(a) {}
+		};
 	}
 
-	template <ChannelOrder O, usize... CS, class TChannel>
-	struct TColorI;
+	template <usize RS, usize GS = RS, usize BS = GS>
+	using RGBiX = Base::ColorPack<Base::ChannelOrder::CCO_RGB, RS, GS, BS>;
 
-	template <class T>
-	struct Colorable: Self<T> {
-		using Self<T>::self;
+	template <usize RS, usize GS = RS, usize BS = GS, usize AS = BS>
+	using RGBAiX = Base::ColorPack<Base::ChannelOrder::CCO_RGBA, RS, GS, BS, AS>;
 
-		constexpr RGBF normalized() const requires (
-			T::ORDER >= ChannelOrder::CCO_RGB && T::ORDER < ChannelOrder::CCO_RGBA
-		) {
-			return RGBF(self().r, self().g, self().b) / T::MAX;
-		}
+	using RGBAi2		= RGBAiX<2>;
+	using RGBAi3		= RGBAiX<3>;
+	using RGBAi8b2321	= RGBAiX<2, 3, 2, 1>;
+	using RGBAi4		= RGBAiX<4>;
+	using RGBAi5		= RGBAiX<5>;
+	using RGBAi16b5551	= RGBAiX<5, 5, 5, 1>;
+	using RGBAi16b4543	= RGBAiX<4, 5, 4, 3>;
+	using RGBAi6		= RGBAiX<6>;
+	using RGBAi8		= RGBAiX<8>;
+	using RGBAi12		= RGBAiX<12>;
+	using RGBAi16		= RGBAiX<16>;
+	using RGBAi24		= RGBAiX<24>;
+	using RGBAi32		= RGBAiX<32>;
+	using RGBAi48		= RGBAiX<48>;
+	using RGBAi64		= RGBAiX<64>;
 
-		constexpr RGBAF normalized() const requires (
-			T::ORDER >= ChannelOrder::CCO_RGBA
-		) {
-			return RGBAF(self().r, self().g, self().b, self().a) / T::MAX;
-		}
-
-		constexpr operator decltype(normalized())() const {
-			return normalized();
-		}
-	};
-
-	template <usize RS, usize GS = RS, usize BS = GS, Type::Unsigned TChannel = Channel<largest(RS, GS, BS)>>
-	struct [[CTL_PACKED_STRUCT]] TColorI<ChannelOrder::CCO_RGB, RS, GS, BS, TChannel>, Colorable<TColorI<ChannelOrder::RGB, RS, GS, BS, TChannel>> {
-		constexpr auto ORDER const = ChannelOrder::RGB;
-
-		TChannel r: RS;
-		TChannel g: GS;
-		TChannel b: BS;
-
-		consteval static RGBF const MAX = RGBAF(
-			maxof(RS),
-			maxof(GS),
-			maxof(BS)
-		);
-	};
-
-	template <usize RS, usize GS = RS, usize BS = GS, usize AS = BS, Type::Unsigned TChannel = Channel<largest(RS, GS, BS, AS)>>
-	struct [[CTL_PACKED_STRUCT]] TColorI<ChannelOrder::CCO_RGBA, RS, GS, BS, AS, TChannel>, Colorable<TColorI<ChannelOrder::RGBA, RS, GS, BS, AS, TChannel>>{
-		TChannel r: RS;
-		TChannel g: GS;
-		TChannel b: BS;
-		TChannel a: AS;
-
-		consteval static RGBAF const MAX = RGBAF(
-			maxof(RS),
-			maxof(GS),
-			maxof(BS),
-			maxof(AS)
-		);
-	};
-
-	using RGBAi2		= TColorI<ChannelOrder::CCO_RGBA, 2>;
-	using RGBAi3		= TColorI<ChannelOrder::CCO_RGBA, 3>;
-	using RGBAi8b2321	= TColorI<ChannelOrder::CCO_RGBA, 2, 3, 2, 1>;
-	using RGBAi4		= TColorI<ChannelOrder::CCO_RGBA, 4>;
-	using RGBAi5		= TColorI<ChannelOrder::CCO_RGBA, 5>;
-	using RGBAi16b5551	= TColorI<ChannelOrder::CCO_RGBA, 5, 5, 5, 1>;
-	using RGBAi16b4543	= TColorI<ChannelOrder::CCO_RGBA, 4, 5, 4, 3>;
-	using RGBAi6		= TColorI<ChannelOrder::CCO_RGBA, 6>;
-	using RGBAi8		= TColorI<ChannelOrder::CCO_RGBA, 8>;
-	using RGBAi12		= TColorI<ChannelOrder::CCO_RGBA, 12>;
-	using RGBAi16		= TColorI<ChannelOrder::CCO_RGBA, 16>;
-	using RGBAi24		= TColorI<ChannelOrder::CCO_RGBA, 24>;
-	using RGBAi32		= TColorI<ChannelOrder::CCO_RGBA, 32>;
-	using RGBAi48		= TColorI<ChannelOrder::CCO_RGBA, 48>;
-	using RGBAi64		= TColorI<ChannelOrder::CCO_RGBA, 64>;
-
-	using RGBi2			= TColorI<ChannelOrder::CCO_RGB, 2>;
-	using RGBi3			= TColorI<ChannelOrder::CCO_RGB, 3>;
-	using RGBi8b332		= TColorI<ChannelOrder::CCO_RGB, 3, 3, 2>;
-	using RGBi4			= TColorI<ChannelOrder::CCO_RGB, 4>;
-	using RGBi5			= TColorI<ChannelOrder::CCO_RGB, 5>;
-	using RGBi16b565	= TColorI<ChannelOrder::CCO_RGB, 5, 6, 5>;
-	using RGBi6			= TColorI<ChannelOrder::CCO_RGB, 6>;
-	using RGBi16b664	= TColorI<ChannelOrder::CCO_RGB, 6, 6, 4>;
-	using RGBi8			= TColorI<ChannelOrder::CCO_RGB, 8>;
-	using RGBi12		= TColorI<ChannelOrder::CCO_RGB, 12>;
-	using RGBi16		= TColorI<ChannelOrder::CCO_RGB, 16>;
-	using RGBi24		= TColorI<ChannelOrder::CCO_RGB, 24>;
-	using RGBi32		= TColorI<ChannelOrder::CCO_RGB, 32>;
-	using RGBi48		= TColorI<ChannelOrder::CCO_RGB, 48>;
-	using RGBi64		= TColorI<ChannelOrder::CCO_RGB, 64>;
+	using RGBi2			= RGBiX<2>;
+	using RGBi3			= RGBiX<3>;
+	using RGBi8b332		= RGBiX<3, 3, 2>;
+	using RGBi4			= RGBiX<4>;
+	using RGBi5			= RGBiX<5>;
+	using RGBi16b565	= RGBiX<5, 6, 5>;
+	using RGBi6			= RGBiX<6>;
+	using RGBi16b664	= RGBiX<6, 6, 4>;
+	using RGBi8			= RGBiX<8>;
+	using RGBi12		= RGBiX<12>;
+	using RGBi16		= RGBiX<16>;
+	using RGBi24		= RGBiX<24>;
+	using RGBi32		= RGBiX<32>;
+	using RGBi48		= RGBiX<48>;
+	using RGBi64		= RGBiX<64>;
 
 	/// @brief Partial implementations.
 	namespace Partial {
 		/// @brief Hue conversion facilitator.
 		constexpr float hueify(float t) {
 			if(t < 0) t++;
-            if(t > 1) t--;
-            if(t < 1.0/6.0) return 6.0 * t;
-            if(t < 1.0/2.0) return 1;
-            if(t < 2.0/3.0) return (2.0/3.0 - t) * 6.0;
-            return 0;
+			if(t > 1) t--;
+			if(t < 1.0/6.0) return 6.0 * t;
+			if(t < 1.0/2.0) return 1;
+			if(t < 2.0/3.0) return (2.0/3.0 - t) * 6.0;
+			return 0;
 		}
 	}
 
@@ -156,7 +248,7 @@ namespace Color {
 	/// @brief Converts a linear hue to an RGBA color.
 	/// @param h Hue to convert.
 	/// @return RGBA color.
-	constexpr RGBAF toRGBA(float h) {
+	constexpr RGBAF fromHue(float h) {
 		h -= floor(h);
 		return RGBAF(
 			Partial::hueify(h + 1.0/3.0),
@@ -189,8 +281,8 @@ namespace Color {
 	/// @param b Blue channel.
 	/// @param a Alpha channel. By default, it is `1.0`.
 	/// @return Resulting color.
-	constexpr RGBA8 fromRGBA8(uint8 r, uint8 g, uint8 b, uint8 a = 255) {
-		return RGBA8(r, g, b, a).normalized();
+	constexpr RGBAi8 fromRGBAi8(uint8 r, uint8 g, uint8 b, uint8 a = 255) {
+		return RGBAi8(r, g, b, a);
 	}
 
 	/// @brief Creates a gray tone from a given intensity, with a given alpha.
@@ -205,8 +297,8 @@ namespace Color {
 	/// @param l Luminance intensity.
 	/// @param a Alpha channel. By default, it is `255`.
 	/// @return Resulting color.
-	constexpr RGBA8 fromLuma8(uint8 l, uint8 a = 255) {
-		return RGBA8(l, l, l, a).normalized();
+	constexpr RGBAi8 fromLuma8(uint8 l, uint8 a = 255) {
+		return RGBAi8(l, l, l, a);
 	}
 
 	/// @brief Creates an RGB color from a set of HSL values.
@@ -216,10 +308,10 @@ namespace Color {
 	/// @param a Alpha channel. By default, it is `1.0`.
 	/// @return Resulting color.
 	constexpr RGBAF fromHSL(float h, float s, float l, float a = 1) {
-		RGBAF res = hueToRGB(h);
+		RGBAF res = fromHue(h);
 		res *= (l * 2);
-		RGBAF gray(RGBF((res.x + res.y + res.z) / 3), 1);
-		res = Math::lerp(gray, res, RGBAF(s));
+		RGBAF gray(RGBF((res.x + res.y + res.z) / 3), a);
+		res = CTL::Math::lerp(gray, res, RGBAF(s));
 		res.w = a;
 		return res.clamped(0, 1);
 	}
@@ -258,14 +350,14 @@ namespace Color {
 			g = (code >> 8)		& 0xFF,
 			b =	(code)			& 0xFF
 		;
-		return RGBF(r, g, b, 255) / 255;
+		return RGBF(r, g, b) / 255;
 	}
 
 	/// @brief Creates a color from a hex code string.
 	/// @param code Hex code string.
 	/// @return Resulting color.
-	constexpr Nullable<RGBAF> fromHexString(String const& code) {
-		code = Makai::Regex::replace(code, "(#|0x)", "");
+	inline Nullable<RGBAF> fromHexString(String code) {
+		code = CTL::Regex::replace(code, "(#|0x)", "");
 		if (code.empty())
 			return null;
 		if (code.size() < 3 || code.size() > 8 || !code.isHex())
@@ -277,7 +369,7 @@ namespace Color {
 				nc.pushBack(c);
 		}
 		if (nc.size() == 6)
-			return fromRGBHex(toUInt32(nc, 16));
+			return RGBAF(fromRGBHex(toUInt32(nc, 16)));
 		return fromRGBAHex(toUInt32(nc, 16));
 	}
 
@@ -296,7 +388,7 @@ namespace Color {
 			else if (v.isString())
 				return fromHexString(v.getString());
 			else if (v.isNumber())
-				return v.getReal();
+				return RGBAF(v.getReal());
 			else if (v.isVector())
 				return v.getVector();
 		} catch (...) {}

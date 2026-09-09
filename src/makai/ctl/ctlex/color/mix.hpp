@@ -8,7 +8,7 @@ CTL_EX_NAMESPACE_BEGIN
 /// @brief Color mixing facilities.
 namespace Color::Mix {
 	constexpr RGBAF linear(RGBAF const& a, RGBAF const& b, float const weight = 0.5) {
-		return Math::lerp<RGBA>(a, b, weight);
+		return CTL::Math::lerp<RGBAF>(a, b, weight);
 	}
 
 	constexpr RGBAF additive(RGBAF const& a, RGBAF const& b, float const weight = 0.5) {
