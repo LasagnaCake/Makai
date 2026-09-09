@@ -16,7 +16,7 @@ namespace Color {
 	using Channel = Meta::Select<(W-1)/8,uint8,uint16,uint32,uint32,uint64,uint64,uint64,uint64>;
 
 	consteval usize maxof(usize const ch) {
-		return ((2<<ch)-1);
+		return ((2<<(ch-1))-1);
 	}
 
 	template <class... Ts>
@@ -94,7 +94,7 @@ namespace Color {
 				return self;
 			}
 
-			constexpr operator auto() const {
+			constexpr operator FloatColorType() const {
 				return normalized();
 			}
 
@@ -158,7 +158,11 @@ namespace Color {
 
 			using Colorable<ColorPack<ChannelOrder::CCO_RGB, RS, GS, BS>, ChannelOrder::CCO_RGB>::operator=;
 
-			constexpr ColorPack(ChannelType const r, ChannelType const g, ChannelType const b): r(r), g(g), b(b) {}
+			constexpr ColorPack(
+				ChannelType const r = maxof(RS),
+				ChannelType const g = maxof(GS),
+				ChannelType const b = maxof(BS)
+			): r(r), g(g), b(b) {}
 		};
 
 		template <usize RS, usize GS, usize BS, usize AS>
@@ -175,7 +179,12 @@ namespace Color {
 
 			using Colorable<ColorPack<ChannelOrder::CCO_RGBA, RS, GS, BS, AS>, ChannelOrder::CCO_RGBA>::operator=;
 
-			constexpr ColorPack(ChannelType const r, ChannelType const g, ChannelType const b, ChannelType const a = maxof(AS)): r(r), g(g), b(b), a(a) {}
+			constexpr ColorPack(
+				ChannelType const r = maxof(RS),
+				ChannelType const g = maxof(GS),
+				ChannelType const b = maxof(BS),
+				ChannelType const a = maxof(AS)
+			): r(r), g(g), b(b), a(a) {}
 		};
 	}
 

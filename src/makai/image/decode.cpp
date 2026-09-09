@@ -4,7 +4,9 @@ using namespace Makai;
 
 using namespace Makai::Image::I2D;
 
-int readFromStream(pointer const inputStream, ref<bytes> const out, int const count) {
+namespace I2D = Image::I2D;
+
+int readFromStream(pointer const inputStream, ref<byte> const out, int const count) {
 	auto& in = *(ref<IInputStream<Bytes<>>>)(inputStream);
 	return in.tryReadInto(out, count);
 }
@@ -19,7 +21,7 @@ int isAtEnd(pointer const inputStream, int const to) {
 	return in.atEnd();
 }
 
-Nullable<Image> I2D::decodeStream(IInputStream<Bytes<>>& stream, Format const format) {
+Nullable<I2D::Image> I2D::decodeStream(IInputStream<Bytes<>>& stream, Format const format) {
 	if (format >= Format::MI2F_QOI) {
 		// TODO: QOI decoder
 		return null;
@@ -39,11 +41,11 @@ Nullable<Image> I2D::decodeStream(IInputStream<Bytes<>>& stream, Format const fo
 	}
 }
 
-Nullable<Image> I2D::decode(ByteSpan<> const& data, Format const format) {
+Nullable<I2D::Image> I2D::decode(ByteSpan<> const& data, Format const format) {
 	InputMemoryStream stream(data);
 	return decodeStream(stream, format);
 }
 
-Nullable<Image> I2D::decode(Bytes<> const& data, Format const format) {
+Nullable<I2D::Image> I2D::decode(Bytes<> const& data, Format const format) {
 	return decodeStream(ByteSpan<>(data.cbegin(), data.cend()), format);
 }

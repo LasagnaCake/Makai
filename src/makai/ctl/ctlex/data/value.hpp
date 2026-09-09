@@ -542,7 +542,7 @@ namespace Data {
 		/// @return Whether value was successfully acquired.
 		template <class T>
 		constexpr bool tryFetch(T& out, ssize const index) const {
-			if (!(isArray() && index < size()))
+			if (!(isArray() && index < Cast::as<ssize>(size())))
 				return false;
 			if constexpr (Type::Different<T, Value>)
 				return (*content.array)[index].tryGet<T>(out);
