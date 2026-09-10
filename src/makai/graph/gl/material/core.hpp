@@ -5,7 +5,6 @@
 #include "../../../compat/ctl.hpp"
 #include "effect.hpp"
 #include "debug.hpp"
-#include "../../color/color.hpp"
 #include "../shader/shader.hpp"
 #include "../renderer/mode.hpp"
 

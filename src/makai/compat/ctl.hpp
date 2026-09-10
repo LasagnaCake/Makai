@@ -58,6 +58,12 @@ namespace Makai {
 	using CTL::String, CTL::List, CTL::OrderedMap, CTL::ListMap, CTL::Map;
 }
 
+namespace MkMath	= Makai::Math;
+namespace MkType	= Makai::Type;
+namespace MkColor	= Makai::Color;
+namespace MkCo		= Makai::Co;
+namespace MkRegex	= Makai::Regex;
+
 #ifdef MAKAILIB_DEBUG_ABSOLUTELY_EVERYTHING
 #define MAKAILIB_DEBUG_FULL(...) DEBUG(__VA_ARGS__)
 #define MAKAILIB_DEBUGLN_FULL(...) DEBUGLN(__VA_ARGS__)

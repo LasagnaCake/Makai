@@ -1,4 +1,5 @@
 #include "decode.hpp"
+#include <stb_image.h>
 
 using namespace Makai;
 
@@ -6,18 +7,22 @@ using namespace Makai::Image::I2D;
 
 namespace I2D = Image::I2D;
 
-int readFromStream(pointer const inputStream, ref<byte> const out, int const count) {
-	auto& in = *(ref<IInputStream<Bytes<>>>)(inputStream);
-	return in.tryReadInto(out, count);
+static IInputStream<Bytes<>>& streamof(pointer const ptr) {
+	return *(ref<IInputStream<Bytes<>>>)(ptr);
+}
+
+int readFromStream(pointer const inputStream, ref<char> const out, int const count) {
+	auto& in = streamof(inputStream);
+	return in.tryReadInto((ref<byte>)out, count);
 }
 
 void jumpInStream(pointer const inputStream, int const to) {
-	auto& in = *(ref<IInputStream<Bytes<>>>)(inputStream);
-	in.go(in.location() + to);
+	auto& in = streamof(inputStream);
+	in.go(in.position() + to);
 }
 
-int isAtEnd(pointer const inputStream, int const to) {
-	auto& in = *(ref<IInputStream<Bytes<>>>)(inputStream);
+int isAtEnd(pointer const inputStream) {
+	auto& in = streamof(inputStream);
 	return in.atEnd();
 }
 
@@ -28,12 +33,13 @@ Nullable<I2D::Image> I2D::decodeStream(IInputStream<Bytes<>>& stream, Format con
 	} else {
 		int imgWidth, imgHeight;
 		int nrChannels;
-		Bytes<> imgdat = File::getBinary(path);
 		stbi_io_callbacks calls {readFromStream, jumpInStream, isAtEnd};
 		owner<byte> data = stbi_load_from_callbacks(&calls, (pointer)&stream, &imgWidth, &imgHeight, &nrChannels, 4);
-		imgdat.clear();
 		if (data) {
-			auto const result = Image{.width = imgWidth, .height = imgHeight, .data = {data, imgWidth * imgHeight * nrChannels}};
+			Image result;
+			result.width = imgWidth;
+			result.height = imgHeight;
+			result.data = decltype(result.data)(data, Cast::as<usize>(imgWidth * imgHeight * nrChannels));
 			stbi_image_free(data);
 			return result;
 		}
@@ -41,11 +47,11 @@ Nullable<I2D::Image> I2D::decodeStream(IInputStream<Bytes<>>& stream, Format con
 	}
 }
 
-Nullable<I2D::Image> I2D::decode(ByteSpan<> const& data, Format const format) {
+Nullable<I2D::Image> I2D::decode(ConstByteSpan<> const& data, Format const format) {
 	InputMemoryStream stream(data);
 	return decodeStream(stream, format);
 }
 
 Nullable<I2D::Image> I2D::decode(Bytes<> const& data, Format const format) {
-	return decodeStream(ByteSpan<>(data.cbegin(), data.cend()), format);
+	return decode(ConstByteSpan<>(data.data(), data.data() + data.size()), format);
 }

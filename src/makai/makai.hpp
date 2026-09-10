@@ -18,4 +18,6 @@
 #include "net/net.hpp"
 #include "regex/regex.hpp"
 
+namespace Mk = Makai;
+
 #endif // MAKAILIB_H

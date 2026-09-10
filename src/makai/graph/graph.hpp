@@ -14,7 +14,6 @@ namespace Makai::Graph {
 	GraphicalAPI getUsedAPI();
 }
 
-#include "color/color.hpp"
 #include "armature/armature.hpp"
 #include "gl/graph.hpp"
 

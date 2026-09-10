@@ -3,7 +3,6 @@
 
 #include "../texture.hpp"
 #include "../vertex.hpp"
-#include "../../color/color.hpp"
 #include "../blend.hpp"
 #include "../shader/shader.hpp"
 #include "../material/material.hpp"

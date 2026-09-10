@@ -315,8 +315,9 @@ Texture2D& Texture2D::make(
 Texture2D& Texture2D::makeUnique(bool const filter) {
 	if (!exists()) return *this;
 	auto const newImg = image.create();
+	auto const _ = image.sync();
 	Image2D::newImage(
-		image.raw(),
+		&*image,
 		image->attributes.width,
 		image->attributes.height,
 		image->attributes.type,
@@ -333,7 +334,7 @@ Texture2D& Texture2D::makeUnique(bool const filter) {
 		}, {
 			*newImg,
 			{0, 0, image->attributes.width, image->attributes.height}
-		}
+		},
 		filter ? FilterMode::FM_SMOOTH : FilterMode::FM_NEAREST
 	);
 	image = newImg;
@@ -355,6 +356,10 @@ Texture2D& Texture2D::copyFrom(
 	bool const filter
 ) {
 	if (!exists()) return *this;
+	auto const
+		_1 = image.sync(),
+		_2 = other.image.sync()
+	;
 	// Copy data
 	Image2D::blit(
 		{
@@ -363,7 +368,7 @@ Texture2D& Texture2D::copyFrom(
 		}, {
 			*other.image,
 			{0, 0, other.image->attributes.width, other.image->attributes.height}
-		}
+		},
 		filter ? FilterMode::FM_SMOOTH : FilterMode::FM_NEAREST
 	);
 	// Regenerate mipmaps
@@ -379,9 +384,13 @@ Texture2D& Texture2D::copyFrom(
 ) {
 	if (!exists()) return *this;
 	// Copy data
+	auto const
+		_1 = image.sync(),
+		_2 = other.image.sync()
+	;
 	Image2D::blit(
 		{
-			*other.image
+			*other.image,
 			{0, 0, other.image->attributes.width, other.image->attributes.height}
 		},
 		{
@@ -402,6 +411,7 @@ Texture2D& Texture2D::setWrapMode(
 	Texture2D::WrapMode const& vertical
 ) {
 	if (!exists()) return *this;
+	auto const _ = image.sync();
 	glBindTexture(GL_TEXTURE_2D, image->getID());
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, convert(horizontal));
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, convert(vertical));
@@ -419,6 +429,7 @@ Texture2D& Texture2D::setFilterMode(
 	FilterMode const& minFilter
 ) {
 	if (!exists()) return *this;
+	auto const _ = image.sync();
 	glBindTexture(GL_TEXTURE_2D, image->getID());
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, convert(minFilter));
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, convert(magFilter));
@@ -429,14 +440,17 @@ Texture2D& Texture2D::setFilterMode(
 }
 
 FilterMode Texture2D::minFilter() const {
+	auto const _ = image.sync();
 	return image->attributes.minFilter;
 }
 
 FilterMode Texture2D::magFilter() const {
+	auto const _ = image.sync();
 	return image->attributes.magFilter;
 }
 
 Image2D::Attributes Texture2D::attributes() const {
+	auto const _ = image.sync();
 	return image->attributes;
 }
 
@@ -445,11 +459,13 @@ Image2D& Texture2D::getImage() {
 }
 
 Texture2D& Texture2D::enable(uint8 const slot) {
+	auto const _ = image.sync();
 	image->use(slot);
 	return *this;
 }
 
 Texture2D const& Texture2D::enable(uint8 const slot) const {
+	auto const _ = image.sync();
 	image->use(slot);
 	return *this;
 }
@@ -464,10 +480,12 @@ Texture2D const& Texture2D::operator()(uint8 const slot) const {
 
 uint32 Texture2D::getID() const {
 	if (!exists()) return 0;
+	auto const _ = image.sync();
 	return image->getID();
 }
 
 Image2D::ImageData Texture2D::getData() const {
+	auto const _ = image.sync();
 	return image->getData();
 }
 
@@ -477,6 +495,7 @@ Texture2D const& Texture2D::saveToFile(
 	ImageFileType const& type
 ) const {
 	if (!exists()) return *this;
+	auto const _ = image.sync();
 	image->saveToFile(path, quality, type);
 	return *this;
 }
@@ -487,6 +506,7 @@ Texture2D& Texture2D::saveToFile(
 	ImageFileType const& type
 ) {
 	if (!exists()) return *this;
+	auto const _ = image.sync();
 	image->saveToFile(path, quality, type);
 	return *this;
 }
@@ -506,6 +526,7 @@ Texture2D& Texture2D::saveToFile(
 }
 
 bool Texture2D::exists() const {
+	auto const _ = image.sync();
 	return image.exists() && image->exists();
 }
 

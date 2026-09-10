@@ -13,7 +13,7 @@ struct InputMemoryStream: IInputStream<Bytes<>> {
 
 	InputMemoryStream() {}
 
-	InputMemoryStream(ByteSpan<> const& buffer): buffer(buffer) {}
+	InputMemoryStream(ConstByteSpan<> const& buffer): buffer(buffer) {}
 
 	constexpr Nullable<Bytes<>> tryRead(usize const count) override {
 		if (!isOpen()) return null;
@@ -45,8 +45,8 @@ struct InputMemoryStream: IInputStream<Bytes<>> {
 	}
 
 private:
-	usize		pointer = 0;
-	ByteSpan<>	buffer;
+	usize			pointer = 0;
+	ConstByteSpan<>	buffer;
 };
 
 struct OutputMemoryStream: IOutputStream<Bytes<>> {

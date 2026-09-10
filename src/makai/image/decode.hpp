@@ -5,7 +5,7 @@
 
 namespace Makai::Image::I2D {
 	Nullable<Image> decodeStream(IInputStream<Bytes<>>& data, Format const format);
-	Nullable<Image> decode(ByteSpan<> const& data, Format const format);
+	Nullable<Image> decode(ConstByteSpan<> const& data, Format const format);
 	Nullable<Image> decode(Bytes<> const& data, Format const format);
 }
 

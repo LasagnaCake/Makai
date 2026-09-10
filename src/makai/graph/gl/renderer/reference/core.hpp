@@ -4,7 +4,6 @@
 #include "../../../../compat/ctl.hpp"
 
 #include "../../vertex.hpp"
-#include "../../../color/color.hpp"
 #include "../../global.hpp"
 
 /// @brief Graphical object references.
@@ -112,7 +111,7 @@ namespace Makai::Graph::Ref {
 		bool fixed		= false;
 		/// @brief Whether the reference is visible.
 		bool visible	= true;
-		
+
 	protected:
 		/// @brief Called when transformations are resetted. Must be implemented.
 		/// @return Reference to self.

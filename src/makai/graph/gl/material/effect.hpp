@@ -4,7 +4,6 @@
 #include "../../../ctl/ctl.hpp"
 #include "../../../file/json.hpp"
 #include "../texture.hpp"
-#include "../../color/color.hpp"
 
 /// @brief Shader materials.
 namespace Makai::Graph::Material {
