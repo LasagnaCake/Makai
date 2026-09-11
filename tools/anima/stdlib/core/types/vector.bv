@@ -48,6 +48,8 @@ extend vector {
 
 	prop normal get (@ByCopy self: vector) => self / self.length
 
+	distanceTo	:: (@ByRef self: vector, other: vector) => (other - self).length
+
 	angle2dTo	:: (@ByRef self: vector, other: vector) => (other - self).angle2d
 
 	normalTo	:: (@ByRef self: vector, other: vector) => (other - self).normal
