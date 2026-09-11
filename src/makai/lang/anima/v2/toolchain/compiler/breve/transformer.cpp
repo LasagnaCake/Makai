@@ -76,7 +76,7 @@ static ATransformer::Result expandProperty(
 	Property& prop,
 	bool const stack
 ) {
-	auto const get = prop.getter->overloadFromTypes({});
+	auto const [get, isExact] = prop.getter->overloadFromTypes({});
 	auto parent = context.resolve(path = path.sliced(0, -1));
 	while (path.size()) {
 		parent = context.resolve(path = path.sliced(0, -1));
@@ -110,7 +110,7 @@ static Makai::Nullable<Makai::UTF8String> addToStack(
 		}
 		return ns->variable->consume(node);
 	} else if (ns->property) {
-		auto const ov = ns->property->getter->overloadFromTypes(
+		auto const [ov, isExact] = ns->property->getter->overloadFromTypes(
 			Makai::List<Namespace::TypeRef>::from(ns->type.asStrong())
 		);
 		if (!ov)
@@ -156,7 +156,7 @@ static ATransformer::Result resolveSubfield(
 	if (ns->property) {
 		if (ns->property->type->fields.contains(sub)) {
 			auto const f = ns->property->type->fields[sub];
-			auto const ov = ns->property->getter->overloadFromTypes(
+			auto const [ov, isExact] = ns->property->getter->overloadFromTypes(
 				Makai::List<Namespace::TypeRef>::from(ns->type.asStrong())
 			);
 			if (!ov)
@@ -254,7 +254,7 @@ static ATransformer::Result infixResolve(ATransformer::Context& context, Node::I
 		&&	tok->meta["Operator"]->value.contains("infix")
 		&&	tok->meta["Operator"]->value.fetch<Makai::UTF8String>("infix", "") == bopName(context, node)
 		) {
-			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type, type));
+			auto const [ov, isExact] = tok->function->overloadFromTypes(Function::ArgTypes::from(type, type));
 			if (!ov) continue;
 			context.top()->impl->writeMainLine("call", ov->entry);
 			return {{"move top"}, ov->result->scope.asStrong(), ov->result};
@@ -271,7 +271,7 @@ static ATransformer::Result prefixResolve(ATransformer::Context& context, Node::
 		&&	tok->meta["Operator"]->value.contains("prefix")
 		&&	tok->meta["Operator"]->value.fetch<Makai::UTF8String>("prefix", "") == uopName(context, node)
 		) {
-			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type));
+			auto const [ov, isExact] = tok->function->overloadFromTypes(Function::ArgTypes::from(type));
 			context.top()->impl->writeMainLine("call", ov->entry);
 			return {{"move top"}, ov->result->scope.asStrong(), ov->result};
 		}
@@ -287,7 +287,7 @@ static ATransformer::Result postfixResolve(ATransformer::Context& context, Node:
 		&&	tok->meta["Operator"]->value.contains("postfix")
 		&&	tok->meta["Operator"]->value.fetch<Makai::UTF8String>("postfix", "") == uopName(context, node)
 		) {
-			auto const ov = tok->function->overloadFromTypes(Function::ArgTypes::from(type));
+			auto const [ov, isExact] = tok->function->overloadFromTypes(Function::ArgTypes::from(type));
 			context.top()->impl->writeMainLine("call", ov->entry);
 			return {{"move top"}, ov->result->scope.asStrong(), ov->result};
 		}
@@ -925,6 +925,8 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 	or	node->base.text == "error"
 	)
 		return Return().transform(context, node);
+	if (node->base.type == LTS_TT_ELLIPSES)
+		return Spread().transform(context, node);
 	Expression expr;
 	auto val = expr.transform(context, node->leftSide);
 	if (val.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
@@ -1366,7 +1368,7 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_SWITCH:			return SwitchMatch().transform(context, node);
 		case Node::Content::AV2_TANC_NAME:
 		case Node::Content::AV2_TANC_FAILABLE_PATH:
-		case Node::Content::AV2_TANC_PATH:				return PathExpression().transform(context, node);
+		case Node::Content::AV2_TANC_EXPANSION:			return Spread().transform(context, node);
 		default: context.error("Unsupported expression!", node);
 	}
 }
@@ -1580,7 +1582,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	impl->impl->writePreLine("enter", required.size() + optional.size());
 	MAKAILIB_DEBUGLN_FULL("Overload: ", current->entry);
 	current->scope = impl.asWeak();
-	auto const vx = fn->overloadFromVariables(current->arguments);
+	auto const [vx, isExact] = fn->overloadFromVariables(current->arguments);
 	if (vx && vx->hasImplementation)
 		context.error("An overload already exists for this function!", node);
 	fn->overloads.pushBack(current);
@@ -1599,7 +1601,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		overload->varc = current->arguments.size();
 		auto const ox = Expression().transform(context, opt);
 		current->arguments.pushBack(ox.scope->variable);
-		auto const fx = fn->overloadFromVariables(current->arguments);
+		auto const [fx, isExact] = fn->overloadFromVariables(current->arguments);
 		if (fx && fx->hasImplementation)
 			context.error("An overload already exists for this function!", node);
 		current->entry = "__" + fn->name + overloadName(current->arguments) + node->name();
@@ -1733,7 +1735,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		else if (lhs.isStackTop() && lhs.isCopied())
 			context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
 		auto const rhs = Expression().transform(context, node->rightSide);
-		auto const set = prop.setter->overloadFromTypes({lhs.parent, rhs.type}, Function::FuzzySearch::AV2_TCF_FS_ALL_EXCEPT_FIRST);
+		auto const [set, isExact] = prop.setter->overloadFromTypes({lhs.parent, rhs.type}, Function::FuzzySearch::AV2_TCF_FS_ALL_EXCEPT_FIRST);
 		if (!set)
 			context.error("No suitable setter for expression type", node->rightSide);
 		if (rhs.shouldBePushed())
@@ -1820,6 +1822,12 @@ ATransformer::Result Import::transform(Context& context, Node::Instance const& n
 		if (imp == subinter.content) return {.scope = subinter.content};
 	context.registerImport(subinter.content);
 	return {.scope = subinter.content};
+}
+
+ATransformer::Result Spread::transform(Context& context, Node::Instance const& node) {
+	auto result = Expression().transform(context, node->leftSide);
+	result.spreaded = true;
+	return result;
 }
 
 ATransformer::Result PropertyDecl::transform(Context& context, Node::Instance const& node) {
@@ -1938,15 +1946,18 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 	if (!(
 		f.overloadFromTypes(args, Function::FuzzySearch::AV2_TCF_FS_ALL_ARGS)
 	or	f.overloadFromTypes(memArgs, Function::FuzzySearch::AV2_TCF_FS_ALL_EXCEPT_FIRST)
-	))
-		context.error("No suitable overload exists!", node);
-	auto ovf = f.overloadFromTypes(args, Function::FuzzySearch::AV2_TCF_FS_ALL_ARGS);
+	)) context.error("No suitable overload exists!", node);
+	auto [ovf, isExact] = f.overloadFromTypes(args, Function::FuzzySearch::AV2_TCF_FS_ALL_ARGS);
 	bool isMemFn = false;
-	if (!ovf) {
-		ovf = f.overloadFromTypes(memArgs, Function::FuzzySearch::AV2_TCF_FS_ALL_EXCEPT_FIRST);
-		if (!(ovf && !ovf->staticEntity))
+	if (!(ovf and isExact)) {
+		auto const retry = f.overloadFromTypes(memArgs, Function::FuzzySearch::AV2_TCF_FS_ALL_EXCEPT_FIRST);
+		if (!ovf && !(retry.match && !retry.match->staticEntity))
 			context.error("No suitable overload exists!", node);
-		isMemFn = true;
+		if (retry && !ovf) {
+			ovf = retry.match;
+			isExact = retry.exact;
+			isMemFn = true;
+		}
 	}
 	auto& ov = *ovf;
 	++ov.fullImpl->uses;
@@ -1966,7 +1977,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 			return Expression().transform(context, context.evaluate(ret["eval"].getString()));
 		else return {{ret.isNull() ? Makai::String("nil") : (ret.toString() + " " + directName(context, ret.type())->basicNumberName())}, nullptr, context.basicTypeOf(ret), ret};
 	} else if (ov.variant.context < ExecutionContext::AV2_TCB_EC_COMPILE) {
-		if (ov.variadic) {
+		if (ov.variadic && args.back()->isArray && !result.spreaded) {
 			auto const vat = ov.arguments.back()->type;
 			if (args.size() < ov.arguments.size()) {
 				context.top()->impl->writeMainLine("new[",vat->name, ":0]");

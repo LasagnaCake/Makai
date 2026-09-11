@@ -16,6 +16,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			ssize					likelihood = 0;
 			Namespace::TypeRef		parent;
 			bool					mayBeEmpty = false;
+			bool					spreaded = false;
 
 			bool shouldBePushed() const;
 			bool isStackTop() const;
@@ -324,6 +325,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	};
 
 	struct PropertySetter: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Spread: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 }

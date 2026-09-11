@@ -217,14 +217,14 @@ void Scene::extendFromDefinitionV0(JSON::Value def, String const& sourcepath) {
 					mat.FOG_TYPE.enabled	= dmat[#FOG_TYPE]["enabled"].get<bool>();\
 					mat.FOG_TYPE.start		= dmat[#FOG_TYPE]["start"].get<float>();\
 					mat.FOG_TYPE.stop		= dmat[#FOG_TYPE]["stop"].get<float>();\
-					mat.FOG_TYPE.color		= MkColor::fromJSON(dmat[#FOG_TYPE]["color"].get<String>());\
+					mat.FOG_TYPE.color		= MkColor::fromDynamicValue(dmat[#FOG_TYPE]["color"].get<String>());\
 					mat.FOG_TYPE.strength	= dmat[#FOG_TYPE]["strength"].get<float>();\
 				}
 			_SET_FOG_PROPERTY(nearFog)
 			_SET_FOG_PROPERTY(farFog)
 			#undef _SET_FOG_PROPERTY
 			if (dmat["ambient"].isObject()) {
-				mat.ambient.color = MkColor::fromJSON(dmat["ambient"]["color"].get<String>()).xyz();
+				mat.ambient.color = MkColor::fromDynamicValue(dmat["ambient"]["color"].get<String>()).orElse(MkColor::WHITE).xyz();
 				mat.ambient.strength = dmat["ambient"]["strength"].get<float>();
 			}
 			world = mat;

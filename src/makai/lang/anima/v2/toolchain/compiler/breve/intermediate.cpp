@@ -124,7 +124,7 @@ void Intermediate::addPostLine(UTF8String const& what) {
 	root->impl->addPostLine(what);
 }
 
-Function::OverloadRef Function::overloadFromVariables(List<Namespace::VariableRef> const& args, FuzzySearch const fuzz) const {
+Function::SearchResult Function::overloadFromVariables(List<Namespace::VariableRef> const& args, FuzzySearch const fuzz) const {
 	return overloadFromTypes(args.toList<Namespace::TypeRef>([] (auto const& e) -> Namespace::TypeRef {return e->type.asStrong();}), fuzz);
 }
 
@@ -164,7 +164,7 @@ static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> c
 	return true;
 }
 
-Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const& args, FuzzySearch const fuzz) const {
+Function::SearchResult Function::overloadFromTypes(List<Namespace::TypeRef> const& args, FuzzySearch const fuzz) const {
 	decltype(overloads) matches;
 	for (auto& ov: overloads) {
 		MAKAILIB_DEBUG_FULL("");
@@ -177,22 +177,22 @@ Function::OverloadRef Function::overloadFromTypes(List<Namespace::TypeRef> const
 		MAKAILIB_DEBUGLN_FULL("matched!");
 		if (fuzz != FuzzySearch::AV2_TCF_FS_NONE) {
 			if (validate(ov, args, FuzzySearch::AV2_TCF_FS_NONE))
-				return ov;
+				return {ov, true};
 			matches.pushBack(ov);
 		}
-		else return ov;
+		else return {ov, true};
 	}
-	if (fuzz == FuzzySearch::AV2_TCF_FS_NONE or matches.empty()) return nullptr;
-	if (matches.size() == 1) return matches.back();
+	if (fuzz == FuzzySearch::AV2_TCF_FS_NONE or matches.empty()) return {nullptr, fuzz != FuzzySearch::AV2_TCF_FS_NONE};
+	if (matches.size() == 1) return {matches.back(), !validate(matches.back(), args, FuzzySearch::AV2_TCF_FS_NONE)};
 	Function::OverloadRef match;
 	for (auto& ov: matches) {
 		if (!ov) continue;
 		if (validate(ov, args, FuzzySearch::AV2_TCF_FS_NONE))
-			return ov;
+			return {ov, true};
 		if (!match or match->arguments.size() < ov->arguments.size())
 			match = ov;
 	}
-	return match;
+	return {match, false};
 }
 
 Implementation::Instance Namespace::compose() const {

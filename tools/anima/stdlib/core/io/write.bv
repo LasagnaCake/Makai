@@ -31,11 +31,11 @@ module IO {
 
 	@Variadic
 	writeLine :: (first: string, rest: [any]) {
-		write(first, rest <| NEWLINE)
+		write(first, ...(rest <| NEWLINE))
 	}
 
 	@Variadic
 	writeLine :: (first: any, rest: [any]) {
-		write(first, rest <| NEWLINE)
+		write(first, ...(rest <| NEWLINE))
 	}
 }

@@ -232,7 +232,7 @@ namespace Makai {
 		void pushLayerToFrame();
 
 		/// @brief Application window background color.
-		Vector4 background = Graph::Color::BLACK;
+		Vector4 background = MkColor::BLACK;
 
 		/// @brief Input manager.
 		Input::Manager input;

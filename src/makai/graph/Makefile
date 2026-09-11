@@ -9,7 +9,7 @@ override prefix := $(call concat, $(prefix), graph)
 
 define MAKE_SUB
 	$(call compile-all, graph)
-	$(call submake-all, gl color)
+	$(call submake-all, gl)
 endef
 
 all: debug release

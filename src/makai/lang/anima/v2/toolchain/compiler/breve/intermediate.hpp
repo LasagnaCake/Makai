@@ -286,8 +286,15 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TCF_FS_ALL_EXCEPT_FIRST,
 		};
 
-		OverloadRef overloadFromVariables(List<Namespace::VariableRef> const& args, FuzzySearch const fuzz = FuzzySearch::AV2_TCF_FS_NONE) const;
-		OverloadRef overloadFromTypes(ArgTypes const& args, FuzzySearch const fuzz = FuzzySearch::AV2_TCF_FS_NONE) const;
+		struct SearchResult {
+			OverloadRef	match;
+			bool		exact;
+
+			constexpr operator bool() const {return match;};
+		};
+
+		SearchResult overloadFromVariables(List<Namespace::VariableRef> const& args, FuzzySearch const fuzz = FuzzySearch::AV2_TCF_FS_NONE) const;
+		SearchResult overloadFromTypes(ArgTypes const& args, FuzzySearch const fuzz = FuzzySearch::AV2_TCF_FS_NONE) const;
 
 		Makai::Data::Value serialize() const override;
 
