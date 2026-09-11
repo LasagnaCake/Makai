@@ -177,7 +177,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("null", prefixes, new SpecialDirectResolver());
 	add("drop", prefixes, new DropExpressionResolver());
 	add("new", prefixes, new CreateExpressionResolver());
-	add(LTS_TT_ELLIPSIS, prefixes, new ExpansionResolver());
 	add(LTS_TT_QUESTION, prefixes, new NullableDeclResolver());
 	add("maybe", prefixes, new NullableDeclResolver());
 	add("await", prefixes, new AwaitExpressionResolver());
@@ -214,6 +213,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_BIT_SHIFT_LEFT_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_BIT_SHIFT_RIGHT_ASSIGN, infixes, new AssignmentResolver());
 	add(LTS_TT_NULL_ASSIGN, infixes, new AssignmentResolver());
+	add(LTS_TT_ELLIPSIS, infixes, new ExpansionResolver());
 	add(LTS_TT_RANGE, infixes, new RangeResolver());
 	add(LTS_TT_LAMBDA, infixes, new LambdaResolver());
 	add(LTS_TT_LITTLE_ARROW, infixes, new FunctionPrototypeResolver());

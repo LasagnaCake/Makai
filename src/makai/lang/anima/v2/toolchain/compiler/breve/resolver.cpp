@@ -782,7 +782,7 @@ Node::Instance ExpansionResolver::resolve(Parser& parser, Node::Instance const& 
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_EXPANSION;
-	result->leftSide	= parser.nextExpression();
+	result->leftSide = leftSide;
 	return result;
 }
 
