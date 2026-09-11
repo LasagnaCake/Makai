@@ -925,8 +925,6 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 	or	node->base.text == "error"
 	)
 		return Return().transform(context, node);
-	if (node->base.type == LTS_TT_ELLIPSES)
-		return Spread().transform(context, node);
 	Expression expr;
 	auto val = expr.transform(context, node->leftSide);
 	if (val.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
@@ -1023,6 +1021,8 @@ static Makai::String asFastOpQualifier(Core::BasicType const& type, ATransformer
 }
 
 ATransformer::Result PostfixExpression::transform(Context& context, Node::Instance const& node) {
+	if (node->base.type == LTS_TT_ELLIPSES)
+		return Spread().transform(context, node);
 	Expression expr;
 	auto const val = expr.transform(context, node->leftSide);
 	if (val.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
