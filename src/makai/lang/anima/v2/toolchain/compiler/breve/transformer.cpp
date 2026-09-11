@@ -1021,7 +1021,7 @@ static Makai::String asFastOpQualifier(Core::BasicType const& type, ATransformer
 }
 
 ATransformer::Result PostfixExpression::transform(Context& context, Node::Instance const& node) {
-	if (node->base.type == LTS_TT_ELLIPSES)
+	if (node->base.type == LTS_TT_ELLIPSIS)
 		return Spread().transform(context, node);
 	Expression expr;
 	auto const val = expr.transform(context, node->leftSide);
