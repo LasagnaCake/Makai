@@ -1913,6 +1913,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		context.error("Symbol is not a function!", node->leftSide);
 	auto& f = *fn.scope->function;
 	Function::ArgTypes args;
+	Makai::List<Result> argResults;
 	usize const memspot = context.top()->impl->main.size();
 	context.top()->impl->writeMainLine("");
 	Makai::Data::Value::ArrayType directArgs;
@@ -1928,6 +1929,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 			context.top()->impl->writeMainLine("copy", *expr.source, "-> top");
 		}
 		args.pushBack(expr.type);
+		argResults.pushBack(expr);
 		if (expr.isCompilable())
 			directArgs.pushBack(expr.direct);
 		else runtimeCall = true;
@@ -1977,7 +1979,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 			return Expression().transform(context, context.evaluate(ret["eval"].getString()));
 		else return {{ret.isNull() ? Makai::String("nil") : (ret.toString() + " " + directName(context, ret.type())->basicNumberName())}, nullptr, context.basicTypeOf(ret), ret};
 	} else if (ov.variant.context < ExecutionContext::AV2_TCB_EC_COMPILE) {
-		if (ov.variadic && args.back()->isArray && !result.spreaded) {
+		if (ov.variadic && args.back()->flags.isArray && !argResults.back().spreaded) {
 			auto const vat = ov.arguments.back()->type;
 			if (args.size() < ov.arguments.size()) {
 				context.top()->impl->writeMainLine("new[",vat->name, ":0]");
