@@ -18,8 +18,12 @@ static void doFunction(Composer& composer, Namespace::FunctionRef const& fn) {
 		if (!ov->fullImpl->uses) continue;
 		MAKAILIB_DEBUGLN_FULL("Name: ", ov->entry);
 		MAKAILIB_DEBUGLN_FULL("Variant: ", ov->serialize()["variant"].getString());
-		if (ov->dynlib.size())
-			ovstr += "@shared[\"" + ov->dynlib + "\" : \"" + ov->outEntry + "\"] ";
+		if (ov->dynlib.size()) {
+			if (ov->variant.external == Function::Overload::Variant::External::AV2_TCB_FO_VE_FFI)
+				ovstr += "@ffi";
+			else ovstr += "@shared";
+			ovstr += "[\"" + ov->dynlib + "\" : \"" + ov->outEntry + "\"] ";
+		}
 		else if (ov->outEntry.size())
 			ovstr += "@out[\"" + ov->outEntry + "\"] ";
 		else ovstr += "@fn ";

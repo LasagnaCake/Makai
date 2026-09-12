@@ -150,6 +150,7 @@ namespace Makai::Anima::V2::Core {
 			uint8	optional:	1;
 			uint8	noResult:	1;
 			uint8	async:		1;
+			uint8	ffi:		1;
 		};
 
 		/// @brief Jump leap.

@@ -1367,7 +1367,8 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_EVAL_BLOCK:		return Evaluation().transform(context, node);
 		case Node::Content::AV2_TANC_SWITCH:			return SwitchMatch().transform(context, node);
 		case Node::Content::AV2_TANC_NAME:
-		case Node::Content::AV2_TANC_FAILABLE_PATH:
+		case Node::Content::AV2_TANC_PATH:
+		case Node::Content::AV2_TANC_FAILABLE_PATH:		return PathExpression().transform(context, node);
 		case Node::Content::AV2_TANC_EXPANSION:			return Spread().transform(context, node);
 		default: context.error("Unsupported expression!", node);
 	}

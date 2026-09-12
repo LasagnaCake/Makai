@@ -444,6 +444,9 @@ static Namespace::AttributeRef createSharedAttribute() {
 			if (ov->variant == Function::Overload::Variant::External::AV2_TCB_FO_VE_NONE && !ov->hasImplementation) {
 				if (ov->variant.context > ExecutionContext::AV2_TCB_EC_RUNTIME)
 					continue;
+				auto const isOptional = v["optional"].getBoolean();
+				if (isOptional && !(ov->result->flags.isNullable or ov->result->flags.isEmpty))
+					continue;
 				if (ov->variant.context == ExecutionContext::AV2_TCB_EC_NONE)
 					ov->variant.context = ExecutionContext::AV2_TCB_EC_RUNTIME;
 				ov->variant = Function::Overload::Variant::External::AV2_TCB_FO_VE_DYNLIB;
@@ -459,7 +462,7 @@ static Namespace::AttributeRef createSharedAttribute() {
 						Makai::Tool::Arch::hashPassword(key)
 							.toBytes()
 					)  + "'";
-				ov->optional = v["optional"];
+				ov->optional = isOptional;
 				ov->entry = "__shared_dynlib_" + Makai::toString(++id) + ov->entry;
 			}
 		if (!hit)
@@ -482,7 +485,8 @@ static Namespace::AttributeRef createNativeAttribute() {
 		bool hit = false;
 		for (auto& ov: ns->function->current)
 			if (ov->variant == Function::Overload::Variant::External::AV2_TCB_FO_VE_NONE && !ov->hasImplementation) {
-				if (ov->variant.context > ExecutionContext::AV2_TCB_EC_RUNTIME)
+				auto const isOptional = v["optional"].getBoolean();
+				if (isOptional && !(ov->result->flags.isNullable or ov->result->flags.isEmpty))
 					continue;
 				if (ov->variant.context == ExecutionContext::AV2_TCB_EC_NONE)
 					ov->variant.context = ExecutionContext::AV2_TCB_EC_RUNTIME;
@@ -490,8 +494,44 @@ static Namespace::AttributeRef createNativeAttribute() {
 				hit = true;
 				ov->hasImplementation = true;
 				ov->outEntry = name;
-				ov->optional = v["optional"];
+				ov->optional = isOptional;
 				ov->entry = "__art_call_" + Makai::toString(id) + ov->entry;
+			}
+		if (!hit)
+			Transformer::ATransformer::Context::error("Missing valid internal call declaration!", ns->node);
+	};
+	return attrib;
+}
+
+static Namespace::AttributeRef createForeignAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Foreign";
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->fields["name"]		= {DVK_STRING};
+	attrib->fields["optional"]	= {.type=DVK_BOOLEAN, .defaultValue=false};
+	attrib->fields["lib"]		= {.type=DVK_STRING, .path=true};
+	attrib->fields["lang"]		= {.type=DVK_STRING, .defaultValue="C"};
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		static usize id = 0;
+		auto const name = (v["name"].getString());
+		bool hit = false;
+		for (auto& ov: ns->function->current)
+			if (ov->variant == Function::Overload::Variant::External::AV2_TCB_FO_VE_NONE && !ov->hasImplementation) {
+				if (ov->variant.context > ExecutionContext::AV2_TCB_EC_RUNTIME)
+					continue;
+				auto const isOptional = v["optional"].getBoolean();
+				if (isOptional && !(ov->result->flags.isNullable or ov->result->flags.isEmpty))
+					continue;
+				if (ov->variant.context == ExecutionContext::AV2_TCB_EC_NONE)
+					ov->variant.context = ExecutionContext::AV2_TCB_EC_RUNTIME;
+				ov->variant = Function::Overload::Variant::External::AV2_TCB_FO_VE_FFI;
+				hit = true;
+				ov->hasImplementation = true;
+				ov->outEntry = name;
+				ov->optional = isOptional;
+				ov->entry = "__extern_c_call_" + Makai::toString(id) + ov->entry;
 			}
 		if (!hit)
 			Transformer::ATransformer::Context::error("Missing valid internal call declaration!", ns->node);
@@ -1024,6 +1064,7 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createConverterAttribute());
 	addGlobalAttribute(createMemberAttribute());
 	addGlobalAttribute(createSharedAttribute());
+	addGlobalAttribute(createForeignAttribute());
 	addGlobalAttribute(createNativeAttribute());
 	addGlobalAttribute(createPathAttribute());
 	addGlobalAttribute(createRemangleAttribute());
@@ -1094,6 +1135,7 @@ Makai::Data::Value Function::Overload::serialize() const {
 		case AV2_TCB_FO_VE_NONE:		out["extern"] = "none";		break;
 		case AV2_TCB_FO_VE_ART_CALL:	out["extern"] = "Expose";	break;
 		case AV2_TCB_FO_VE_DYNLIB:		out["extern"] = "dynlib";	break;
+		case AV2_TCB_FO_VE_FFI:			out["extern"] = "ffi";		break;
 	}
 	switch (variant.object) {
 		using enum Variant::Object;

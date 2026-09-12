@@ -612,15 +612,17 @@ static void doCall(Context& context, bool dynamic = false) {
 		if (!context.methods.contains(id))
 			context.error("Method with this name does not exist!");
 		auto const m = context.getMethod(id);
-		invoke.external = m->flags.isExternal;
-		invoke.optional = m->flags.isOptional;
-		invoke.noResult = context.program.detail.types[m->retType].flags.hasNoResult;
+		invoke.external	= m->flags.isExternal;
+		invoke.optional	= m->flags.isOptional;
+		invoke.ffi		= m->flags.isFFI;
+		invoke.noResult	= context.program.detail.types[m->retType].flags.hasNoResult;
 		MAKAILIB_DEBUGLN_FULL("_______________________ Call entry: ", m->jump);
 		context.add(
 			Instruction::Name::AV2_IN_CALL,
 			invoke
 		);
-		if (invoke.external) context.add(m->hash);
+		if (invoke.ffi) context.addStringLiteral(m->outName);
+		else if (invoke.external) context.add(m->hash);
 		else context.addJumpTarget(m->jump, Context::JumpMode::AV2_JM_TABLE_INDEX);
 	} else {
 		context.add(
@@ -1645,18 +1647,27 @@ static void declareOutboundMethod(Context& context) {
 }
 
 static void declareSharedMethod(Context& context) {
+	auto const isFFI = context.token().text == "ffi";
 	auto const method = new Context::Method();
 	context.expectNext(Type{'['});
 	auto const dynlibName = context.getNext(LTS_TT_DOUBLE_QUOTE_STRING).getString();
 	context.expectNext(Type{':'});
-	auto const outID = Makai::hash(context.getNext(LTS_TT_DOUBLE_QUOTE_STRING).getString());
+	auto const outName = context.getNext(LTS_TT_DOUBLE_QUOTE_STRING).getString();
+	auto const outID = Makai::hash(outName);
 	context.expectNext(Type{']'});
 	method->hash = outID;
 	getMethodAttriutes(context, *method);
 	auto id = resolvePath(context);
 	method->flags.isExternal = method->flags.isShared = true;
-	if (context.program.ani->shared.libraries.find(dynlibName) == -1)
-		context.program.ani->shared.libraries.pushBack(dynlibName);
+	method->flags.isFFI = isFFI;
+	method->outName = outName;
+	if (isFFI) {
+		if (context.program.ani->shared.libraries.find(dynlibName) == -1)
+			context.program.ani->shared.libraries.pushBack(dynlibName);
+	} else {
+		if (context.program.ani->shared.ffi.find(dynlibName) == -1)
+		context.program.ani->shared.ffi.pushBack(dynlibName);
+	}
 	if (context.types.contains(id))
 		method->retType = context.getType(id)->id;
 	else context.error("Return type does not exist!");
@@ -1820,7 +1831,7 @@ static void doDeclaration(Context& context) {
 		declareFullMethod(context);
 	else if (decl == "out")
 		declareOutboundMethod(context);
-	else if (decl == "shared")
+	else if (decl == "shared" or decl == "ffi")
 		declareSharedMethod(context);
 	else if (decl == "type")
 		declareType(context);

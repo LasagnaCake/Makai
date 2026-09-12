@@ -76,6 +76,7 @@ namespace Makai::Anima::V2::Core {
 			StringList	out;
 
 			struct Shared {
+				StringList	ffi;
 				StringList	libraries;
 				StringList	modules;
 				StringList	interops;

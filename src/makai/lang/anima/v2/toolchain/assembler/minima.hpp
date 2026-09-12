@@ -14,6 +14,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 			struct Method: Core::Module::Method {
 				bool local = false;
 				String jump;
+				String outName;
 			};
 
 			struct Declaration: Core::Module::Declaration {

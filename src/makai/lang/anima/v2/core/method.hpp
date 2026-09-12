@@ -7,6 +7,7 @@ namespace Makai::Anima::V2::Core {
 	struct [[CTL_FLAG_STRUCT(uint64)]] MethodFlags {
 		uint64 isExternal:	1 = false;
 		uint64 isShared:	1 = false;
+		uint64 isFFI:		1 = false;
 		uint64 isOptional:	1 = false;
 		CTL_FLAG_STRUCT_END(uint64);
 	};

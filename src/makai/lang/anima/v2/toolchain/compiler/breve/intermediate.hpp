@@ -224,6 +224,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 					AV2_TCB_FO_VE_NONE,
 					AV2_TCB_FO_VE_ART_CALL,
 					AV2_TCB_FO_VE_DYNLIB,
+					AV2_TCB_FO_VE_FFI,
 				};
 				enum class Object {
 					AV2_TCB_FO_VO_NONE,
