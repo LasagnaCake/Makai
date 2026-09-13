@@ -198,6 +198,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
+	struct Cast: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
 	struct Definition: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};

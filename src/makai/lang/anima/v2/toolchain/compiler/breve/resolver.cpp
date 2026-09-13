@@ -93,6 +93,22 @@ Node::Instance PostfixResolver::resolve(Parser& parser, Node::Instance const& le
 	return result;
 }
 
+Node::Instance CastResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	MAKAILIB_DEBUGLN_FULL("Resolving cast [", token.text, "]...");
+	Node::Instance result = Node::Instance::create();
+	bool unsafe = false;
+	if (parser.context.peek().text == "fatal") {
+		unsafe = true;
+		parser.context.next();
+	}
+	result->base = token;
+	result->leftSide = leftSide;
+	result->rightSide = parser.nextExpression(precedence);
+	result->content = unsafe ? Node::Content::AV2_TANC_UNSAFE_CAST : Node::Content::AV2_TANC_CAST;
+	MAKAILIB_DEBUGLN_FULL("Cast:DONE!");
+	return result;
+}
+
 Node::Instance NullableDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	MAKAILIB_DEBUGLN_FULL("Resolving nullable declaration expression [", token.text, "]...");
 	Node::Instance result = Node::Instance::create();

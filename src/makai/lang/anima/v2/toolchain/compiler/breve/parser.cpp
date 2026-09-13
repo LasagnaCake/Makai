@@ -122,7 +122,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	infix("cross", false);
 	infix("fcross", false);
 	infix("is", false);
-	infix("as", false);
 	infix("pow", false);
 	infix("and", false);
 	infix("or", false);
@@ -217,6 +216,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_RANGE, infixes, new RangeResolver());
 	add(LTS_TT_LAMBDA, infixes, new LambdaResolver());
 	add(LTS_TT_LITTLE_ARROW, infixes, new FunctionPrototypeResolver());
+	add("as", infixes, new CastResolver());
 	MAKAILIB_DEBUGLN_FULL("Done!");
 }
 

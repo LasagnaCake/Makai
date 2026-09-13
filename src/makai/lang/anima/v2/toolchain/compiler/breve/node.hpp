@@ -59,6 +59,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TANC_EVAL_BLOCK,
 			AV2_TANC_SWITCH,
 			AV2_TANC_EXIT,
+			AV2_TANC_CAST,
+			AV2_TANC_UNSAFE_CAST,
 		};
 
 		Content							content = Content::AV2_TANC_EMPTY;

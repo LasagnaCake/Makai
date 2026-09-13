@@ -74,6 +74,9 @@ contexts:
       scope: keyword.control.asm-block.breve
       push: inline_assembly
 
+    - match: '\b(fatal)\b'
+      scope: keyword.control.fatal-expr.breve
+
     - match: '\b(ref|move|copy|(un)?likely|maybe)\b'
       scope: keyword.operator.move-or-likelihood.breve
 

@@ -1118,6 +1118,46 @@ ATransformer::Result specialDirectResolve(
 	return out;
 }
 
+ATransformer::Result Cast::transform(Context& context, Node::Instance const& node) {
+	auto const sseAnd = "__sce_and_" + node->name();
+	auto const sseOr = "__sce_or_" + node->name();
+	Expression expr;
+	bool lhsHasBeenPushed = false;
+	auto const lhs = expr.transform(context, node->leftSide);
+	if (lhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
+	bool const comparison = isComparison(node);
+	if (!lhs.source)
+		context.error("Invalid expression (Does not result in a value)!", node->leftSide);
+	if (lhs.isCompilable() && isLogicOp(node)) {
+		if (lhs.direct.isFalsy() && node->base.type == LTS_TT_LOGIC_AND) return lhs;
+		if (lhs.direct.isTruthy() && node->base.type == LTS_TT_LOGIC_OR) return lhs;
+	}
+	if (lhs.shouldBePushed() && !lhs.isCompilable()) {
+		lhsHasBeenPushed = true;
+		context.impl()->writeMainLine("push", *lhs.source);
+	} else if (lhs.isStackTop() && lhs.isCopied()) {
+		lhsHasBeenPushed = true;
+		context.impl()->writeMainLine("copy", *lhs.source, "-> top");
+	} else if (lhs.isStackTop()) lhsHasBeenPushed = true;
+	if (isLogicOp(node) && !lhs.isCompilable()) {
+		if (node->base.type == LTS_TT_LOGIC_AND) {
+			context.impl()->writeMainLine("push val top");
+			context.impl()->writeMainLine("jump if false", sseAnd);
+		} if (node->base.type == LTS_TT_LOGIC_OR) {
+			context.impl()->writeMainLine("push val top");
+			context.impl()->writeMainLine("jump if true", sseOr);
+		}
+	}
+	auto const t = TypeRequest().transform(context, node->rightSide);
+	if (lhs.isCompilable())
+		return specialDirectResolve(context, lhs, t.type, node->base.text, node->leftSide);
+	auto const retType = t.type;
+	if (node->content != Node::Content::AV2_TANC_UNSAFE_CAST && t.type->basic != Core::BasicType::AV2_BT_ANY && !TypeDecl::stronger(t.type, retType))
+		context.error("Value's type cannot be converted to given type!", node);
+	context.top()->impl->writeMainLine("as", t.type->name);
+	return {{"move top"}, retType->scope.asStrong(), retType};
+}
+
 ATransformer::Result InfixExpression::transform(Context& context, Node::Instance const& node) {
 	auto const sseAnd = "__sce_and_" + node->name();
 	auto const sseOr = "__sce_or_" + node->name();
@@ -1366,6 +1406,8 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_EMPTY_DECAY:		return NullDecay().transform(context, node);
 		case Node::Content::AV2_TANC_EVAL_BLOCK:		return Evaluation().transform(context, node);
 		case Node::Content::AV2_TANC_SWITCH:			return SwitchMatch().transform(context, node);
+		case Node::Content::AV2_TANC_CAST:
+		case Node::Content::AV2_TANC_UNSAFE_CAST:		return Cast().transform(context, node);
 		case Node::Content::AV2_TANC_NAME:
 		case Node::Content::AV2_TANC_PATH:
 		case Node::Content::AV2_TANC_FAILABLE_PATH:		return PathExpression().transform(context, node);
@@ -1980,7 +2022,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 			return Expression().transform(context, context.evaluate(ret["eval"].getString()));
 		else return {{ret.isNull() ? Makai::String("nil") : (ret.toString() + " " + directName(context, ret.type())->basicNumberName())}, nullptr, context.basicTypeOf(ret), ret};
 	} else if (ov.variant.context < ExecutionContext::AV2_TCB_EC_COMPILE) {
-		if (ov.variadic && args.back()->flags.isArray && !argResults.back().spreaded) {
+		if (ov.variadic && !(args.back()->flags.isArray && argResults.back().spreaded)) {
 			auto const vat = ov.arguments.back()->type;
 			if (args.size() < ov.arguments.size()) {
 				context.top()->impl->writeMainLine("new[",vat->name, ":0]");

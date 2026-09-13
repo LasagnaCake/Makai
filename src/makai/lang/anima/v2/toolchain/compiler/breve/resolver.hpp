@@ -70,6 +70,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
+	struct CastResolver: AResolver {
+		CastResolver(): AResolver(Parser::Precedence::AV2_TAPP_CAST, false) {}
+		virtual ~CastResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
 	struct FunctionCallResolver: AResolver {
 		FunctionCallResolver(): AResolver(Parser::Precedence::AV2_TAPP_FN_CALL, false) {}
 		virtual ~FunctionCallResolver() {}
@@ -219,12 +225,6 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct UsingResolver: AResolver {
 		UsingResolver(): AResolver() {}
 		virtual ~UsingResolver() {}
-		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
-	};
-
-	struct CastResolver: AResolver {
-		CastResolver(): AResolver() {}
-		virtual ~CastResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
