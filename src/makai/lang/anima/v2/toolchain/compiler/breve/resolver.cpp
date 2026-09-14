@@ -880,7 +880,7 @@ Node::Instance MatchResolver::resolve(Parser& parser, Node::Instance const& left
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_SWITCH;
 	if (parser.context.peek().type != LTS_TT_OPEN_CURLY)
-		result->leftSide = parser.nextExpression();
+		result->middle = parser.nextExpression();
 	parser.context.expectNext(LTS_TT_OPEN_CURLY);
 	while (true) {
 		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
@@ -888,6 +888,21 @@ Node::Instance MatchResolver::resolve(Parser& parser, Node::Instance const& left
 			break;
 		}
 		auto const caseDecl = Node::Instance::create();
+		if (
+			result->middle
+		and	(
+				parser.context.peek().type == LTS_TT_COMPARE_EQUALS
+			or	parser.context.peek().type == LTS_TT_COMPARE_NOT_EQUALS
+			or	parser.context.peek().type == LTS_TT_LESS_THAN
+			or	parser.context.peek().type == LTS_TT_GREATER_THAN
+			or	parser.context.peek().type == LTS_TT_COMPARE_GREATER_EQUALS
+			or	parser.context.peek().type == LTS_TT_COMPARE_LESS_EQUALS
+			or	parser.context.peek().type == LTS_TT_LOGIC_NOT
+			or	parser.context.peek().text == "not"
+			)
+		) {
+			caseDecl->base = parser.context.next().token();
+		} else caseDecl->base.type = LTS_TT_COMPARE_EQUALS;
 		caseDecl->leftSide = parser.nextExpression();
 		parser.context.expectNext(LTS_TT_BIG_ARROW);
 		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY))

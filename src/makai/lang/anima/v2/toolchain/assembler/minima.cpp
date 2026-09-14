@@ -25,11 +25,11 @@ uint64 Context::addStringLiteral(String const& str) {
 	return program.strings.size() - 1;
 }
 
-uint64 Context::addFFILibrary(String const& str) {
-	auto const strID = context.program.ani->shared.ffi.find(dynlibName);
+uint64 Context::addFFILibrary(String const& lib) {
+	auto const strID = program.ani->shared.ffi.find(lib);
 	if (strID != -1) return strID;
-	context.program.ani->shared.ffi.pushBack(dynlibName);
-	return context.program.ani->shared.ffi.size() - 1;
+	program.ani->shared.ffi.pushBack(lib);
+	return program.ani->shared.ffi.size() - 1;
 }
 
 Makai::String Context::fullModulePath() const {

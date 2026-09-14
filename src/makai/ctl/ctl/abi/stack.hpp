@@ -15,13 +15,13 @@ namespace ABI::Stack {
 	or	Type::Pointer<T>
 	) {
 		if constexpr (sizeof(T) < sizeof(uint16))
-			asm ("push %0" :: "r" ((uint16)value))
+			asm ("push %0" :: "r" ((uint16)bitcast<uint8>(value)))
 		;
 		else if constexpr (sizeof(T) < sizeof(uint32))
 			asm ("push %0" :: "r" (bitcast<uint16>(value)))
 		;
 		else if constexpr (sizeof(T) < sizeof(uint64))
-			//asm ("push %0" :: "r" (bitcast<uint32>(value)))
+			asm ("push %0" :: "r" ((uint64)bitcast<uint32>(value)))
 		;
 		else if constexpr (sizeof(T) < sizeof(uint128))
 			asm ("push %0" :: "r" (bitcast<uint64>(value)))
@@ -40,20 +40,21 @@ namespace ABI::Stack {
 		if constexpr (sizeof(T) < sizeof(uint16)) {
 			uint16 buf;
 			asm ("pop %0" : "=r" (buf));
-			into = (T)buf;
+			into = bitcast<T, uint8>(buf & 0xFF);
 		} else if constexpr (sizeof(T) < sizeof(uint32)) {
 			uint16 buf;
 			asm ("pop %0" : "=r" (buf));
 			into = bitcast<T>(buf);
 		} else if constexpr (sizeof(T) < sizeof(uint64)) {
-			uint32 buf;
-			//asm ("pop %0" : "=r" (buf));
-			into = bitcast<T>(buf);
+			uint64 buf;
+			asm ("pop %0" : "=r" (buf));
+			into = bitcast<T, uint32>(buf & 0xFFFFFFFF);
 		} else if constexpr (sizeof(T) < sizeof(uint128)) {
 			uint64 buf;
 			asm ("pop %0" : "=r" (buf));
 			into = bitcast<T>(buf);
 		} else {
+			into = 0;
 		}
 		return into;
 	}

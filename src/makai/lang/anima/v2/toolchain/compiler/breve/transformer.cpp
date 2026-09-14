@@ -1119,41 +1119,21 @@ ATransformer::Result specialDirectResolve(
 }
 
 ATransformer::Result Cast::transform(Context& context, Node::Instance const& node) {
-	auto const sseAnd = "__sce_and_" + node->name();
-	auto const sseOr = "__sce_or_" + node->name();
 	Expression expr;
-	bool lhsHasBeenPushed = false;
 	auto const lhs = expr.transform(context, node->leftSide);
 	if (lhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
-	bool const comparison = isComparison(node);
 	if (!lhs.source)
 		context.error("Invalid expression (Does not result in a value)!", node->leftSide);
-	if (lhs.isCompilable() && isLogicOp(node)) {
-		if (lhs.direct.isFalsy() && node->base.type == LTS_TT_LOGIC_AND) return lhs;
-		if (lhs.direct.isTruthy() && node->base.type == LTS_TT_LOGIC_OR) return lhs;
-	}
-	if (lhs.shouldBePushed() && !lhs.isCompilable()) {
-		lhsHasBeenPushed = true;
+	if (lhs.shouldBePushed() && !lhs.isCompilable())
 		context.impl()->writeMainLine("push", *lhs.source);
-	} else if (lhs.isStackTop() && lhs.isCopied()) {
-		lhsHasBeenPushed = true;
+	else if (lhs.isStackTop() && lhs.isCopied())
 		context.impl()->writeMainLine("copy", *lhs.source, "-> top");
-	} else if (lhs.isStackTop()) lhsHasBeenPushed = true;
-	if (isLogicOp(node) && !lhs.isCompilable()) {
-		if (node->base.type == LTS_TT_LOGIC_AND) {
-			context.impl()->writeMainLine("push val top");
-			context.impl()->writeMainLine("jump if false", sseAnd);
-		} if (node->base.type == LTS_TT_LOGIC_OR) {
-			context.impl()->writeMainLine("push val top");
-			context.impl()->writeMainLine("jump if true", sseOr);
-		}
-	}
 	auto const t = TypeRequest().transform(context, node->rightSide);
 	if (lhs.isCompilable())
 		return specialDirectResolve(context, lhs, t.type, node->base.text, node->leftSide);
 	auto const retType = t.type;
 	if (node->content != Node::Content::AV2_TANC_UNSAFE_CAST && t.type->basic != Core::BasicType::AV2_BT_ANY && !TypeDecl::stronger(t.type, retType))
-		context.error("Value's type cannot be converted to given type!", node);
+		context.error("Type of value cannot be converted to given type!", node);
 	context.top()->impl->writeMainLine("as", t.type->name);
 	return {{"move top"}, retType->scope.asStrong(), retType};
 }
@@ -1674,6 +1654,12 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 				retType = context.basicType("void");
 			else retType = def.type;
 		}
+		if (def.mayBeEmpty && !(retType->flags.isNullable or retType->flags.isEmpty))
+			context.error("Non-nullable functions cannot have potentially-empty values!", node);
+		if (def.shouldBePushed())
+			context.top()->impl->writeMainLine("push", *def.source);
+		else if (def.isStackTop() && def.isCopied())
+			context.top()->impl->writeMainLine("copy", *def.source, "-> top");
 		current->hasImplementation = true;
 		if (ovImpl.empty())
 			current->scope = context.top().asWeak();
@@ -1688,6 +1674,8 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	if (!retType)
 		context.error("Missing function return type!", node);
 	//	retType = context.basicType("void");
+	if (retType->flags.isNullable)
+		impl->impl->writePostLine("push null");
 	impl->impl->writePostLine("exit");
 	impl->impl->writePostLine("ret");
 	for (usize _ = 0; _ < optional.size() + 1; ++_)
@@ -2882,9 +2870,124 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 	return {.source = {"move top"}, .type = result.type, .likelihood = result.likelihood + result.likelihood, .mayBeEmpty = mayBeEmpty or defaultCaseExpr};
 }
 
+static Makai::String matchType(decltype(LTS_TT_COMPARE_EQUALS) const type) {
+	switch (type) {
+		case LTS_TT_LESS_THAN:				return "negative";
+		case LTS_TT_GREATER_THAN:			return "positive";
+		case LTS_TT_COMPARE_GREATER_EQUALS:	return "not negative";
+		case LTS_TT_COMPARE_LESS_EQUALS:	return "not positive";
+		case LTS_TT_COMPARE_NOT_EQUALS:
+		case LTS_TT_IDENTIFIER:
+		case LTS_TT_LOGIC_AND:				return "nonzero";
+		default: return "zero";
+	}
+}
+
+ATransformer::Result ShortMatch::transform(Context& context, Node::Instance const& node) {
+	ATransformer::Result result;
+	auto const varc = context.top()->varc;
+	auto const matchScope = context.declare(UTF8StringList::from("<short-match>" + node->name()));
+	matchScope->varc += varc;
+	matchScope->implementContents = true;
+	auto const caseMarker = "__short_match_case" + node->name();
+	auto const caseSkipMarker = "__short_match_case_skip" + node->name();
+	auto const matchEnd = "__short_match_end" + node->name();
+	auto const defaultCase = "__short_match_default" + node->name();
+	Node::Instance defaultCaseExpr;
+	Namespace::TypeRef prevCaseType;
+	bool isFirstCase = true;
+	bool mayBeEmpty = false;
+	auto const matchVar = [&] {
+		auto const vsn = UTF8StringList::from("##QUERY::" + node->name());
+		auto const varScope = context.declare(vsn);
+		varScope->varc += matchScope->varc;
+		auto& var = *(varScope->variable = varScope->variable.create());
+		var.fill();
+		var.id = matchScope->varc++;
+		var.name = "##QUERY::" + node->name();
+		context.pop(vsn.size());
+		auto const query = Expression().transform(context, node->middle);
+		if (!query.source)
+			context.error("Expected value here!", node->middle);
+		matchScope->impl->writeMainLine("copy", *query.source, " ->", var.getSource());
+		var.type = query.type.asWeak();
+		return varScope->variable;
+	} ();
+	MAKAILIB_DEBUGLN_FULL("Total cases: ", node->children.size());
+	for (auto& caseExpr: node->children) {
+		auto const caseScope = context.declare(UTF8StringList::from("<case>" + caseExpr->name()));
+		caseScope->varc += matchScope->varc;
+		caseScope->implementContents = true;
+		if (caseExpr->leftSide->base.text != "else") {
+			auto const match = Expression().transform(context, caseExpr->leftSide);
+			if (match.type != matchVar->type)
+				context.error("Case type is not matched value type!", caseExpr->leftSide);
+			if (match.shouldBePushed())
+				caseScope->impl->writeMainLine("push", match.source.value());
+			else if (match.isStackTop() && match.isCopied())
+				caseScope->impl->writeMainLine("copy", *match.source, "-> top");
+			caseScope->impl->writeMainLine("push val", matchVar->getSource());
+			caseScope->impl->writeMainLine("cmp order");
+			caseScope->impl->writeMainLine("jump if", matchType(caseExpr->base.type), caseSkipMarker + caseExpr->name());
+		} else if (!defaultCaseExpr) {
+			context.pop(1);
+			defaultCaseExpr = caseExpr;
+			continue;
+		} else context.error("Redeclaration of default case!", caseExpr->leftSide);
+		auto const then = Expression().transform(context, caseExpr->rightSide);
+		mayBeEmpty = mayBeEmpty or then.mayBeEmpty;
+		if (!isFirstCase && prevCaseType != then.type)
+			context.error("Case result mismatch!", caseExpr->rightSide);
+		else if (isFirstCase)
+			prevCaseType = then.type;
+		result = then;
+		if (then.mayBeEmpty)
+			context.error("One or more paths may not return a value!");
+		if (then.shouldBePushed())
+			caseScope->impl->writeMainLine("push", then.source.value());
+		else if (then.isStackTop() && then.isCopied())
+			caseScope->impl->writeMainLine("copy", *then.source, "-> top");
+		context.pop(1);
+		matchScope->impl->writeMainLine("@target", (caseMarker + caseExpr->name()), ":");
+		matchScope->impl->writeMainLine(caseScope->compose()->toString());
+		matchScope->impl->writeMainLine("jump", matchEnd);
+		matchScope->impl->writeMainLine("@target", (caseSkipMarker + caseExpr->name()), ":");
+		matchScope->impl->writeMainLine("end");
+		isFirstCase = false;
+	}
+	if (defaultCaseExpr) {
+		auto const caseScope = context.declare(UTF8StringList::from("<default>" + defaultCaseExpr->name()));
+		caseScope->varc += matchScope->varc;
+		caseScope->implementContents = true;
+		auto const then = Expression().transform(context, defaultCaseExpr->rightSide);
+		if (!isFirstCase && prevCaseType != then.type)
+			context.error("Case result mismatch!", defaultCaseExpr->rightSide);
+		else if (isFirstCase)
+			prevCaseType = then.type;
+		result = then;
+		if (then.mayBeEmpty)
+			context.error("One or more paths may not return a value!");
+		if (then.shouldBePushed())
+			caseScope->impl->writeMainLine("push", then.source.value());
+		else if (then.isStackTop() && then.isCopied())
+			caseScope->impl->writeMainLine("copy", *then.source, "-> top");
+		context.pop(1);
+		matchScope->impl->writeMainLine(caseScope->compose()->toString());
+		result = then;
+	}
+	matchScope->impl->writePostLine("@target", matchEnd, ":");
+	context.pop(1);
+	context.impl()->writeMainLine(matchScope->compose()->toString());
+	if (!result.source) return {};
+	return {.source = {"move top"}, .type = result.type, .likelihood = result.likelihood + result.likelihood, .mayBeEmpty = mayBeEmpty or defaultCaseExpr};
+	return {};
+}
+
 ATransformer::Result SwitchMatch::transform(Context& context, Node::Instance const& node) {
 	if (node->leftSide)
 		return Switch().transform(context, node);
+	else if (node->middle)
+		return ShortMatch().transform(context, node);
 	else return Match().transform(context, node);
 }
 
