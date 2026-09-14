@@ -127,6 +127,26 @@ namespace Makai::Anima::V2::Runtime {
 
 		virtual void onBreakpoint();
 
+		enum class ForeignCallError {
+			AV2_RE_FCE_MISSING_ARGS,
+			AV2_RE_FCE_MISSING_LIBRARY_NAME,
+			AV2_RE_FCE_MISSING_FUNCTION_NAME,
+			AV2_RE_FCE_LIBRARY_NOT_LOADED,
+			AV2_RE_FCE_FUNCTION_DOES_NOT_EXIST,
+			AV2_RE_FCE_INVALID_ARG_TYPE,
+			AV2_RE_FCE_INVALID_RETURN_TYPE
+		};
+
+		using ForeignCallResult = Result<Core::Object::Storage, ForeignCallError>;
+
+		ForeignCallResult callForeign(
+			Core::Instruction::Invocation const& invocation,
+			usize const lib,
+			usize const fn,
+			usize const argc,
+			Core::BasicType const ret
+		);
+
 	private:
 		void load();
 		void unload();

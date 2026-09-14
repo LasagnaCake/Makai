@@ -336,6 +336,95 @@ void Engine::v2Copy() {
 	to = from;
 }
 
+Engine::ForeignCallResult Engine::callForeign(
+	Core::Instruction::Invocation const& invocation,
+	usize const lib,
+	usize const fn,
+	usize const argc,
+	Core::BasicType const ret
+) {
+	if (context.globalValueStack.size() < argc)
+		return ForeignCallError::AV2_RE_FCE_MISSING_ARGS;
+	if (program.ani->shared.ffi.size() < lib)
+		return ForeignCallError::AV2_RE_FCE_MISSING_LIBRARY_NAME;
+	auto const lname = program.ani->shared.ffi[lib];
+	if (program.strings.size() < fn)
+		return ForeignCallError::AV2_RE_FCE_MISSING_FUNCTION_NAME;
+	auto const fname = program.strings[fn];
+	if (!context.art.ffilibs.contains(lname))
+		return ForeignCallError::AV2_RE_FCE_LIBRARY_NOT_LOADED;
+	auto const fcall = context.art.ffilibs[lname]->function<void()>(fname);
+	if (!fcall)
+		return ForeignCallError::AV2_RE_FCE_FUNCTION_DOES_NOT_EXIST;
+	usize argi = argc;
+	List<Cell<String>> tempStore;
+	Makai::Defer _{
+		[&] {
+			if (!argi) return;
+			while (argi != argc) {
+				Makai::ABI::Stack::pop<bool>();
+				++argi;
+			}
+		}
+	};
+	while (argi--) {
+		auto const arg = context.pop();
+		if (auto const argt = arg->getOriginalType()) {
+			if (argt->basic)
+				switch (*argt->basic) {
+					case Core::BasicType::AV2_BT_BOOL:		Makai::ABI::Stack::push(arg->toValue<bool>());					break;
+					case Core::BasicType::AV2_BT_INT8:		Makai::ABI::Stack::push(arg->toValue<int8>());					break;
+					case Core::BasicType::AV2_BT_UINT8:		Makai::ABI::Stack::push(arg->toValue<uint8>());					break;
+					case Core::BasicType::AV2_BT_INT16:		Makai::ABI::Stack::push(arg->toValue<int16>());					break;
+					case Core::BasicType::AV2_BT_UINT16:	Makai::ABI::Stack::push(arg->toValue<uint16>());				break;
+					case Core::BasicType::AV2_BT_INT32:		Makai::ABI::Stack::push(arg->toValue<int32>());					break;
+					case Core::BasicType::AV2_BT_CHAR:
+					case Core::BasicType::AV2_BT_UINT32:	Makai::ABI::Stack::push(arg->toValue<uint32>());				break;
+					case Core::BasicType::AV2_BT_INT64:		Makai::ABI::Stack::push(arg->toValue<int64>());					break;
+					case Core::BasicType::AV2_BT_UINT64:	Makai::ABI::Stack::push(arg->toValue<uint64>());				break;
+					case Core::BasicType::AV2_BT_REAL32:	Makai::ABI::Stack::push(arg->toValue<float32>());				break;
+					case Core::BasicType::AV2_BT_REAL64:	Makai::ABI::Stack::push(arg->toValue<float64>());				break;
+					case Core::BasicType::AV2_BT_REAL128:	Makai::ABI::Stack::push(arg->toValue<float128>());				break;
+					case Core::BasicType::AV2_BT_VECTOR:	Makai::ABI::Stack::push((ref<Makai::Vector4>)arg->data());		break;
+					case Core::BasicType::AV2_BT_MATRIX:	Makai::ABI::Stack::push((ref<Makai::Matrix4x4>)arg->data());	break;
+					case Core::BasicType::AV2_BT_ANY:		Makai::ABI::Stack::push(arg->data());							break;
+					case Core::BasicType::AV2_BT_STRING: {
+						tempStore.pushBack(Cell<String>::create(arg->toValue<String>()));
+						Makai::ABI::Stack::push(tempStore.back()->cstr());
+					} break;
+					case Core::BasicType::AV2_BT_BYTES:		Makai::ABI::Stack::push((ref<byte>)arg->data()); break;
+					default: return ForeignCallError::AV2_RE_FCE_INVALID_ARG_TYPE;
+				}
+			else if (argt->flags.isValueType)
+				Makai::ABI::Stack::push(arg->data());
+			else return ForeignCallError::AV2_RE_FCE_INVALID_ARG_TYPE;
+		}
+	}
+	fcall();
+	Object::Storage result;
+	switch (ret) {
+		case Core::BasicType::AV2_BT_BOOL:		result = context.newValue(Makai::ABI::Stack::pop<bool>());						break;
+		case Core::BasicType::AV2_BT_INT8:		result = context.newValue(Makai::ABI::Stack::pop<int8>());						break;
+		case Core::BasicType::AV2_BT_UINT8:		result = context.newValue(Makai::ABI::Stack::pop<uint8>());						break;
+		case Core::BasicType::AV2_BT_INT16:		result = context.newValue(Makai::ABI::Stack::pop<int16>());						break;
+		case Core::BasicType::AV2_BT_UINT16:	result = context.newValue(Makai::ABI::Stack::pop<uint16>());					break;
+		case Core::BasicType::AV2_BT_INT32:		result = context.newValue(Makai::ABI::Stack::pop<int32>());						break;
+		case Core::BasicType::AV2_BT_CHAR:
+		case Core::BasicType::AV2_BT_UINT32:	result = context.newValue(Makai::ABI::Stack::pop<uint32>());					break;
+		case Core::BasicType::AV2_BT_INT64:		result = context.newValue(Makai::ABI::Stack::pop<int64>());						break;
+		case Core::BasicType::AV2_BT_UINT64:	result = context.newValue(Makai::ABI::Stack::pop<uint64>());					break;
+		case Core::BasicType::AV2_BT_REAL32:	result = context.newValue(Makai::ABI::Stack::pop<float32>());					break;
+		case Core::BasicType::AV2_BT_REAL64:	result = context.newValue(Makai::ABI::Stack::pop<float64>());					break;
+		case Core::BasicType::AV2_BT_REAL128:	result = context.newValue(Makai::ABI::Stack::pop<float128>());					break;
+		case Core::BasicType::AV2_BT_VECTOR:	result = context.newValue(*Makai::ABI::Stack::pop<ref<Makai::Vector4>>());		break;
+		case Core::BasicType::AV2_BT_MATRIX:	result = context.newValue(*Makai::ABI::Stack::pop<ref<Makai::Matrix4x4>>());	break;
+		case Core::BasicType::AV2_BT_STRING:	result = context.newValue(String(Makai::ABI::Stack::pop<cstring>()));			break;
+		case Core::BasicType::AV2_BT_VOID:																						break;
+		default: return ForeignCallError::AV2_RE_FCE_INVALID_RETURN_TYPE;
+	}
+	return result;
+}
+
 void Engine::v2Call() {
 	// Get invocation
 	Instruction::Invocation invocation = bitcast<Instruction::Invocation>(current.type);
@@ -350,6 +439,41 @@ void Engine::v2Call() {
 	}
 	MAKAILIB_DEBUGLN_FULL("Handling call...");
 	if (invocation.external) {
+		advance(true);
+		auto const lib = Makai::Cast::bit<uint64>(current);
+		advance(true);
+		auto const argc	= Makai::Cast::bit<uint32>(current.name);
+		auto const ret	= Makai::Cast::as<Core::BasicType>(current.type >> 24);
+		if (invocation.ffi)
+			callForeign(invocation, lib, loc, argc, ret)
+			.then(
+				[&] (auto const& v) {
+					if (invocation.noResult) return;
+					if (!v || v->isEmptyType())
+						crash(invalidFunctionError("Expected return type, but function is void"));
+					else context.globalValueStack.pushBack(v);
+				}
+			).onError(
+				[&] (auto const& e) {
+					if (invocation.optional) {
+						if (!invocation.noResult)
+							context.globalValueStack.pushBack(nullptr);
+						return;
+					}
+					Makai::String err = "FOREIGN FUNCTION: ";
+					switch (e) {
+						using enum ForeignCallError;
+						case AV2_RE_FCE_MISSING_ARGS:				err += "Not enough args for function";			break;
+						case AV2_RE_FCE_MISSING_FUNCTION_NAME:		err += "Missing function name";					break;
+						case AV2_RE_FCE_MISSING_LIBRARY_NAME:		err += "Missing library name";					break;
+						case AV2_RE_FCE_LIBRARY_NOT_LOADED:			err += "Library failed to load";				break;
+						case AV2_RE_FCE_FUNCTION_DOES_NOT_EXIST:	err += "Function does not exist in library";	break;
+						case AV2_RE_FCE_INVALID_ARG_TYPE:			err += "Invalid argument type for function";	break;
+						case AV2_RE_FCE_INVALID_RETURN_TYPE:		err += "Invalid return type for function";		break;
+					}
+					crash(invalidFunctionError(err));
+				}
+			);
 		decltype(context.globalValueStack) args;
 		if (auto argc = context.art.argumentCountOf(loc)) {
 			StackStateScopePrinter s3p{context};
@@ -1619,8 +1743,8 @@ void Engine::v2FieldGet() {
 				using enum Object::GetError;
 				case AV2_COGE_NO_TYPE:						crash(invalidSourceError("Object does not have a type!"));
 				case AV2_COGE_TYPE_DOES_NOT_CONTAIN_FIELDS:	crash(invalidSourceError("Type does not contain fields!"));
-				case AV2_COGE_FIELD_IS_NOT_COPYABLE:		crash(invalidSourceError("Field is not copyable!"));
-				case AV2_COGE_FIELD_DOES_NOT_EXIST:			crash(invalidSourceError("Field does not exist!"));
+				case AV2_COGE_FIELD_IS_NOT_COPYABLE:		crash(invalidSourceError("Field ["+Makai::toString(loc)+"] is not copyable!"));
+				case AV2_COGE_FIELD_DOES_NOT_EXIST:			crash(invalidSourceError("Field ["+Makai::toString(loc)+"] does not exist!"));
 			}
 		});
 	if  (err) return;

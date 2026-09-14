@@ -327,6 +327,8 @@ namespace Makai::Anima::V2::Core {
 
 		bool openLibrary(String const& path);
 
+		bool openForeignLibrary(String const& path);
+
 		template <class T>
 		bool addNativeType() {
 			if (hasNativeType<T>()) return false;
@@ -356,6 +358,7 @@ namespace Makai::Anima::V2::Core {
 		Database<Method>					methods;
 		Map<usize, Instance<NativeCall>>	externalMethods;
 		Dictionary<Instance<Library>>		dynlibs;
+		Dictionary<Instance<CPP::Library>>	ffilibs;
 
 		static Instance<OutputStringWriter> writer;
 

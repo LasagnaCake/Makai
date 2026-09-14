@@ -52,6 +52,15 @@ bool Context::openLibrary(Makai::String const& path) {
 	return true;
 }
 
+bool Context::openForeignLibrary(Makai::String const& path) {
+	if (ffilibs.contains(path)) return true;
+	MAKAILIB_DEBUGLN_FULL("Fetching foreign library...");
+	Instance<CPP::Library> lib = lib.create();
+	lib->open(path);
+	ffilibs[path] = lib;
+	return true;
+}
+
 void Context::Library::Impl::close() {
 	if(!lib) return;
 	lib->close();

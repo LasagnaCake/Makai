@@ -25,6 +25,13 @@ uint64 Context::addStringLiteral(String const& str) {
 	return program.strings.size() - 1;
 }
 
+uint64 Context::addFFILibrary(String const& str) {
+	auto const strID = context.program.ani->shared.ffi.find(dynlibName);
+	if (strID != -1) return strID;
+	context.program.ani->shared.ffi.pushBack(dynlibName);
+	return context.program.ani->shared.ffi.size() - 1;
+}
+
 Makai::String Context::fullModulePath() const {
 	String path = "";
 	for (auto& module: moduleStack)
@@ -615,13 +622,19 @@ static void doCall(Context& context, bool dynamic = false) {
 		invoke.external	= m->flags.isExternal;
 		invoke.optional	= m->flags.isOptional;
 		invoke.ffi		= m->flags.isFFI;
-		invoke.noResult	= context.program.detail.types[m->retType].flags.hasNoResult;
+		invoke.noResult	= context.getTypeByID(m->retType)->flags.hasNoResult;
 		MAKAILIB_DEBUGLN_FULL("_______________________ Call entry: ", m->jump);
 		context.add(
 			Instruction::Name::AV2_IN_CALL,
 			invoke
 		);
-		if (invoke.ffi) context.addStringLiteral(m->outName);
+		if (invoke.ffi) {
+			context.addStringLiteral(m->outName);
+			context.addFFILibrary(m->ffiLibName);
+			uint64 argcAndName = m->argTypes.size() << 32;
+			argcAndName |= Makai::Cast::as<uint16>(*(context.getTypeByID(m->retType)->basic)) << 24;
+			context.add(argcAndName);
+		}
 		else if (invoke.external) context.add(m->hash);
 		else context.addJumpTarget(m->jump, Context::JumpMode::AV2_JM_TABLE_INDEX);
 	} else {
@@ -1664,6 +1677,7 @@ static void declareSharedMethod(Context& context) {
 	if (isFFI) {
 		if (context.program.ani->shared.libraries.find(dynlibName) == -1)
 			context.program.ani->shared.libraries.pushBack(dynlibName);
+		method->ffiLibName = dynlibName;
 	} else {
 		if (context.program.ani->shared.ffi.find(dynlibName) == -1)
 		context.program.ani->shared.ffi.pushBack(dynlibName);

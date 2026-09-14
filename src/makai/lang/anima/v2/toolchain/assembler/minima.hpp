@@ -15,6 +15,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 				bool local = false;
 				String jump;
 				String outName;
+				String ffiLibName;
 			};
 
 			struct Declaration: Core::Module::Declaration {
@@ -40,6 +41,7 @@ namespace Makai::Anima::V2::Toolchain::Assembler {
 
 			usize update(usize const instruction, uint32 const type);
 
+			uint64 addFFILibrary(String const& lib);
 			uint64 addStringLiteral(String const& val);
 			uint64 addGlobal(String const& name);
 
