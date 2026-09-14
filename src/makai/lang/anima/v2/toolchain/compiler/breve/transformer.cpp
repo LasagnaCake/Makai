@@ -2852,7 +2852,6 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 			context.error("Case result mismatch!", defaultCaseExpr->rightSide);
 		else if (isFirstCase)
 			prevCaseType = then.type;
-		result = then;
 		if (then.mayBeEmpty)
 			context.error("One or more paths may not return a value!");
 		if (then.shouldBePushed())
