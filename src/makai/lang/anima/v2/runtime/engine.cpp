@@ -1853,8 +1853,9 @@ void Engine::v2StackBlit() {
 void Engine::initializeObject(Object::Storage const& object) {
 	if (context.globalValueStack.size() < object->count())
 		return crash(invalidSourceError("Stack is too small to initialize the given value!"));
-	auto const content = context.globalValueStack.sliced(-(object->count()-1), -1);
-	context.globalValueStack.eraseRange(-object->count(), -1);
+	if (!object->count()) return;
+	auto const content = context.globalValueStack.sliced(-object->count(), -1);
+	context.globalValueStack.eraseRange(-object->count() -1, -1);
 	MAKAILIB_DEBUGLN_FULL("Value: ", object->getType()->cleanName());
 	MAKAILIB_DEBUGLN_FULL("Size: ", object->count());
 	MAKAILIB_DEBUGLN_FULL("Fields {");

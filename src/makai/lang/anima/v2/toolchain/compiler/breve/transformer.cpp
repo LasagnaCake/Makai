@@ -2013,10 +2013,9 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		if (ov.variadic && !(args.back()->flags.isArray && argResults.back().spreaded)) {
 			auto const vat = ov.arguments.back()->type;
 			if (args.size() < ov.arguments.size()) {
-				context.top()->impl->writeMainLine("new[",vat->name, ":0]");
+				context.top()->impl->writeMainLine("new [",vat->name, ":0]");
 			} else {
-				context.top()->impl->writeMainLine("new[",vat->name, ":", (args.size() - ov.arguments.size()) + 1, "]");
-				context.top()->impl->writeMainLine("create", vat->name);
+				context.top()->impl->writeMainLine("create [",vat->name, ":", (args.size() - ov.arguments.size()) + 1, "]");
 			}
 		}
 		context.top()->impl->writeMainLine("call", ov.entry);
