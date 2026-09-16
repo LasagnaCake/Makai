@@ -15,4 +15,4 @@ export OS_LIBS :=
 export ADDLIBS := $(call link-shared, $(SHARELIB))
 export DYNLIB_TYPE :=so
 endif
-export LITE_BUILD_REQS := $(call link-static, libcrypto++ SDL2_net libopencl1) $(call link-shared, $(SHARELIB))
+export LITE_BUILD_REQS := $(call link-static, libcrypto++ SDL2_net libOpenCL) $(call link-shared, $(SHARELIB))
