@@ -1,6 +1,6 @@
 link-static = $(foreach lib,$(1), $(shell pkg-config --libs $(lib)))
 
-SHARELIB := libcurl libSDL2 libopencl1
+SHARELIB := libcurl libSDL2 libOpenCL
 
 ifeq ($(os),win)
 link-shared = $(foreach lib,$(1), $(shell pkg-config --libs "$(strip $(lib)).dll"))
