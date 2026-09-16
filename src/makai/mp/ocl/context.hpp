@@ -35,7 +35,7 @@ namespace Makai::MP::OpenCL {
 			using Self::self;
 
 			Context context() const {
-				self().context();
+				return self().context();
 			}
 		};
 
