@@ -176,7 +176,6 @@ Nullable<Kernel::SetError> Kernel::set(String const& name) {
 		case CL_OUT_OF_HOST_MEMORY:			return OCL_PKSE_OUT_OF_HOST_MEMORY;
 	}
 	usize argSize = 0;
-	usize _ = 0;
 	err = clGetKernelInfo(
 		impl(*this).kernel,
 		CL_KERNEL_NUM_ARGS,
