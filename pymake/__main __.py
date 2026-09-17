@@ -24,4 +24,5 @@ if info().name == "win":
 async def main():
 	await vendored.pack_all()
 
-bud(main)
+if __name__ == "__main__":
+	bud(main)
