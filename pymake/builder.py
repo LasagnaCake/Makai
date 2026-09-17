@@ -1,3 +1,4 @@
+import os
 from pymake.os import info
 from pymake.synchro import block_until_done, spawn
 
@@ -24,6 +25,16 @@ class Builder:
 		await spawn(
 			executable=self.cxx,
 			args=[f"{folder}/{file}.cpp", "-o", f"{folder.replace('/', '.')}.{file}.{target.name}.o"] + all_flags,
+			check=True
+		)
+
+	async def build_c(self, target: Target, folder: str, file: str, flags: list[str]|None = None):
+		if flags is None:
+			flags = []
+		all_flags = list[str](target.flags) + list[str](self.flags) + list[str](flags)
+		await spawn(
+			executable=self.cc,
+			args=[f"{os.getcwd()}/{folder}/{file}.c", "-o", f"{folder.replace('/', '.')}.{file}.{target.name}.o"] + all_flags,
 			check=True
 		)
 
@@ -63,12 +74,12 @@ _FLAGS_DEBUG_EVERYTHING: list[str] = [
 class Targets:
 	DEBUG: Builder.Target = Builder.Target(
 		"debug",
-		[]
+		_BASE_FLAGS
 	)
 
 	RELEASE: Builder.Target = Builder.Target(
 		"release",
-		[]
+		_BASE_FLAGS
 	)
 
 class Builders:
