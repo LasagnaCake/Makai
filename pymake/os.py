@@ -10,14 +10,16 @@ class OSInfo:
 		name: str,
 		arch: str,
 		exec_type: str = "",
-		libs: list[str] = list[str]([]),
+		libs: list[str]|None = None,
 		has_dlls: bool = False,
 		shared_lib_name = ".so"
 	) -> None:
+		if libs is None:
+			libs = list[str]()
 		self.name = name
 		self.arch = arch
 		self.exec_type = exec_type
-		self.libs = libs
+		self.libs = list[str](libs)
 		self.has_dlls = has_dlls
 		self.static_lib_name = ".a"
 		self.shared_lib_name = shared_lib_name

@@ -7,6 +7,7 @@ from pymake.mri import MRI_BASE_SCRIPT
 from pymake.os import info
 from pymake.synchro import spawn
 
+__os_info = info()
 
 class Vendor:
 	class Library:
@@ -26,11 +27,11 @@ class Vendor:
 			filename = "lib" + name
 		if name in self.__vendored:
 			return
-		if shared and not info().has_dlls:
+		if shared and not __os_info.has_dlls:
 			return
 		self.__mri_libs[name] = "lib.3p." + name + ".a"
 		self.__vendored[name] = Vendor.Library(
-			"lib/" + path + "/lib/" + info().full_name() + "/" + filename + info().lib_name(shared),
+			"lib/" + path + "/lib/" + __os_info.full_name() + "/" + filename + __os_info.lib_name(shared),
 			"obj/extern/" + name,
 			"obj/extern/" + "lib.3p." + name,
 		)
