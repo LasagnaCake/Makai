@@ -1,5 +1,3 @@
-from asyncio.threads import to_thread
-
 from pymake.os import info
 from pymake.synchro import block_until_done as bud
 from pymake.vendor import Vendor

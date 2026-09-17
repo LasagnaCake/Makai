@@ -1,7 +1,6 @@
 import os
 import re
 import subprocess as sp
-from asyncio.threads import to_thread as async_run
 
 from pymake import synchro
 from pymake.mri import MRI_BASE_SCRIPT
