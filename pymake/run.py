@@ -19,8 +19,8 @@ if info().name == "win":
 	vendored.vendor("ocl-util", "OpenCL", "libOpenCLUtils", True)
 	vendored.vendor("ocl-util-cpp", "OpenCL", "libOpenCLUtilsCpp", True)
 
-async def main():
+async def pymake_main():
 	await vendored.pack_all()
 
-if __name__ == "__main__":
-	bud(main)
+def run():
+	bud(pymake_main)
