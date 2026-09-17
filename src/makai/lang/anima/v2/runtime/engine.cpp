@@ -353,76 +353,65 @@ Engine::ForeignCallResult Engine::callForeign(
 	auto const fname = program.strings[fn];
 	if (!context.art.ffilibs.contains(lname))
 		return ForeignCallError::AV2_RE_FCE_LIBRARY_NOT_LOADED;
-	auto const fcall = context.art.ffilibs[lname]->function<void()>(fname);
+	auto const fcall = reinterpret_cast<ref<void(...)>>(context.art.ffilibs[lname]->variadicFunctionRef<void>(fname));
 	if (!fcall)
 		return ForeignCallError::AV2_RE_FCE_FUNCTION_DOES_NOT_EXIST;
 	usize argi = argc;
 	List<Cell<String>> tempStore;
-	Makai::Defer _{
-		[&] {
-			if (!argi) return;
-			while (argi != argc) {
-				Makai::ABI::Stack::pop<bool>();
-				++argi;
-			}
-		}
-	};
+	Makai::ABI::Dyn::Arguments callArgs;
 	while (argi--) {
 		auto const arg = context.pop();
 		if (auto const argt = arg->getOriginalType()) {
 			if (argt->basic)
 				switch (*argt->basic) {
-					case Core::BasicType::AV2_BT_BOOL:		Makai::ABI::Stack::push(arg->toValue<bool>());					break;
-					case Core::BasicType::AV2_BT_INT8:		Makai::ABI::Stack::push(arg->toValue<int8>());					break;
-					case Core::BasicType::AV2_BT_UINT8:		Makai::ABI::Stack::push(arg->toValue<uint8>());					break;
-					case Core::BasicType::AV2_BT_INT16:		Makai::ABI::Stack::push(arg->toValue<int16>());					break;
-					case Core::BasicType::AV2_BT_UINT16:	Makai::ABI::Stack::push(arg->toValue<uint16>());				break;
-					case Core::BasicType::AV2_BT_INT32:		Makai::ABI::Stack::push(arg->toValue<int32>());					break;
+					case Core::BasicType::AV2_BT_BOOL:		callArgs.add(arg->toValue<bool>());					break;
+					case Core::BasicType::AV2_BT_INT8:		callArgs.add(arg->toValue<int8>());					break;
+					case Core::BasicType::AV2_BT_UINT8:		callArgs.add(arg->toValue<uint8>());				break;
+					case Core::BasicType::AV2_BT_INT16:		callArgs.add(arg->toValue<int16>());				break;
+					case Core::BasicType::AV2_BT_UINT16:	callArgs.add(arg->toValue<uint16>());				break;
+					case Core::BasicType::AV2_BT_INT32:		callArgs.add(arg->toValue<int32>());				break;
 					case Core::BasicType::AV2_BT_CHAR:
-					case Core::BasicType::AV2_BT_UINT32:	Makai::ABI::Stack::push(arg->toValue<uint32>());				break;
-					case Core::BasicType::AV2_BT_INT64:		Makai::ABI::Stack::push(arg->toValue<int64>());					break;
-					case Core::BasicType::AV2_BT_UINT64:	Makai::ABI::Stack::push(arg->toValue<uint64>());				break;
-					case Core::BasicType::AV2_BT_REAL32:	Makai::ABI::Stack::push(arg->toValue<float32>());				break;
-					case Core::BasicType::AV2_BT_REAL64:	Makai::ABI::Stack::push(arg->toValue<float64>());				break;
-					case Core::BasicType::AV2_BT_REAL128:	Makai::ABI::Stack::push(arg->toValue<float128>());				break;
-					case Core::BasicType::AV2_BT_VECTOR:	Makai::ABI::Stack::push((ref<Makai::Vector4>)arg->data());		break;
-					case Core::BasicType::AV2_BT_MATRIX:	Makai::ABI::Stack::push((ref<Makai::Matrix4x4>)arg->data());	break;
-					case Core::BasicType::AV2_BT_ANY:		Makai::ABI::Stack::push(arg->data());							break;
+					case Core::BasicType::AV2_BT_UINT32:	callArgs.add(arg->toValue<uint32>());				break;
+					case Core::BasicType::AV2_BT_INT64:		callArgs.add(arg->toValue<int64>());				break;
+					case Core::BasicType::AV2_BT_UINT64:	callArgs.add(arg->toValue<uint64>());				break;
+					case Core::BasicType::AV2_BT_REAL32:	callArgs.add(arg->toValue<float32>());				break;
+					case Core::BasicType::AV2_BT_REAL64:	callArgs.add(arg->toValue<float64>());				break;
+					case Core::BasicType::AV2_BT_REAL128:	callArgs.add(arg->toValue<float128>());				break;
+					case Core::BasicType::AV2_BT_VECTOR:	callArgs.add((ref<Makai::Vector4>)arg->data());		break;
+					case Core::BasicType::AV2_BT_MATRIX:	callArgs.add((ref<Makai::Matrix4x4>)arg->data());	break;
+					case Core::BasicType::AV2_BT_ANY:		callArgs.add(arg->data());							break;
 					case Core::BasicType::AV2_BT_STRING: {
 						tempStore.pushBack(Cell<String>::create(arg->toValue<String>()));
-						Makai::ABI::Stack::push(tempStore.back()->cstr());
+						callArgs.add(tempStore.back()->cstr());
 					} break;
-					case Core::BasicType::AV2_BT_BYTES:		Makai::ABI::Stack::push((ref<byte>)arg->data()); break;
+					case Core::BasicType::AV2_BT_BYTES: callArgs.add((ref<byte>)arg->data()); break;
 					default: return ForeignCallError::AV2_RE_FCE_INVALID_ARG_TYPE;
 				}
 			else if (argt->flags.isValueType)
-				Makai::ABI::Stack::push(arg->data());
+				callArgs.add(arg->data());
 			else return ForeignCallError::AV2_RE_FCE_INVALID_ARG_TYPE;
 		}
 	}
-	fcall();
-	Object::Storage result;
 	switch (ret) {
-		case Core::BasicType::AV2_BT_BOOL:		result = context.newValue(Makai::ABI::Stack::pop<bool>());						break;
-		case Core::BasicType::AV2_BT_INT8:		result = context.newValue(Makai::ABI::Stack::pop<int8>());						break;
-		case Core::BasicType::AV2_BT_UINT8:		result = context.newValue(Makai::ABI::Stack::pop<uint8>());						break;
-		case Core::BasicType::AV2_BT_INT16:		result = context.newValue(Makai::ABI::Stack::pop<int16>());						break;
-		case Core::BasicType::AV2_BT_UINT16:	result = context.newValue(Makai::ABI::Stack::pop<uint16>());					break;
-		case Core::BasicType::AV2_BT_INT32:		result = context.newValue(Makai::ABI::Stack::pop<int32>());						break;
+		case Core::BasicType::AV2_BT_BOOL:		return context.newValue(Makai::ABI::Dyn::invoke<bool>(fcall, callArgs));
+		case Core::BasicType::AV2_BT_INT8:		return context.newValue(Makai::ABI::Dyn::invoke<int8>(fcall, callArgs));
+		case Core::BasicType::AV2_BT_UINT8:		return context.newValue(Makai::ABI::Dyn::invoke<uint8>(fcall, callArgs));
+		case Core::BasicType::AV2_BT_INT16:		return context.newValue(Makai::ABI::Dyn::invoke<int16>(fcall, callArgs));
+		case Core::BasicType::AV2_BT_UINT16:	return context.newValue(Makai::ABI::Dyn::invoke<uint16>(fcall, callArgs));
+		case Core::BasicType::AV2_BT_INT32:		return context.newValue(Makai::ABI::Dyn::invoke<int32>(fcall, callArgs));
 		case Core::BasicType::AV2_BT_CHAR:
-		case Core::BasicType::AV2_BT_UINT32:	result = context.newValue(Makai::ABI::Stack::pop<uint32>());					break;
-		case Core::BasicType::AV2_BT_INT64:		result = context.newValue(Makai::ABI::Stack::pop<int64>());						break;
-		case Core::BasicType::AV2_BT_UINT64:	result = context.newValue(Makai::ABI::Stack::pop<uint64>());					break;
-		case Core::BasicType::AV2_BT_REAL32:	result = context.newValue(Makai::ABI::Stack::pop<float32>());					break;
-		case Core::BasicType::AV2_BT_REAL64:	result = context.newValue(Makai::ABI::Stack::pop<float64>());					break;
-		case Core::BasicType::AV2_BT_REAL128:	result = context.newValue(Makai::ABI::Stack::pop<float128>());					break;
-		case Core::BasicType::AV2_BT_VECTOR:	result = context.newValue(*Makai::ABI::Stack::pop<ref<Makai::Vector4>>());		break;
-		case Core::BasicType::AV2_BT_MATRIX:	result = context.newValue(*Makai::ABI::Stack::pop<ref<Makai::Matrix4x4>>());	break;
-		case Core::BasicType::AV2_BT_STRING:	result = context.newValue(String(Makai::ABI::Stack::pop<cstring>()));			break;
-		case Core::BasicType::AV2_BT_VOID:																						break;
+		case Core::BasicType::AV2_BT_UINT32:	return context.newValue(Makai::ABI::Dyn::invoke<uint32>(fcall, callArgs));
+		case Core::BasicType::AV2_BT_INT64:		return context.newValue(Makai::ABI::Dyn::invoke<int64>(fcall, callArgs));
+		case Core::BasicType::AV2_BT_UINT64:	return context.newValue(Makai::ABI::Dyn::invoke<uint64>(fcall, callArgs));
+		case Core::BasicType::AV2_BT_REAL32:	return context.newValue(Makai::ABI::Dyn::invoke<float32>(fcall, callArgs));
+		case Core::BasicType::AV2_BT_REAL64:	return context.newValue(Makai::ABI::Dyn::invoke<float64>(fcall, callArgs));
+		case Core::BasicType::AV2_BT_REAL128:	return context.newValue(Makai::ABI::Dyn::invoke<float128>(fcall, callArgs));
+		case Core::BasicType::AV2_BT_VECTOR:	return context.newValue(*Makai::ABI::Dyn::invoke<ref<Makai::Vector4>>(fcall, callArgs));
+		case Core::BasicType::AV2_BT_MATRIX:	return context.newValue(*Makai::ABI::Dyn::invoke<ref<Makai::Matrix4x4>>(fcall, callArgs));
+		case Core::BasicType::AV2_BT_STRING:	return context.newValue(String(Makai::ABI::Dyn::invoke<cstring>(fcall, callArgs)));
+		case Core::BasicType::AV2_BT_VOID:		Makai::ABI::Dyn::invoke<void>(fcall, callArgs); return Object::Storage();
 		default: return ForeignCallError::AV2_RE_FCE_INVALID_RETURN_TYPE;
 	}
-	return result;
 }
 
 void Engine::v2Call() {
@@ -1681,6 +1670,9 @@ void Engine::v2ScopeBind() {
 	auto const count = Makai::Cast::bit<uint64>(current);
 	auto& src = context.globalValueStack;
 	auto& dst = context.locals();
+	MAKAILIB_DEBUGLN_FULL("Count: ", count);
+	MAKAILIB_DEBUGLN_FULL("Source Size: ", src.size());
+	MAKAILIB_DEBUGLN_FULL("Destination Size: ", dst.size());
 	if ((bind.src + count) > src.size())
 		return crash(outOfRangeError("Requested global stack range falls outside its size!"));
 	if ((bind.dst + count) > dst.size())

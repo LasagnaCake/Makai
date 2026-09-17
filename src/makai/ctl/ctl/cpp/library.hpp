@@ -3,7 +3,7 @@
 
 #include "../namespace.hpp"
 #include "../container/strings/strings.hpp"
-#include "../container/pointer/pointer.hpp"
+#include "../container/pointer/atomiccell.hpp"
 #include "../container/error.hpp"
 #include "../container/nullable.hpp"
 #include "../container/functor.hpp"
@@ -72,12 +72,12 @@ namespace CPP {
 
 		private:
 			friend struct Library;
-			Function(ref<TReturn(TArgs...)> const func, Instance<Module> const& lib, String const& name):
+			Function(ref<TReturn(TArgs...)> const func, AtomicCell<Module> const& lib, String const& name):
 				func(*func),
 				lib(lib),
 				name(name) {}
 			::CTL::Functor<TReturn(TArgs...)>	func;
-			Instance<Module>					lib;
+			AtomicCell<Module>					lib;
 			String								name;
 		};
 
@@ -85,8 +85,8 @@ namespace CPP {
 
 		Library(String const& path)		{open(path);				}
 
-		void open(String const& path)	{lib = new Module(path);	}
-		void close()					{lib.unbind();				}
+		void open(String const& path)	{lib = lib.create(path);	}
+		void close()					{lib = null;				}
 
 		template <Type::Function T>
 		Function<T> function(String const& name) {
@@ -96,8 +96,20 @@ namespace CPP {
 			return {*f, lib, name};
 		}
 
+		template <Type::Function T>
+		ref<T> functionRef(String const& name) {
+			if (!lib) return {};
+			return (ref<T>)lib->function(name);
+		}
+
+		template <class T>
+		ref<T(...)> variadicFunctionRef(String const& name) {
+			if (!lib) return {};
+			return (ref<T(...)>)lib->function(name);
+		}
+
 	private:
-		Instance<Module> lib;
+		AtomicCell<Module> lib;
 	};
 }
 

@@ -1,7 +1,4 @@
 class OSDependentValue[T]:
-    windows: T
-    linux: T
-
     def __init__(self, windows: T, linux: T) -> None:
         self.windows = windows
         self.linux = linux

@@ -2,5 +2,6 @@
 #define CTL_ABI_HPP
 
 #include "stack.hpp"
+#include "dinvoke.hpp"
 
 #endif
