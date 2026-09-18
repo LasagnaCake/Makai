@@ -53,6 +53,7 @@ class Builder:
         procs: Group = Group()
         for [dir, folders, files] in os.walk(folder if not abspath else f"{os.getcwd()}/{folder}"):
             for sub in folders:
+                self.clean(target, f"{dir}/{sub}", abspath)
                 procs.group.extend(self.compile_folder(target, f"{dir}/{sub}", flags, abspath))
             for file in files:
                 procs.add(self.compile(target, dir, file, flags))
@@ -115,14 +116,14 @@ class Targets:
 class Toolchain:
     @final
     class C:
-        GCC: Builder = Builder("gcc", flags = _BASE_FLAGS)
-        CLANG: Builder = Builder("clang", flags = _BASE_FLAGS)
-        MINGW_GCC: Builder = Builder("mingw32-gcc", flags = _BASE_FLAGS)
-        MINGW_LINUX_GCC: Builder = Builder("x86_64-w64-mingw32-gcc", flags = _BASE_FLAGS)
+        GCC: Builder = Builder("c", "gcc", flags = _BASE_FLAGS)
+        CLANG: Builder = Builder("c", "clang", flags = _BASE_FLAGS)
+        MINGW_GCC: Builder = Builder("c", "mingw32-gcc", flags = _BASE_FLAGS)
+        MINGW_LINUX_GCC: Builder = Builder("c", "x86_64-w64-mingw32-gcc", flags = _BASE_FLAGS)
 
     @final
     class CPP:
-        GCC: Builder = Builder("g++", flags = _FLAGS_GCC + _BASE_FLAGS + _BASE_FLAGS_CPP)
-        CLANG: Builder = Builder("clang++", flags = _FLAGS_CLANG + _BASE_FLAGS + _BASE_FLAGS_CPP)
-        MINGW_GCC: Builder = Builder("mingw32-g++", flags = _FLAGS_GCC + _BASE_FLAGS + _BASE_FLAGS_CPP)
-        MINGW_LINUX_GCC: Builder = Builder("x86_64-w64-mingw32-g++", flags = _FLAGS_GCC + _BASE_FLAGS + _BASE_FLAGS_CPP)
+        GCC: Builder = Builder("cpp", "g++", flags = _FLAGS_GCC + _BASE_FLAGS + _BASE_FLAGS_CPP)
+        CLANG: Builder = Builder("cpp", "clang++", flags = _FLAGS_CLANG + _BASE_FLAGS + _BASE_FLAGS_CPP)
+        MINGW_GCC: Builder = Builder("cpp", "mingw32-g++", flags = _FLAGS_GCC + _BASE_FLAGS + _BASE_FLAGS_CPP)
+        MINGW_LINUX_GCC: Builder = Builder("cpp", "x86_64-w64-mingw32-g++", flags = _FLAGS_GCC + _BASE_FLAGS + _BASE_FLAGS_CPP)
