@@ -1,6 +1,10 @@
+import asyncio
+import os
 from collections.abc import Callable
 from types import CoroutineType
 from typing import ClassVar, Generic, Self, TypeVar
+
+from pymake.synchro import Group
 
 TYield = TypeVar("TYield")
 TWhoKnows = TypeVar("TWhoKnows")
@@ -32,6 +36,7 @@ class Subtask(Generic[TYield, TWhoKnows, TReturn]):
                 await task
             except RuntimeError:
                 continue
+        await asyncio.sleep(1)
         Subtask._queue.clear()
 
 def subtask[TYield, TWhoKnows, TReturn](fn: Subtask[TYield, TWhoKnows, TReturn].Executor):
@@ -39,6 +44,6 @@ def subtask[TYield, TWhoKnows, TReturn](fn: Subtask[TYield, TWhoKnows, TReturn].
 
 def checkpoint[TYield, TWhoKnows, TReturn](fn: Subtask[TYield, TWhoKnows, TReturn].Executor):
     async def new_fn(*args, **kwargs):
-        await Subtask[TYield, TWhoKnows, TReturn].sync()
+        await Subtask.sync()
         await fn(*args, **kwargs)
     return new_fn

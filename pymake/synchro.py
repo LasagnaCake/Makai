@@ -1,4 +1,5 @@
 import asyncio
+from os import waitpid
 import subprocess as sp
 from asyncio.threads import to_thread
 from collections.abc import Callable, Iterator
@@ -21,12 +22,19 @@ class Buddy[Ax, Bx, Rx]:
 def buddy[A, B, R](fn: Callable[..., CoroutineType[A, B, R]]) -> Callable[..., R]:
     return Buddy[A, B, R](fn)
 
+async def wrap(*args, **kwargs) -> sp.Popen:
+    def waiter(proc: sp.Popen):
+        proc.wait()
+        return proc
+    px = await to_thread(sp.Popen, *args, **kwargs)
+    return await to_thread(waiter, px)
+
 async def spawn(*args, **kwargs) -> sp.Popen:
-    return await to_thread(sp.Popen, *args, **kwargs, shell=False)
+    return await wrap(*args, **kwargs, shell=False)
 
 async def pipe_into(from_proc: list[str], to_proc: list[str]) -> sp.Popen:
-    pin = await to_thread(sp.Popen, from_proc, shell=False, stdout=sp.PIPE)
-    return await to_thread(sp.Popen, to_proc, shell=False, stdin=pin.stdout)
+    pin = await wrap(from_proc, shell=False, stdout=sp.PIPE)
+    return await wrap(to_proc, shell=False, stdin=pin.stdout)
 
 class Group:
     in_parallel = True
@@ -50,7 +58,7 @@ class Group:
         return self
 
     def spawn(self, *args, **kwargs) -> None:
-        self.add(to_thread(sp.Popen, *args, **kwargs, shell=False))
+        self.add(wrap(*args, **kwargs, shell=False))
 
     def __iter__(self) -> Iterator[Process]:
         return self.iterate()

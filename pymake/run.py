@@ -42,22 +42,36 @@ vendored.vendor_header_only("xml2json")
 
 @subtask
 async def vendor_in_libraries():
-	await (await vendored.clean_cache()).pack_all()
-	(await pipe_into(["echo", f"'{vendored.mri_script()}'"], ["ar", "-M"]))
+	await vendored.clean_cache()
+	await vendored.pack_all()
+	await pipe_into(["echo", f"'{vendored.mri_script()}'"], ["ar", "-M"])
 	await spawn(["ranlib", "obj/extern/extern.3p.a"])
 
 @checkpoint
-async def prepare_output():
-	await spawn(["rm", "-rf", "output/*"])
+async def begin():
+	await spawn(["rm", "-rf", f"{os.getcwd()}/output/*"])
+	gp = Group()
+	gp.spawn(["mkdir", "-p", f"{os.getcwd()}/output/lib"])
+	gp.spawn(["mkdir", "-p", f"{os.getcwd()}/output/include"])
+	gp.spawn(["mkdir", "-p", f"{os.getcwd()}/obj/extern"])
+	await gp.await_all()
 
 @checkpoint
+async def next_step():
+	pass
+
+@checkpoint
+async def end():
+	pass
+
+@subtask
 async def pack_library(target: str, lite: bool):
-	objects: list[str] = [f"obj/{target}/{file}f" for file in os.listdir(f"obj/{target}") if ".o" in file]
-	await spawn(["ar", "rcvs", f"obj/{target}/libmakai.a"] + objects)
+	objects: list[str] = [f"obj/{target}/{file}" for file in os.listdir(f"{os.getcwd()}/obj/{target}") if f".{target}.o" in file]
+	await spawn(["ar", "rcvs", f"{os.getcwd()}/obj/libmakai.a"] + objects)
 	if target != "release":
-		await spawn(["ar", "rcvs", f"obj/{target}/libmakai.{target}.a"] + objects)
+		await spawn(["ar", "rcvs", f"{os.getcwd()}/obj/libmakai.{target}.a"] + objects)
 	else:
-		await spawn(["ar", "rcvs", f"obj/{target}/libmakai.a"] + objects)
+		await spawn(["ar", "rcvs", f"{os.getcwd()}/obj/libmakai.a"] + objects)
 	if not lite:
 		await vendored.finalize("makai", target if target != "release" else None)
 
@@ -86,7 +100,7 @@ async def compile_all(compiler: str, target: str, optimize: str):
 		tc_cpp.compile_folder("makai/net", flags.clone().add(vendored.includes("curl", "sdl-net"))),
 		tc_cpp.compile_folder("makai/parser", flags.clone()),
 		tc_cpp.compile_folder("makai/regex", flags.clone().add(vendored.includes("pcre2-8", "pcre2-16", "pcre2-32", "pcre2-posix"))),
-		tc_cpp.compile_folder("makai/tool", flags.clone().add(vendored.includes("cryptopp", "cppcodec"))),
+		tc_cpp.compile_folder("makai/tool", flags.clone().add(vendored.includes("cryptopp"))),
 		tc_cpp.compile_folder("makai/video", flags.clone().add(ocl_include))
 	).await_all()
 	await tc_cpp.copy_objects().await_all()
@@ -95,32 +109,48 @@ async def compile_all(compiler: str, target: str, optimize: str):
 async def copy_libraries():
 	pass
 
+@checkpoint
+async def do_jack_shit():
+	pass
+
 async def pymake_main():
 	parser = cli.ArgumentParser(
 		prog="pymake"
 	)
-	parser.add_argument("exec")
-	parser.add_argument("target")
+	parser.add_argument("_")
+	parser.add_argument("-t", "--task", action="extend", dest="tasks", nargs="+", choices=["vendor", "devmode", "debug", "release", "tools"])
 	parser.add_argument("-o", default="2", choices=["g", "s", "0", "1", "2", "3"], dest="optimize")
 	parser.add_argument("-mm", "--math-mode", default="fast", choices=["fast", "normal", "safe"], dest="math")
 	parser.add_argument("-DT", "--debug-tooling", action="store_true", dest="debug-tools")
-	parser.add_argument("-s", "--subsystems", action="extend", dest="subsystems", default=[])
+	parser.add_argument("-s", "--sub", "--subsystem", action="extend", dest="subsystems", default=[])
 	parser.add_argument("-L", "--lite", dest="lite", action="store_true", default=False)
 	parser.add_argument("-tc", "--toolchain", dest="compiler", default="gcc", choices=["gcc", "clang", "mingw-win", "mingw-linux"])
-	parser.add_argument("-a", "--os", dest="os", choices=["win", "linux"], default="win")
+	parser.add_argument("-x", "--os", dest="os", choices=["win", "linux"], default="win")
+	parser.add_argument("-S", "--sync", action="store_true", default=False, dest="sync")
 	cfg = parser.parse_args(argv)
+	Group.in_parallel = not cfg.sync
 	osinfo.target_os = cfg.os
 	print(cfg)
-	await prepare_output()
-	vendor_in_libraries()
-	if cfg.target == "all":
-		compile_all(cfg.compiler, "devmode", "g")
-		compile_all(cfg.compiler, "debug", "g")
-		compile_all(cfg.compiler, "release", cfg.optimize)
-	elif cfg.target == "release":
-		compile_all(cfg.compiler, "release", cfg.optimize)
-	else:
-		compile_all(cfg.compiler, cfg.target, cfg.optimize)
-	await pack_library(cfg.target, cfg.lite)
+	await begin()
+	for task in cfg.tasks:
+		if task == "vendor":
+			vendor_in_libraries()
+		elif task == "all":
+			compile_all(cfg.compiler, "devmode", "g")
+			compile_all(cfg.compiler, "debug", "g")
+			compile_all(cfg.compiler, "release", cfg.optimize)
+		elif task == "release":
+			compile_all(cfg.compiler, "release", cfg.optimize)
+		else:
+			compile_all(cfg.compiler, task, cfg.optimize)
+	await next_step()
+	for task in cfg.tasks:
+		if task == "all":
+			pack_library("devmode", cfg.lite)
+			pack_library("debug", cfg.lite)
+			pack_library("release", cfg.lite)
+		elif task != "vendor":
+			pack_library(task, cfg.lite)
+	await end()
 def run():
 	asyncio.run(pymake_main())

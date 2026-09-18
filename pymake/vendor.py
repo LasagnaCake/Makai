@@ -90,6 +90,9 @@ class Vendor:
         await spawn(
             args=["rm", "-rf", "obj/extern/"]
         )
+        await spawn(
+            args=["mkdir", "-p", "obj/extern/"]
+        )
         return self
 
     async def pack(self, name: str):

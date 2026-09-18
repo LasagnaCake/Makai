@@ -34,8 +34,7 @@ class Builder:
             flags = Flags()
         all_flags = concat(target.flags, target.flags, self.flags, flags)
         return await spawn(
-            executable=self.compiler,
-            args=[f"{folder}/{file}.{self.file_type}", "-o", f"{folder.replace('/', '.')}.{file}.{target.name}.o"] + all_flags.unpack(),
+            args=[self.compiler, f"{folder}/{file}.{self.file_type}", "-o", f"{folder.replace('/', '.')}.{file}.{target.name}.o"] + all_flags.unpack(),
             check=True
         )
 
@@ -43,9 +42,13 @@ class Builder:
         if flags is None:
             flags = Flags()
         all_flags = concat(target.flags, target.flags, self.flags, flags)
+        base_decl = [self.compiler, f"{os.getcwd()}/{folder}/{file}.cpp", "-o", f"{os.getcwd()}/{folder.replace('/', '.')}.{file}.{target.name}{info().exec_type}"]
+        await spawn(
+            args=["echo"] + base_decl + all_flags.unpack(),
+            check=True
+        )
         return await spawn(
-            executable=self.compiler,
-            args=[f"{folder}/{file}.cpp", "-o", f"{folder.replace('/', '.')}.{file}.{target.name}{info().exec_type}"] + all_flags.unpack(),
+            args=base_decl + all_flags.unpack(),
             check=True
         )
 
@@ -61,7 +64,7 @@ class Builder:
 
     def clean(self, target: Target, folder: str, abspath: bool = False):
         for file in os.listdir(folder if not abspath else f"{os.getcwd()}/{folder}"):
-            if re.match(f".*\\.{target.name}\\.o", file):
+            if f".{target.name}.o" in file:
                 os.remove(file)
 
 _BASE_FLAGS: Flags = Flags(
@@ -176,8 +179,9 @@ class Toolchain:
 
     async def clean_cache(self):
         await spawn(
-            args=["rm", "-rf", f"obj/{self.target.name}/"]
+            args=["rm", "-rf", f"{os.getcwd()}/obj/{self.target.name}/*"]
         )
+        await spawn(["mkdir", "-p", f"{os.getcwd()}/obj/{self.target.name}"])
         return self
 
     @staticmethod
@@ -188,7 +192,7 @@ class Toolchain:
                 ops.join_with(Toolchain.flat_copy(f"{dir}/{folder}", to_dir))
             for file in files:
                 ops.spawn(
-                    args=["cp", f"{to_dir}", f"{top}/{file}"]
+                    args=["cp", f"{os.getcwd()}/{to_dir}", f"{os.getcwd()}/{top}/{file}"]
                 )
         return ops
 
@@ -201,11 +205,11 @@ class Toolchain:
             for file in files:
                 if ".hpp" not in file:
                     continue
-                ops.spawn(args=["cp", f"output/include/{dir}", f"{top}/{file}"])
+                ops.spawn(args=["cp", f"{os.getcwd()}/{top}/{file}", f"{os.getcwd()}/output/include/{dir}"])
         return ops
 
     def copy_objects(self) -> Group:
-        return Toolchain.flat_copy("src", self.target.name)
+        return Toolchain.flat_copy("src", f"obj/{self.target.name}")
 
     @staticmethod
     def get_for(lang: str, compiler: str, target: str):
