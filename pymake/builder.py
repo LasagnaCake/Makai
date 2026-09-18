@@ -104,12 +104,12 @@ _FLAGS_DEBUG_EVERYTHING: list[str] = [
 class Targets:
     DEBUG: Builder.Target = Builder.Target(
         "debug",
-        []
+        _FLAGS_DEBUG
     )
 
     RELEASE: Builder.Target = Builder.Target(
         "release",
-        []
+        _FLAGS_OPTIMIZE
     )
 
 @final
