@@ -1,4 +1,5 @@
 import os
+import re
 from typing import final
 
 from pymake.os import info
@@ -8,6 +9,7 @@ __os_info = info()
 
 class Builder:
     compiler: str
+    file_type: str
     linker: str
     flags: list[str]
 
@@ -19,12 +21,13 @@ class Builder:
             self.name = name
             self.flags = flags
 
-    def __init__(self, compiler: str, linker: str = "ld", flags: list[str]|None = None):
+    def __init__(self, file_type: str, compiler: str, linker: str = "ld", flags: list[str]|None = None):
         if flags is None:
             flags = []
         self.compiler = compiler
         self.linker = linker
         self.flags = list[str](flags)
+        self.file_type = file_type
 
     async def compile(self, target: Target, folder: str, file: str, flags: list[str]|None = None):
         if flags is None:
@@ -32,7 +35,7 @@ class Builder:
         all_flags = list[str](target.flags) + list[str](self.flags) + list[str](flags)
         return await spawn(
             executable=self.compiler,
-            args=[f"{folder}/{file}.cpp", "-o", f"{folder.replace('/', '.')}.{file}.{target.name}.o"] + all_flags,
+            args=[f"{folder}/{file}.{self.file_type}", "-o", f"{folder.replace('/', '.')}.{file}.{target.name}.o"] + all_flags,
             check=True
         )
 
@@ -54,6 +57,11 @@ class Builder:
             for file in files:
                 procs.add(self.compile(target, dir, file, flags))
         return procs
+
+    def clean(self, target: Target, folder: str, abspath: bool = False):
+        for file in os.listdir(folder if not abspath else f"{os.getcwd()}/{folder}"):
+            if re.match(f".*\\.{target.name}\\.o", file):
+                os.remove(file)
 
 _BASE_FLAGS: list[str] = [
     "-m64",
