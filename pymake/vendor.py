@@ -3,9 +3,9 @@ import re
 import subprocess as sp
 
 from pymake import synchro
-from pymake.mri import MRI_BASE_SCRIPT
 from pymake.os import info
-from pymake.synchro import spawn
+from pymake.synchro import pipe_into, spawn
+
 
 class Vendor:
     class Library:
@@ -52,17 +52,20 @@ class Vendor:
         return self.__vendored[name]
 
     def mri_script(self) -> str:
-        return re.sub(
-            "\\$LIBRARIES",
-            MRI_BASE_SCRIPT,
-            "\n".join(
-                [
-                    "addlib obj/extern/" + self.mri_lib(x)
-                    for x in self.__vendored
-                    if self.__vendored[x].source is not None
-                ]
-            )
-        )
+        return f"""
+            create obj/extern/extern.3p.a
+            {
+                "\n".join(
+                    [
+                        "addlib " + self.mri_lib(x)
+                        for x in self.__vendored
+                        if self.__vendored[x].source is not None
+                    ]
+                )
+            }
+            save
+            end
+        """.replace("    ", "")
 
     def mri_lib(self, name: str) -> str:
         return self.__vendored[name].mri_name + ".a"
@@ -124,4 +127,4 @@ class Vendor:
             save
             end
         """
-        await spawn(["ar", "-M", MRI, "\n\n\n"])
+        await pipe_into(["echo", f"'{MRI}'"], ["ar", "-M"])

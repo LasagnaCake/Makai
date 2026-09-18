@@ -5,6 +5,7 @@ from collections.abc import Callable, Iterator
 from types import CoroutineType
 from typing import Any, Self, cast
 
+
 def block_until_done[A, B, R](fn: CoroutineType[A, B, R]) -> R:
 	return asyncio.run(fn)
 
@@ -20,13 +21,17 @@ class Buddy[Ax, Bx, Rx]:
 def buddy[A, B, R](fn: Callable[..., CoroutineType[A, B, R]]) -> Callable[..., R]:
     return Buddy[A, B, R](fn)
 
-async def spawn(*args, **kwargs) -> sp.CompletedProcess[str]:
-    return await to_thread(sp.run, *args, **kwargs, shell=False, check=True)
+async def spawn(*args, **kwargs) -> sp.Popen:
+    return await to_thread(sp.Popen, *args, **kwargs, shell=False)
+
+async def pipe_into(from_proc: list[str], to_proc: list[str]) -> sp.Popen:
+    pin = await to_thread(sp.Popen, from_proc, shell=False, stdout=sp.PIPE)
+    return await to_thread(sp.Popen, to_proc, shell=False, stdin=pin.stdout)
 
 class Group:
     in_parallel = True
 
-    Process = CoroutineType[Any, Any, sp.CompletedProcess[str]]
+    Process = CoroutineType[Any, Any, sp.Popen]
     Processes = list[Process]
 
     group: Processes
@@ -45,7 +50,7 @@ class Group:
         return self
 
     def spawn(self, *args, **kwargs) -> None:
-        self.add(to_thread(sp.run, *args, **kwargs))
+        self.add(to_thread(sp.Popen, *args, **kwargs, shell=False))
 
     def __iter__(self) -> Iterator[Process]:
         return self.iterate()
@@ -60,7 +65,6 @@ class Group:
             except RuntimeError:
                 continue
 
-@staticmethod
 def join_groups(*groups: Group) -> Group:
     procs = Group.Processes()
     for group in groups:

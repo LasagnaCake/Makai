@@ -8,7 +8,7 @@ from pymake.builder import Toolchain
 from pymake.flags import Flags
 from pymake.os import info
 from pymake.subtask import checkpoint, subtask
-from pymake.synchro import Group, join_groups, spawn
+from pymake.synchro import Group, join_groups, pipe_into, spawn
 from pymake.vendor import Vendor
 
 vendored = Vendor()
@@ -43,7 +43,7 @@ vendored.vendor_header_only("xml2json")
 @subtask
 async def vendor_in_libraries():
 	await (await vendored.clean_cache()).pack_all()
-	await spawn(["ar", "-M", vendored.mri_script(), "\n\n\n"])
+	(await pipe_into(["echo", f"'{vendored.mri_script()}'"], ["ar", "-M"]))
 	await spawn(["ranlib", "obj/extern/extern.3p.a"])
 
 @checkpoint
