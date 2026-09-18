@@ -1,9 +1,8 @@
 import subprocess as sp
 from asyncio.threads import to_thread
+from collections.abc import Callable, Iterator
 from types import CoroutineType
-from typing import Any, Callable, Generic, Never, TypeVar, cast
-
-from typing_extensions import Iterator
+from typing import Any, cast
 
 __async_allowed = True
 
