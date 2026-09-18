@@ -7,12 +7,12 @@ from pymake.mri import MRI_BASE_SCRIPT
 from pymake.os import info
 from pymake.synchro import spawn
 
-__os_info = info()
-
 class Vendor:
     class Library:
-        def __init__(self, source: str, unpack_to: str, mri_name: str):
+        def __init__(self, source: str|None, headers: str, unpack_to: str, mri_name: str):
             self.source = source
+            self.headers = headers
+            self.headers = ""
             self.unpack_to = unpack_to
             self.mri_name = mri_name
 
@@ -27,23 +27,39 @@ class Vendor:
             filename = "lib" + name
         if name in self.__vendored:
             return
-        if shared and not __os_info.has_dlls:
+        if shared and not info().has_dlls:
             return
         self.__mri_libs[name] = "lib.3p." + name + ".a"
         self.__vendored[name] = Vendor.Library(
-            "lib/" + path + "/lib/" + __os_info.full_name() + "/" + filename + __os_info.lib_name(shared),
+            "lib/" + path + "/lib/" + info().full_name() + "/" + filename + info().lib_name(shared),
+            "lib/" + path + "/include/",
             "obj/extern/" + name,
             "obj/extern/" + "lib.3p." + name,
         )
+        return self.__vendored[name]
+
+    def vendor_header_only(self, name: str, path: str = ""):
+        if path == "":
+            path = name + "/include/"
+        if name in self.__vendored:
+            return
+        self.__vendored[name] = Vendor.Library(
+            None,
+            "lib/" + path,
+            "",
+            "",
+        )
+        return self.__vendored[name]
 
     def mri_script(self) -> str:
         return re.sub(
             "\\$LIBRARIES",
             MRI_BASE_SCRIPT,
-            "".join(
+            "\n".join(
                 [
                     "addlib obj/extern/" + self.mri_lib(x)
                     for x in self.__vendored
+                    if self.__vendored[x].source is not None
                 ]
             )
         )
@@ -51,43 +67,61 @@ class Vendor:
     def mri_lib(self, name: str) -> str:
         return self.__vendored[name].mri_name + ".a"
 
-    def keys(self) -> list[str]:
+    def all_libraries(self) -> list[str]:
         return list(self.__vendored.keys())
 
     def __iter__(self):
-        return iter(self.__vendored)
+        return iter([
+            lib
+            for lib in self.__vendored
+            if self.__vendored[lib].source is not None
+        ])
+
+    def include(self, name: str):
+        return f"-I{self.__vendored[name].headers}"
+
+    def includes(self, *names: str):
+        return " ".join([self.include(name) for name in names])
+
+    async def clean_cache(self):
+        await spawn(
+            args=["rm", "-rf", "obj/extern/"]
+        )
+        return self
 
     async def pack(self, name: str):
         _ = await spawn(
-            sp.run,
-            executable="mkdir",
-            args=["-p", self.__vendored[name].unpack_to],
-            check=True
+            args=["mkdir", "-p", self.__vendored[name].unpack_to]
         )
         _ = await spawn(
-            sp.run,
-            executable="ar",
-            args=["x", self.__vendored[name].source, "--output", self.__vendored[name].unpack_to],
-            check=True
+            args=["ar", "x", self.__vendored[name].source, "--output", self.__vendored[name].unpack_to]
         )
         sprocs = synchro.Group()
         for file in os.listdir(self.__vendored[name].unpack_to):
             sprocs.spawn(
-                executable="mv",
-                args=[f"${file}", f"{self.__vendored[name].mri_name}.${file}.a"],
-                check=True
+                args=["mv", f"{self.__vendored[name].unpack_to}/{file}", f"{self.__vendored[name].unpack_to}/lib.3p.{name}.{file}"]
             )
-            await sprocs.await_all()
+        await sprocs.await_all()
+        objects: list[str] = [f"{self.__vendored[name].unpack_to}/{fname}" for fname in os.listdir(self.__vendored[name].unpack_to) if ".o" in fname]
+        print("\n  > ".join(objects))
         _ = await spawn(
-            sp.run,
-            executable="ar",
-            args=["rcvs", self.mri_lib(name), f"{self.__vendored[name].unpack_to}/*.o*"],
-            check=True
+            args=(["ar", "rcvs", self.mri_lib(name)] + objects)
         )
+        return await spawn(args=["echo", "''"])
 
     async def pack_all(self) -> str:
         sprocs = synchro.Group()
         for lib in self:
-            sprocs.spawn(Vendor.pack, self, lib)
+            sprocs.add(Vendor.pack(self, lib))
         await sprocs.await_all()
         return self.mri_script()
+
+    async def finalize(self, name: str, target: str|None = None) -> None:
+        target = f".{target}" if target is not None else ""
+        MRI = f"""
+            open output/lib/lib{name}{target}.a
+            addlib obj/extern/extern.3p.a
+            save
+            end
+        """
+        await spawn(["ar", "-M", MRI, "\n\n\n"])

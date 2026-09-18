@@ -1,0 +1,5 @@
+#!python3
+
+import pymake.run as pm
+
+pm.run()

@@ -36,7 +36,7 @@ class OSInfo:
     def lib_name(self, shared: bool) -> str:
         return self.shared_lib_name if shared else ".a"
 
-ARCH = pf.architecture()
+ARCH = [arch.removesuffix("bit") for arch in pf.architecture()]
 
 __WINDOWS_LIBS = [
         "ole32",
@@ -56,13 +56,16 @@ __WINDOWS_LIBS = [
 OS = OSDependentValue[OSInfo](
     OSInfo(
         "win",
-        ARCH[0],
+        ARCH[0].removesuffix("bit"),
         ".exe",
         __WINDOWS_LIBS,
-        True
+        True,
+        ".dll.a"
     ),
     OSInfo("linux", ARCH[0])
 )
 
+target_os = "win"
+
 def info() -> OSInfo:
-    return OS[os.name]
+    return OS[target_os]
