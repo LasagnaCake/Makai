@@ -44,7 +44,7 @@ class Group:
         else:
             _ = block_until_done(coro)
 
-    def spawn(self, *args: Any, **kwargs: Any) -> None:
+    def spawn(self, *args, **kwargs) -> None:
         self.add(to_thread(sp.run, *args, **kwargs))
 
     def __iter__(self) -> Iterator[CoroutineType[Any, Any, sp.CompletedProcess[str]]]:
