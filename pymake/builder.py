@@ -102,6 +102,11 @@ _FLAGS_DEBUG_EVERYTHING: list[str] = [
 
 @final
 class Targets:
+    DEVMODE: Builder.Target = Builder.Target(
+        "iddqd",
+        _FLAGS_DEBUG + _FLAGS_DEBUG_EVERYTHING
+    )
+
     DEBUG: Builder.Target = Builder.Target(
         "debug",
         _FLAGS_DEBUG
