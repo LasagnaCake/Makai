@@ -55,6 +55,7 @@ class Builder:
     def compile_folder(self, target: Target, folder: str, flags: Flags|None = None, abspath: bool = False) -> Group:
         procs: Group = Group()
         for [dir, folders, files] in os.walk(folder if not abspath else f"{os.getcwd()}/{folder}"):
+            print(dir)
             for sub in folders:
                 self.clean(target, f"{dir}/{sub}", abspath)
                 procs.group.extend(self.compile_folder(target, f"{dir}/{sub}", flags, abspath))

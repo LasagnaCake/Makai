@@ -85,6 +85,7 @@ async def compile_all(compiler: str, target: str, optimize: str):
 		"-Isrc"
 	)
 	ocl_include = vendored.include("ocl") if info().name == "linux" else flags.clone().add(vendored.includes("ocl", "ocl-ext", "ocl-util", "ocl-util-cpp"))
+	print("Compilation time!")
 	await join_groups(
 		# TODO: makai/embed
 		tc_c.compile_folder("makai/impl", flags.clone().add(vendored.includes("stb", "cute", "glad", "miniaudio", "gl3w"))),
