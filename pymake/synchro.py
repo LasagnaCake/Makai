@@ -3,6 +3,8 @@ from asyncio.threads import to_thread
 from types import CoroutineType
 from typing import Any, Callable, Generic, Never, TypeVar, cast
 
+from typing_extensions import Iterator
+
 __async_allowed = True
 
 def block_until_done[A, B, R](fn: CoroutineType[A, B, R], *args, **kwargs) -> R:
@@ -28,8 +30,8 @@ class Buddy[Ax, Bx, Rx]:
 def buddy[A, B, R](fn: Callable[..., CoroutineType[A, B, R]]) -> Callable[..., R]:
     return Buddy[A, B, R](fn)
 
-async def spawn[A, B, R](*args, **kwargs) -> CoroutineType[A, B, sp.CompletedProcess[str]]:
-    return to_thread(sp.run, *args, **kwargs)
+async def spawn[R](*args, **kwargs) -> sp.CompletedProcess[str]:
+    return await to_thread(sp.run, *args, **kwargs)
 
 class Group:
     group: list[CoroutineType[Any, Any, sp.CompletedProcess[str]]]
@@ -43,8 +45,14 @@ class Group:
         else:
             _ = block_until_done(coro)
 
-    def spawn(self, *args, **kwargs):
+    def spawn(self, *args: Any, **kwargs: Any) -> None:
         self.add(to_thread(sp.run, *args, **kwargs))
 
-    async def all(self):
+    def __iter__(self) -> Iterator[CoroutineType[Any, Any, sp.CompletedProcess[str]]]:
+        return self.iterate()
+
+    def iterate(self) -> Iterator[CoroutineType[Any, Any, sp.CompletedProcess[str]]]:
+        return iter(self.group)
+
+    async def await_all(self):
         [await item for item in self.group]
