@@ -229,7 +229,7 @@ void Definition::makeBasic(Definition& type) {
 }
 
 String Definition::cleanName() const {
-	if (basic) return asNameString(*basic);
+	if (flags.isBasic) return asNameString(*basic);
 	auto const clean = Regex::replace(
 		Regex::replace(
 			//Regex::findFirst(name, "_[A-Za-z0-9_]+_ID_(u[0-9]+){4}_$"),

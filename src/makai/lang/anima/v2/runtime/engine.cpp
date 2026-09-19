@@ -1847,7 +1847,7 @@ void Engine::initializeObject(Object::Storage const& object) {
 		return crash(invalidSourceError("Stack is too small to initialize the given value!"));
 	if (!object->count()) return;
 	auto const content = context.globalValueStack.sliced(-object->count(), -1);
-	context.globalValueStack.eraseRange(-object->count() -1, -1);
+	context.globalValueStack.eraseRange(-object->count(), -1);
 	MAKAILIB_DEBUGLN_FULL("Object Type: ", object->getType()->cleanName());
 	MAKAILIB_DEBUGLN_FULL("Field Size: ", object->count());
 	MAKAILIB_DEBUGLN_FULL("Fields {");
@@ -1885,6 +1885,8 @@ void Engine::v2Create() {
 	auto const type = context.art.types.byID(typeID);
 	if (!type)
 		return crash(invalidTypeError("Type does not exist!"));
+	if (type->flags.isEmptyType)
+		return crash(invalidTypeError("Cannot create empty types!"));
 	auto obj = Object::create(type);
 	auto const _ = obj.sync();
 	if (create.forArray) {
