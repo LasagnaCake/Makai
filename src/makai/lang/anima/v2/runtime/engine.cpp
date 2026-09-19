@@ -2046,3 +2046,6 @@ void Engine::v2Select() {
 	uint64 const loc = Makai::Cast::bit<uint64>(program.code[context.pointers.instruction + at]);
 	jumpByMode(select.mode, loc, false /*not returnable*/);
 }
+
+void Engine::v2Spread() {
+}
