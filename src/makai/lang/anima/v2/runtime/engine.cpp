@@ -119,6 +119,7 @@ bool Engine::yieldCycle() {
 		case AV2_IN_CREATE:			v2Create();			break;
 		case AV2_IN_INITIALIZE:		v2Initialize();		break;
 		case AV2_IN_BREAKPOINT:		v2Breakpoint();		break;
+		case AV2_IN_SPREAD:			v2Spread();			break;
 		case AV2_IN_NO_OP: break;
 //		default: crash(invalidInstructionError());
 	}
@@ -1679,7 +1680,7 @@ void Engine::v2ScopeBind() {
 		return crash(outOfRangeError("Requested destination range falls outside its size!"));
 	MAKAILIB_DEBUGLN_FULL("Binding values...");
 	for (usize i = 0; i < count; ++i) {
-		auto const si = (src.size() - count - bind.src);
+		auto const si = (src.size() - i - bind.src);
 		auto const di = i + bind.dst;
 		auto const v = src[si];
 		MAKAILIB_DEBUG_FULL("> [", si, " -> ", di, "]", ": ");
