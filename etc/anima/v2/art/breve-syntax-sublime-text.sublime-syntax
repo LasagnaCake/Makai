@@ -24,6 +24,7 @@ contexts:
     - include: blocks
     - include: named_blocks
     - include: basic_types
+    - include: templates
 
   strings:
     - match: '"'
@@ -41,6 +42,14 @@ contexts:
   numbers:
     - match: '\b(\+-)?[0-9._]+\b'
       scope: constant.numeric.breve
+
+  templates:
+    - match: '\#{{id}}'
+      scope: punctuation.definition.generic.breve
+
+    - match: '\#({{id}})*\['
+      scope: punctuation.definition.generic.begin.breve
+      push: template_decl
 
   comments:
     - match: '\#\!'
@@ -139,11 +148,6 @@ contexts:
     - match: '\?'
       scope: storage.modifier.breve
 
-  template:
-    - match: '<:'
-      scope: punctuation.definition.generic.begin.breve
-      push: template_decl
-
   attributes:
     - match: '@{{id}}'
       scope: punctuation.definition.annotation.breve
@@ -233,7 +237,8 @@ contexts:
 
   template_decl:
     - meta_scope: meta.generic.breve
-    - match: :>
+    - include: breve
+    - match: '\]'
       scope: punctuation.definition.generic.end.breve
       pop: true
 
