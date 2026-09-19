@@ -65,7 +65,7 @@ OS = OSDependentValue[OSInfo](
     OSInfo("linux", ARCH[0])
 )
 
-target_os = "win"
+target_os: str = "win"
 
 def info() -> OSInfo:
     return OS[target_os]
