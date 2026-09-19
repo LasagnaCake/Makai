@@ -2555,8 +2555,12 @@ ATransformer::Result TupleTypeDecl::transform(Context& context, Node::Instance c
 		if (!varg.type)
 			context.error("Expected type declaration here!");
 		varg.name = Makai::toString("_", index);
-		type.fields.pushBack(vscope->variable);
+		type.fields[varg.name] = varg.type.asWeak();
+		type.parentScope = scope.asWeak();
+		type.fieldOf = scope->type;
+		context.pop(1);
 	}
+	context.pop(1);
 	context.registerType(type.scope.asStrong());
 	return {.type = t};
 }
