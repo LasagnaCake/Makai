@@ -1734,10 +1734,10 @@ void Engine::v2FieldGet() {
 		.onError([&] (auto const& err) {
 			switch (err) {
 				using enum Object::GetError;
-				case AV2_COGE_NO_TYPE:						crash(invalidSourceError("Object does not have a type!"));
-				case AV2_COGE_TYPE_DOES_NOT_CONTAIN_FIELDS:	crash(invalidSourceError("Type does not contain fields!"));
-				case AV2_COGE_FIELD_IS_NOT_COPYABLE:		crash(invalidSourceError("Field ["+Makai::toString(loc)+"] is not copyable!"));
-				case AV2_COGE_FIELD_DOES_NOT_EXIST:			crash(invalidSourceError("Field ["+Makai::toString(loc)+"] does not exist!"));
+				case AV2_COGE_NO_TYPE:						crash(invalidSourceError("Object does not have a type!")); break;
+				case AV2_COGE_TYPE_DOES_NOT_CONTAIN_FIELDS:	crash(invalidSourceError("Type does not contain fields!")); break;
+				case AV2_COGE_FIELD_IS_NOT_COPYABLE:		crash(invalidSourceError("Field ["+Makai::toString(loc)+"] is not copyable!")); break;
+				case AV2_COGE_FIELD_DOES_NOT_EXIST:			crash(invalidSourceError("Field ["+Makai::toString(loc)+"] does not exist!")); break;
 			}
 		});
 	if  (err) return;
@@ -2054,7 +2054,20 @@ void Engine::v2Spread() {
 	auto const count = Makai::Cast::bit<uint64>(current);
 	auto const arr = context.pop();
 	if (!(arr && arr->getType() && (arr->getType()->flags.isArray or arr->getType()->flags.isStructure)))
-		crash(invalidSourceError("Value is not of a spreadable type"));
-	for (usize i = 0; i < count; ++i)
-		context.push(arr->getAtIndex(i + offset));
+		crash(invalidSourceError("Value is not of a spreadable type!"));
+	for (usize i = 0; i < count; ++i) {
+		if (
+			!arr->getAtIndex(i + offset)
+			.then([&] (auto const& v) {context.push(v)})
+			.onError([&] (auto const& err) {
+				switch (err) {
+					using enum Object::GetError;
+					case AV2_COGE_NO_TYPE:						crash(invalidSourceError("Object does not have a type!")); break;
+					case AV2_COGE_TYPE_DOES_NOT_CONTAIN_FIELDS:	crash(invalidSourceError("Type does not contain fields!")); break;
+					case AV2_COGE_FIELD_IS_NOT_COPYABLE:		crash(invalidSourceError("Field ["+Makai::toString(i + offset)+"] is not copyable!")); break;
+					case AV2_COGE_FIELD_DOES_NOT_EXIST:			crash(invalidSourceError("Field ["+Makai::toString(i + offset)+"] does not exist!")); break;
+				}
+			})
+		) break;
+	}
 }
