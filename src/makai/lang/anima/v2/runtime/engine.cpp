@@ -2058,7 +2058,7 @@ void Engine::v2Spread() {
 	for (usize i = 0; i < count; ++i) {
 		if (
 			!arr->getAtIndex(i + offset)
-			.then([&] (auto const& v) {context.push(v)})
+			.then([&] (auto const& v) {context.push(v);})
 			.onError([&] (auto const& err) {
 				switch (err) {
 					using enum Object::GetError;
