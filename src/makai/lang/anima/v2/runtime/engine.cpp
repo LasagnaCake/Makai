@@ -1848,8 +1848,8 @@ void Engine::initializeObject(Object::Storage const& object) {
 	if (!object->count()) return;
 	auto const content = context.globalValueStack.sliced(-object->count(), -1);
 	context.globalValueStack.eraseRange(-object->count() -1, -1);
-	MAKAILIB_DEBUGLN_FULL("Value: ", object->getType()->cleanName());
-	MAKAILIB_DEBUGLN_FULL("Size: ", object->count());
+	MAKAILIB_DEBUGLN_FULL("Object Type: ", object->getType()->cleanName());
+	MAKAILIB_DEBUGLN_FULL("Field Size: ", object->count());
 	MAKAILIB_DEBUGLN_FULL("Fields {");
 	for (auto const& [e, i]: Makai::Range::expand(content)) {
 		if (e) {
