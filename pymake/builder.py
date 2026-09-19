@@ -29,44 +29,49 @@ class Builder:
         self.flags = flags.clone()
         self.file_type = file_type
 
-    async def compile(self, target: Target, folder: str, file: str, flags: Flags|None = None):
+    async def compile(self, target: Target, folder: str, file: str, flags: Flags|None = None, abspath: bool = False):
         if flags is None:
             flags = Flags()
         all_flags = concat(target.flags, target.flags, self.flags, flags)
+        basename = folder.replace('/', '.')
+        dir = folder if abspath else f"{os.getcwd()}/src/{folder}"
+        #basename = basename[:basename.rfind(".")]
+        base_decl = [self.compiler, "-c", f"{dir}/{file}", "-o", f"{basename}.{file}.{target.name}.o"]
+        print(" ".join(base_decl + all_flags.unpack()))
         return await spawn(
-            args=[self.compiler, f"{folder}/{file}.{self.file_type}", "-o", f"{folder.replace('/', '.')}.{file}.{target.name}.o"] + all_flags.unpack(),
-            check=True
+            args=base_decl + all_flags.unpack()
         )
 
-    async def build(self, target: Target, folder: str, file: str, flags: Flags|None = None):
+    async def build(self, target: Target, folder: str, file: str, flags: Flags|None = None, abspath: bool = False):
         if flags is None:
             flags = Flags()
-        all_flags = concat(target.flags, target.flags, self.flags, flags)
-        base_decl = [self.compiler, f"{os.getcwd()}/{folder}/{file}.cpp", "-o", f"{os.getcwd()}/{folder.replace('/', '.')}.{file}.{target.name}{info().exec_type}"]
-        await spawn(
-            args=["echo"] + base_decl + all_flags.unpack(),
-            check=True
-        )
+        all_flags = concat(target.flags, self.flags, flags)
+        basename = folder.replace('/', '.')
+        dir = folder if abspath else f"{os.getcwd()}/src/{folder}"
+        #basename = basename[:basename.rfind(".")]
+        base_decl = [self.compiler, f"{dir}/{file}", "-o", f"obj/{target.name}/{basename}.{file}.{target.name}{info().exec_type}"]
+        print(" ".join(base_decl + all_flags.unpack()))
         return await spawn(
-            args=base_decl + all_flags.unpack(),
-            check=True
+            args=base_decl + all_flags.unpack()
         )
 
     def compile_folder(self, target: Target, folder: str, flags: Flags|None = None, abspath: bool = False) -> Group:
         procs: Group = Group()
-        for [dir, folders, files] in os.walk(folder if not abspath else f"{os.getcwd()}/{folder}"):
-            print(dir)
-            for sub in folders:
-                self.clean(target, f"{dir}/{sub}", abspath)
-                procs.group.extend(self.compile_folder(target, f"{dir}/{sub}", flags, abspath))
-            for file in files:
-                procs.add(self.compile(target, dir, file, flags))
+        dir = folder if abspath else f"{os.getcwd()}/src/{folder}"
+        print(dir)
+        for entry in os.scandir(dir):
+            if (entry.is_dir()):
+                self.clean(target, entry.path, abspath)
+                procs.group.extend(self.compile_folder(target, f"{folder}/{entry.name}", flags, abspath))
+            if entry.is_file() and f".{self.file_type}" in entry.name and ".o" not in entry.name:
+                procs.add(self.compile(target, folder, entry.name, flags, abspath))
         return procs
 
     def clean(self, target: Target, folder: str, abspath: bool = False):
-        for file in os.listdir(folder if not abspath else f"{os.getcwd()}/{folder}"):
+        basepath = folder if not abspath else f"{os.getcwd()}/{folder}"
+        for file in os.listdir(basepath):
             if f".{target.name}.o" in file:
-                os.remove(file)
+                os.remove(f"{basepath}/{file}")
 
 _BASE_FLAGS: Flags = Flags(
     "-m64",
@@ -79,7 +84,8 @@ _BASE_FLAGS_CPP: Flags = Flags(
 
 _FLAGS_GCC: Flags = Flags(
     "-fconcepts-diagnostics-depth=4",
-    "-fcoroutines"
+    "-fcoroutines",
+    "-fconcepts"
 )
 
 _FLAGS_CLANG: Flags = Flags(
@@ -156,10 +162,10 @@ class Toolchain:
         @staticmethod
         def get_for(name: str):
             match name:
-                case "gcc": return Toolchain.C.GCC
-                case "clang": return Toolchain.C.CLANG
-                case "mingw-win": return Toolchain.C.MINGW_WINDOWS
-                case "mingw-linux": return Toolchain.C.MINGW_LINUX
+                case "gcc": return Toolchain.CPP.GCC
+                case "clang": return Toolchain.CPP.CLANG
+                case "mingw-win": return Toolchain.CPP.MINGW_WINDOWS
+                case "mingw-linux": return Toolchain.CPP.MINGW_LINUX
                 case _: raise KeyError()
 
     builder: Builder
@@ -179,23 +185,9 @@ class Toolchain:
         return self.builder.compile_folder(self.target, folder, flags, abspath)
 
     async def clean_cache(self):
-        await spawn(
-            args=["rm", "-rf", f"{os.getcwd()}/obj/{self.target.name}/*"]
-        )
+        await spawn(["rm", "-rf", f"{os.getcwd()}/obj/{self.target.name}/*"])
         await spawn(["mkdir", "-p", f"{os.getcwd()}/obj/{self.target.name}"])
         return self
-
-    @staticmethod
-    def flat_copy(dir: str, to_dir: str) -> Group:
-        ops = Group()
-        for top, folders, files in os.walk(dir):
-            for folder in folders:
-                ops.join_with(Toolchain.flat_copy(f"{dir}/{folder}", to_dir))
-            for file in files:
-                ops.spawn(
-                    args=["cp", f"{os.getcwd()}/{to_dir}", f"{os.getcwd()}/{top}/{file}"]
-                )
-        return ops
 
     @staticmethod
     def copy_headers(dir: str = "") -> Group:
@@ -208,9 +200,6 @@ class Toolchain:
                     continue
                 ops.spawn(args=["cp", f"{os.getcwd()}/{top}/{file}", f"{os.getcwd()}/output/include/{dir}"])
         return ops
-
-    def copy_objects(self) -> Group:
-        return Toolchain.flat_copy("src", f"obj/{self.target.name}")
 
     @staticmethod
     def get_for(lang: str, compiler: str, target: str):

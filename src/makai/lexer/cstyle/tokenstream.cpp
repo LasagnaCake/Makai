@@ -390,6 +390,12 @@ bool TokenStream::next() {
 		curToken.value = curToken.text.toString();
 		curToken.type = LTS_TT_LINE_COMMENT;
 	}
+	else if (lexer->now() == UTF::U8Char{'#'} && lexer->peek() == UTF::U8Char{'!'}) {
+		lexeme = parseLineComment(*lexer);
+		curToken.text = lexeme;
+		curToken.value = curToken.text.toString();
+		curToken.type = LTS_TT_SHEBANG;
+	}
 	else if (isWordChar(lexer->now())) {
 		lexeme = parseID(*lexer);
 		curToken.text = lexeme;

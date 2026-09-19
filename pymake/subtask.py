@@ -4,13 +4,13 @@ from collections.abc import Callable
 from types import CoroutineType
 from typing import ClassVar, Generic, Self, TypeVar
 
-from pymake.synchro import Group
+from pymake.synchro import Group, Coro
 
 TYield = TypeVar("TYield")
 TWhoKnows = TypeVar("TWhoKnows")
 TReturn = TypeVar("TReturn")
 
-Type = CoroutineType[TYield, TWhoKnows, TReturn]
+Type = Coro[TYield, TWhoKnows, TReturn]
 
 class Subtask(Generic[TYield, TWhoKnows, TReturn]):
     in_parallel = True

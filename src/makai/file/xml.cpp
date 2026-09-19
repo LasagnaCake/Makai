@@ -17,9 +17,9 @@
 #pragma GCC diagnostic ignored "-Woverflow"
 
 #define XML2JSON_CONTENT_PROP		".content"
-#define XML2JSON_ATTRIB_PREFIX		"@" 
+#define XML2JSON_ATTRIB_PREFIX		"@"
 #define XML2JSON_ACCEPTS_NUMBERS	true
-#include <xml2json/xml2json.hpp>
+#include <xml2json.hpp>
 #include <json2xml.hpp>
 
 #pragma GCC diagnostic pop

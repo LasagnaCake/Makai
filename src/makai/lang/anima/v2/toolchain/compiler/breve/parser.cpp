@@ -245,10 +245,12 @@ Node::Instance Parser::nextExpression(Parser::Precedence precedence) {
 	if (
 		tok.type == LTS_TT_LINE_COMMENT
 	or	tok.type == LTS_TT_BLOCK_COMMENT
+	or	tok.type == LTS_TT_SHEBANG
 	) {
 		while (
 			context.peek().type == LTS_TT_LINE_COMMENT
 		or	context.peek().type == LTS_TT_BLOCK_COMMENT
+		or	context.peek().type == LTS_TT_SHEBANG
 		) context.next();
 		if (context.empty())
 			return nullptr;

@@ -9,10 +9,14 @@ from pymake.synchro import pipe_into, spawn
 
 class Vendor:
     class Library:
+        source: str|None
+        headers: str
+        unpack_to: str
+        mri_name: str
+
         def __init__(self, source: str|None, headers: str, unpack_to: str, mri_name: str):
             self.source = source
             self.headers = headers
-            self.headers = ""
             self.unpack_to = unpack_to
             self.mri_name = mri_name
 
@@ -27,12 +31,13 @@ class Vendor:
             filename = "lib" + name
         if name in self.__vendored:
             return
+        has_lib_file = True
         if shared and not info().has_dlls:
-            return
+            has_lib_file = False
         self.__mri_libs[name] = "lib.3p." + name + ".a"
         self.__vendored[name] = Vendor.Library(
-            "lib/" + path + "/lib/" + info().full_name() + "/" + filename + info().lib_name(shared),
-            "lib/" + path + "/include/",
+            ("lib/" + path + "/lib/" + info().full_name() + "/" + filename + info().lib_name(shared)) if has_lib_file else "",
+            f"lib/{path}/include/",
             "obj/extern/" + name,
             "obj/extern/" + "lib.3p." + name,
         )
@@ -80,11 +85,15 @@ class Vendor:
             if self.__vendored[lib].source is not None
         ])
 
-    def include(self, name: str):
-        return f"-I{self.__vendored[name].headers}"
+    def include(self, name: str, abspath: bool = False) -> list[str]:
+        basepath = f"{os.getcwd()}/" if not abspath else ""
+        return ["-I", f"{basepath}{self.__vendored[name].headers}"]
 
-    def includes(self, *names: str):
-        return " ".join([self.include(name) for name in names])
+    def includes(self, *names: str) -> list[str]:
+        inc = list[str]()
+        for name in names:
+            inc.extend(self.include(name))
+        return inc
 
     async def clean_cache(self):
         await spawn(
@@ -113,7 +122,7 @@ class Vendor:
         _ = await spawn(
             args=(["ar", "rcvs", self.mri_lib(name)] + objects)
         )
-        return await spawn(args=["echo", "''"])
+        return await spawn(args=["echo", ""])
 
     async def pack_all(self) -> str:
         sprocs = synchro.Group()

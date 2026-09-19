@@ -192,6 +192,8 @@ namespace Makai::Lexer::CStyle {
 				LTS_TT_BIG_HALBERD,
 				/// @brief Lambda (`::>`).
 				LTS_TT_LAMBDA,
+				/// @brief Shebang directive (`#!`).
+				LTS_TT_SHEBANG,
 			};
 
 			/// @brief Token type.

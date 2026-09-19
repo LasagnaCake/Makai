@@ -3,43 +3,54 @@ from os import waitpid
 import subprocess as sp
 from asyncio.threads import to_thread
 from collections.abc import Callable, Iterator
-from types import CoroutineType
-from typing import Any, Self, cast
+from collections.abc import Awaitable
+from typing import Any, Generic, Self, TypeVar, cast
+from pymake.os import info
 
 
-def block_until_done[A, B, R](fn: CoroutineType[A, B, R]) -> R:
+Popen = sp.Popen[str]
+
+TYield = TypeVar("TYield")
+TWhoKnows = TypeVar("TWhoKnows")
+TReturn = TypeVar("TReturn")
+
+Coro = Awaitable
+
+def block_until_done(fn: Coro) -> TReturn:
 	return asyncio.run(fn)
 
-class Buddy[Ax, Bx, Rx]:
-    fn: Callable[..., CoroutineType[Ax, Bx, Rx]]
+class Buddy(Generic[TYield, TWhoKnows, TReturn]):
+    Wrapper = Coro
 
-    def __init__(self, fn: Callable[..., CoroutineType[Ax, Bx, Rx]]):
+    fn: Callable[..., Wrapper]
+
+    def __init__(self, fn: Callable[..., Wrapper]):
         self.fn = fn
 
-    def __call__(self, *args, **kwargs) -> Rx:
+    def __call__(self, *args, **kwargs) -> TReturn:
         return asyncio.run(self.fn(*args, **kwargs))
 
-def buddy[A, B, R](fn: Callable[..., CoroutineType[A, B, R]]) -> Callable[..., R]:
+def buddy[A, B, R](fn: Callable[..., Coro[A, B, R]]) -> Callable[..., R]:
     return Buddy[A, B, R](fn)
 
-async def wrap(*args, **kwargs) -> sp.Popen:
-    def waiter(proc: sp.Popen):
-        proc.wait()
+async def wrap(*args, **kwargs) -> Popen:
+    def waiter(proc: Popen):
+        _ = proc.wait()
         return proc
     px = await to_thread(sp.Popen, *args, **kwargs)
     return await to_thread(waiter, px)
 
-async def spawn(*args, **kwargs) -> sp.Popen:
+async def spawn(*args, **kwargs) -> Popen:
     return await wrap(*args, **kwargs, shell=False)
 
-async def pipe_into(from_proc: list[str], to_proc: list[str]) -> sp.Popen:
+async def pipe_into(from_proc: list[str], to_proc: list[str]) -> Popen:
     pin = await wrap(from_proc, shell=False, stdout=sp.PIPE)
     return await wrap(to_proc, shell=False, stdin=pin.stdout)
 
 class Group:
     in_parallel = True
 
-    Process = CoroutineType[Any, Any, sp.Popen]
+    Process = Coro[Any, Any, Popen]
     Processes = list[Process]
 
     group: Processes

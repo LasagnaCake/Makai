@@ -1,3 +1,5 @@
+#! art -S -BA:T -BA:C
+
 using import core
 
 @Main

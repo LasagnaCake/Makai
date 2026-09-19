@@ -43,6 +43,10 @@ contexts:
       scope: constant.numeric.breve
 
   comments:
+    - match: '\#\!'
+      scope: punctuation.definition.comment.breve
+      push: line_comment
+
     - match: '//'
       scope: punctuation.definition.comment.breve
       push: line_comment
