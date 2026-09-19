@@ -2542,6 +2542,25 @@ ATransformer::Result FunctionTypeDecl::transform(Context& context, Node::Instanc
 	return {.type = scope->type};
 }
 
+ATransformer::Result TupleTypeDecl::transform(Context& context, Node::Instance const& node) {
+	if (node->children.empty())
+		context.error("Tuple must contain at least one type!", node);
+	auto const scope = context.declare(UTF8StringList::from("<tuple>" + node->name()));
+	auto& type = *(scope->type = scope->type.create());
+	type.scope = scope.asWeak();
+	for (auto const& [child, index]: Range::expand(node->children)) {
+		auto const vscope = context.declare(UTF8StringList::from(Makai::toString("_", index)));
+		auto& varg = *(scope->variable = scope->variable.create());
+		varg.type = TypeRequest().transform(context, child).type;
+		if (!varg.type)
+			context.error("Expected type declaration here!");
+		varg.name = Makai::toString("_", index);
+		type.fields.pushBack(vscope->variable);
+	}
+	context.registerType(type.scope.asStrong());
+	return {.type = t};
+}
+
 ATransformer::Result TypeExtension::transform(Context& context, Node::Instance const& node) {
 	auto const type = TypeRequest().transform(context, node->leftSide);
 	AsNonConst<decltype(type)> trait;
