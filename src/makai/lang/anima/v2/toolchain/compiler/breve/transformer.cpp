@@ -2551,11 +2551,11 @@ ATransformer::Result TupleTypeDecl::transform(Context& context, Node::Instance c
 	for (auto const& [child, index]: Range::expand(node->children)) {
 		auto const vscope = context.declare(UTF8StringList::from(Makai::toString("_", index)));
 		auto& varg = *(scope->variable = scope->variable.create());
-		varg.type = TypeRequest().transform(context, child).type.asStrong();
+		varg.type = TypeRequest().transform(context, child).type.asWeak();
 		if (!varg.type)
 			context.error("Expected type declaration here!");
 		varg.name = Makai::toString("_", index);
-		type.fields[varg.name] = varg.type.asString();
+		type.fields[varg.name] = varg.type.asStrong();
 		varg.parentScope = scope.asWeak();
 		varg.fieldOf = scope->type;
 		context.pop(1);
