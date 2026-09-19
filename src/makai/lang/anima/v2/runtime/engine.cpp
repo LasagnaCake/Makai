@@ -2048,5 +2048,13 @@ void Engine::v2Select() {
 }
 
 void Engine::v2Spread() {
-
+	advance(true);
+	auto const offset = Makai::Cast::bit<uint64>(current);
+	advance(true);
+	auto const count = Makai::Cast::bit<uint64>(current);
+	auto const arr = context.pop();
+	if (!(arr && arr->getType() && (arr->getType()->flags.isArray or arr->getType()->flags.isStructure)))
+		crash(invalidSourceError("Value is not of a spreadable type"));
+	for (usize i = 0; i < count; ++i)
+		context.push(arr->getAtIndex(i + offset));
 }
