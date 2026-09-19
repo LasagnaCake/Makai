@@ -1885,7 +1885,7 @@ void Engine::v2Create() {
 	auto const type = context.art.types.byID(typeID);
 	if (!type)
 		return crash(invalidTypeError("Type does not exist!"));
-	if (type->flags.isEmptyType)
+	if (type->flags.isEmpty)
 		return crash(invalidTypeError("Cannot create empty types!"));
 	auto obj = Object::create(type);
 	auto const _ = obj.sync();

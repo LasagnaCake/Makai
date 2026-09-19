@@ -270,6 +270,9 @@ namespace Makai::Anima::V2::Core {
 			JumpMode	mode:	2;
 		};
 
+		struct [[gnu::aligned(4)]] Spreading {
+		};
+
 		/// @brief Instruction name.
 		enum class Name: uint32 {
 			/// @brief No-operation.
@@ -413,6 +416,10 @@ namespace Makai::Anima::V2::Core {
 			/// @param type Discarded.
 			/// @details `break`
 			AV2_IN_BREAKPOINT,
+			/// @brief Pops the top value of the stack, and pushes its contents into the stack.
+			/// @param type `Spreading` = how to spread the value.
+			/// @details `spread <offset> <count>`
+			AV2_IN_SPREAD,
 		};
 
 		/// @brief Instruction "Name" (opcode).

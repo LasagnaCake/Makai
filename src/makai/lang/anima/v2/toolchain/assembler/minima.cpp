@@ -1268,6 +1268,16 @@ static void doBreakpoint(Context& context) {
 	context.add(Instruction::Name::AV2_IN_BREAKPOINT);
 }
 
+static void doSpread(Context& context) {
+	Instruction::Spreading spread {};
+	auto const offset = context.peek().type != LTS_TT_OPEN_BRACKET ? context.getNext(LTS_TT_INTEGER).getUnsigned() : 0;
+	auto const count = context.expectNext(LTS_TT_OPEN_BRACKET).getNext(LTS_TT_INTEGER).getUnsigned();
+	context.expectNext(LTS_TT_CLOSE_BRACKET);
+	context.add(Instruction::Name::AV2_IN_SPREAD, spread);
+	context.add(offset);
+	context.add(count);
+}
+
 static void declareTypeFields(Context& context, Context::Declaration& type) {
 	if (type.fields.size())
 		context.error("Redeclaration of type fields are not allowed!");
@@ -1912,6 +1922,7 @@ static void doExpression(Context& context) {
 	else if (id == "create" || id == "new")		doCreate(context);
 	else if (id == "init" || id == "make")		doInitialize(context);
 	else if (id == "break")						doBreakpoint(context);
+	else if (id == "spread" || id == "splat")	doSpread(context);
 	else context.error("Invalid instruction!");
 }
 

@@ -2015,7 +2015,8 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 			} else {
 				context.top()->impl->writeMainLine("create [",vat->name, ":", (args.size() - ov.arguments.size()) + 1, "]");
 			}
-		}
+		} else if (argResults.back().spreaded)
+			context.top()->impl->writeMainLine("splat [", args.size(), "]");
 		context.top()->impl->writeMainLine("call", ov.entry);
 	}
 	else context.error("It is forbidden to call a direct function with indirect arguments!", node);
