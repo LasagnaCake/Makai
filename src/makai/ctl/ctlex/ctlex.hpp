@@ -13,5 +13,6 @@
 #include "cli/cli.hpp"
 #include "binary/binary.hpp"
 #include "color/color.hpp"
+#include "abstract/abstract.hpp"
 
 #endif // CTL_EX_H
