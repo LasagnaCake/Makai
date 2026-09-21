@@ -313,6 +313,12 @@ namespace Makai::Anima::V2::Core {
 			return (origin->flags.isBasic);
 		}
 
+		bool reverse() {
+			if (!canHaveFields()) return false;
+			fields.reverse();
+			return true;
+		}
+
 		Data::Value toDynamicValue() const {
 			if (!isBasic()) 		return Data::Value::undefined();
 			if (!content)			return Data::Value::undefined();

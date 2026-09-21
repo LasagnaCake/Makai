@@ -843,14 +843,22 @@ static bool arrayUopIt(Object::Storage const& val, Operator const op, Runtime::C
 		switch (op) {
 			using enum Operator;
 			case AV2_UOP_LENGTH: {
+				context.pop();
 				context.push(val->count());
 				return true;
 			} return true;
 			case AV2_UOP_POP: {
 				if (auto const v = val->pop()) {
+					context.pop();
 					context.push(v.value());
 					return true;
 				} else return false;
+			}
+			case AV2_UOP_INVERSE: {
+				if (!val->reverse()) return false;
+				context.pop();
+				context.push(val);
+				return true;
 			}
 			default: return false;
 		}
