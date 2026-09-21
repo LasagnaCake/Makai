@@ -65,10 +65,25 @@ async def end():
 	await spawn(["rm", "-rf", f"{os.getcwd()}/2"])
 	pass
 
+def includes_for(subsystem: str) -> list[str]:
+	ocl_include = vendored.include("ocl") if info().name == "linux" else vendored.includes("ocl", "ocl-ext", "ocl-util", "ocl-util-cpp")
+	match (subsystem):
+		case "impl":	return vendored.includes("stb", "cute", "glad", "miniaudio", "gl3w")
+		case "audio":	return vendored.includes("miniaudio", "minivorbis")
+		case "graph":	return vendored.includes("sdl", "opengl", "glad", "gl3w", "stb")
+		case "core":	return vendored.include("sdl")
+		case "data":	return vendored.include("cryptopp")
+		case "file":	return vendored.includes("xml2json", "json2xml")
+		case "image":	return vendored.includes("stb")
+		case "mp":		return ocl_include
+		case "net":		return vendored.includes("curl", "sdl-net", "cute")
+		case "regex":	return vendored.includes("pcre2-8", "pcre2-16", "pcre2-32", "pcre2-posix")
+		case "tool":	return vendored.includes("cryptopp")
+		case _:			return []
+
 @subtask
 async def pack_library(target: str, lite: bool):
-	objects: list[str] = [f"obj/{target}/{file}" for file in os.listdir(f"{os.getcwd()}/obj/{target}") if f".{target}.o" in file]
-	await spawn(["ar", "rcvs", f"{os.getcwd()}/output/lib/libmakai.a"] + objects)
+	objects: list[str] = [f"{os.getcwd()}/obj/{target}/{file}" for file in os.listdir(f"{os.getcwd()}/obj/{target}") if f".{target}.o" in file]
 	if target != "release":
 		await spawn(["ar", "rcvs", f"{os.getcwd()}/output/lib/libmakai.{target}.a"] + objects)
 	else:
@@ -77,7 +92,7 @@ async def pack_library(target: str, lite: bool):
 		await vendored.finalize("makai", target if target != "release" else None)
 
 @subtask
-async def compile_all(compiler: str, target: str, optimize: str):
+async def compile_all(compiler: str, target: str, optimize: str, subsystems: list[str]|None = None):
 	tc_cpp	= Toolchain.get_for("c++", compiler, target)
 	await tc_cpp.clean_cache()
 	flags = Flags(
@@ -85,27 +100,34 @@ async def compile_all(compiler: str, target: str, optimize: str):
 		"-I",
 		f"{os.getcwd()}/src"
 	)
-	ocl_include = vendored.include("ocl") if info().name == "linux" else flags.clone().add(vendored.includes("ocl", "ocl-ext", "ocl-util", "ocl-util-cpp"))
 	print("Compilation time!")
 	print((flags + vendored.includes("stb", "cute", "glad", "miniaudio", "gl3w")).unpack())
-	await join_groups(
-		# TODO: makai/embed
-		tc_cpp.compile_folder("makai/impl", flags + vendored.includes("stb", "cute", "glad", "miniaudio", "gl3w")),
-		tc_cpp.compile_folder("makai/audio", flags + vendored.includes("miniaudio", "minivorbis")),
-		tc_cpp.compile_folder("makai/graph", flags + vendored.includes("sdl", "opengl", "glad", "gl3w", "stb")),
-		tc_cpp.compile_folder("makai/core", flags + vendored.include("sdl")),
-		tc_cpp.compile_folder("makai/data", flags + vendored.include("cryptopp")),
-		tc_cpp.compile_folder("makai/file", flags + vendored.includes("xml2json", "json2xml")),
-		tc_cpp.compile_folder("makai/image", flags+ vendored.includes("stb")),
-		tc_cpp.compile_folder("makai/lang", flags),
-		tc_cpp.compile_folder("makai/lexer", flags),
-		tc_cpp.compile_folder("makai/mp", flags + ocl_include),
-		tc_cpp.compile_folder("makai/net", flags + vendored.includes("curl", "sdl-net")),
-		tc_cpp.compile_folder("makai/parser", flags),
-		tc_cpp.compile_folder("makai/regex", flags + vendored.includes("pcre2-8", "pcre2-16", "pcre2-32", "pcre2-posix")),
-		tc_cpp.compile_folder("makai/tool", flags + vendored.includes("cryptopp")),
-		tc_cpp.compile_folder("makai/video", flags)
-	).await_all()
+	if subsystems is None:
+		await join_groups(
+			# TODO: makai/embed
+			tc_cpp.compile_folder("makai/impl", flags + includes_for("impl")),
+			tc_cpp.compile_folder("makai/audio", flags + includes_for("audio")),
+			tc_cpp.compile_folder("makai/graph", flags + includes_for("graph")),
+			tc_cpp.compile_folder("makai/core", flags + includes_for("core")),
+			tc_cpp.compile_folder("makai/data", flags + includes_for("data")),
+			tc_cpp.compile_folder("makai/file", flags + includes_for("file")),
+			tc_cpp.compile_folder("makai/image", flags + includes_for("image")),
+			tc_cpp.compile_folder("makai/lang", flags + includes_for("lang")),
+			tc_cpp.compile_folder("makai/lexer", flags + includes_for("lexer")),
+			tc_cpp.compile_folder("makai/mp", flags + includes_for("mp")),
+			tc_cpp.compile_folder("makai/net", flags + includes_for("net")),
+			tc_cpp.compile_folder("makai/parser", flags + includes_for("parser")),
+			tc_cpp.compile_folder("makai/regex", flags + includes_for("regex")),
+			tc_cpp.compile_folder("makai/tool", flags + includes_for("tool")),
+			tc_cpp.compile_folder("makai/video", flags + includes_for("video"))
+		).await_all()
+	else:
+		await join_groups(
+			*[
+				tc_cpp.compile_folder(f"makai/{sub}", flags + includes_for(sub.split('/')[0]))
+				for sub in subs
+			]
+		).await_all()
 
 @checkpoint
 async def copy_libraries():

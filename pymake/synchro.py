@@ -41,6 +41,10 @@ async def wrap(*args, **kwargs) -> Popen:
     return await to_thread(waiter, px)
 
 async def spawn(*args, **kwargs) -> Popen:
+    if len(args):
+        print(" ".join(args[0]))
+    if "args" in kwargs:
+        print(" ".join(kwargs["args"]))
     return await wrap(*args, **kwargs, shell=False)
 
 async def pipe_into(from_proc: list[str], to_proc: list[str]) -> Popen:

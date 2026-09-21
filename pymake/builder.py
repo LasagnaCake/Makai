@@ -37,7 +37,6 @@ class Builder:
         dir = folder if abspath else f"{os.getcwd()}/src/{folder}"
         #basename = basename[:basename.rfind(".")]
         base_decl = [self.compiler, "-c", f"{dir}/{file}", "-o", f"{basename}.{file}.{target.name}.o"]
-        print(" ".join(base_decl + all_flags.unpack()))
         return await spawn(
             args=base_decl + all_flags.unpack()
         )
@@ -50,7 +49,6 @@ class Builder:
         dir = folder if abspath else f"{os.getcwd()}/src/{folder}"
         #basename = basename[:basename.rfind(".")]
         base_decl = [self.compiler, f"{dir}/{file}", "-o", f"obj/{target.name}/{basename}.{file}.{target.name}{info().exec_type}"]
-        print(" ".join(base_decl + all_flags.unpack()))
         return await spawn(
             args=base_decl + all_flags.unpack()
         )
