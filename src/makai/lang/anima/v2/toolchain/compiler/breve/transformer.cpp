@@ -1405,6 +1405,8 @@ ATransformer::Result TypeRequest::transform(Context& context, Node::Instance con
 		t = StructureDecl().transform(context, node).type;
 	else if (node->content == Node::Content::AV2_TANC_FN_PROTOTYPE)
 		t = FunctionTypeDecl().transform(context, node).type;
+	else if (node->content == Node::Content::AV2_TANC_BLOCK)
+		t = TupleTypeDecl().transform(context, node).type;
 	else t = context.fetch(node)->type;
 	if (!t) context.error("Type does not exist!", node);
 	++t->uses;
@@ -2545,24 +2547,15 @@ ATransformer::Result FunctionTypeDecl::transform(Context& context, Node::Instanc
 ATransformer::Result TupleTypeDecl::transform(Context& context, Node::Instance const& node) {
 	if (node->children.empty())
 		context.error("Tuple must contain at least one type!", node);
-	auto const scope = context.declare(UTF8StringList::from("<tuple>" + node->name()));
-	auto& type = *(scope->type = scope->type.create());
-	type.scope = scope.asWeak();
+	List<Namespace::TypeRef> types;
 	for (auto const& [child, index]: Range::expand(node->children)) {
-		auto const vscope = context.declare(UTF8StringList::from(Makai::toString("_", index)));
-		auto& varg = *(scope->variable = scope->variable.create());
-		varg.type = TypeRequest().transform(context, child).type.asWeak();
-		if (!varg.type)
+		auto const type = TypeRequest().transform(context, child);
+		if (!type.type)
 			context.error("Expected type declaration here!");
-		varg.name = Makai::toString("_", index);
-		type.fields[varg.name] = scope->variable;
-		varg.parentScope = scope.asWeak();
-		varg.fieldOf = scope->type;
-		context.pop(1);
+		types.pushBack(type.type);
 	}
 	context.pop(1);
-	context.registerType(type.scope.asStrong());
-	return {.scope = scope, .type = scope->type};
+	return {.type = context.tupleFor(types)};
 }
 
 ATransformer::Result TypeExtension::transform(Context& context, Node::Instance const& node) {
@@ -3062,6 +3055,30 @@ Namespace::TypeRef ATransformer::Context::nullableFor(Namespace::TypeRef const& 
 		nullables[type.asWeak()] = arr;
 		return arr;
 	} else return nullables[type.asWeak()];
+}
+
+Namespace::TypeRef ATransformer::Context::tupleFor(List<Namespace::TypeRef> const& types) {
+	usize id = 0;
+	if (!tuples.contains(types)) {
+		auto const scope = Namespace::Instance::create("<tuple>::" + Makai::toString(++id));
+		scopeStack.pushBack(scope);
+		auto const tup = Namespace::TypeRef::create();
+		tup->scope = scope.asWeak();
+		for (auto const& [type, index]: Range::expand(types)) {
+			tup->name += type->name;
+			auto& varg = *(scope->variable = scope->variable.create());
+			varg.type = type.asWeak();
+			varg.name = Makai::toString("_", index);
+			tup->fields[varg.name] = scope->variable;
+			varg.parentScope = scope.asWeak();
+			varg.fieldOf = tup;
+			pop(1);
+		}
+		tup->name += "_Tuple";
+		pop(1);
+		registerType(scope);
+		return tup;
+	} else return tuples[types];
 }
 
 static Makai::String idName(usize const id) {

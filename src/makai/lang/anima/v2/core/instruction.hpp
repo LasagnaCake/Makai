@@ -167,10 +167,12 @@ namespace Makai::Anima::V2::Core {
 				AV2_ILT_IF_EXISTS,
 			};
 			using Mode = JumpMode;
-			Type	type:	4;
-			uint8	dyn:	1;
-			Mode	mode:	2;
-			uint8	invert:	1;
+			Type	type:		4;
+			uint8	dyn:		1;
+			Mode	mode:		2;
+			uint8	invert:		1;
+			int8	expect:		2;
+			bool	useFlags:	1;
 		};
 
 		/// @brief Comparison operator.
@@ -420,6 +422,10 @@ namespace Makai::Anima::V2::Core {
 			/// @param type `Spreading` = how to spread the value.
 			/// @details `spread <offset> <count>`
 			AV2_IN_SPREAD,
+			/// @brief Pops the top value of the stack, and tests it against a series of states.
+			/// @param type Discarded.
+			/// @details `test`
+			AV2_IN_TEST,
 		};
 
 		/// @brief Instruction "Name" (opcode).
@@ -465,6 +471,7 @@ namespace Makai::Anima::V2::Core {
 				case Name::AV2_IN_INITIALIZE:		return "init";
 				case Name::AV2_IN_BREAKPOINT:		return "break";
 				case Name::AV2_IN_SPREAD:			return "splat";
+				case Name::AV2_IN_TEST:				return "test";
 			}
 			return "???";
 		}

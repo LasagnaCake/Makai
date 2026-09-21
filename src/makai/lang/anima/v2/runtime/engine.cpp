@@ -1680,7 +1680,7 @@ void Engine::v2ScopeBind() {
 		return crash(outOfRangeError("Requested destination range falls outside its size!"));
 	MAKAILIB_DEBUGLN_FULL("Binding values...");
 	for (usize i = 0; i < count; ++i) {
-		auto const si = (src.size() - i - 1 - bind.src);
+		auto const si = (src.size() - count - bind.src) + i;
 		auto const di = i + bind.dst;
 		MAKAILIB_DEBUG_FULL("> [", si, " -> ", di, "]", ": ");
 		auto const v = src[si];
