@@ -887,7 +887,7 @@ void Engine::doBinaryOperation(Operator const op) {
 	else if (lhs->isVectorable() && rhs->isVectorable())	success = bopIt<Vector4>(out, lhs, rhs, op, context);
 	else if (lhs->isAlgebraic() && rhs->isAlgebraic())		success = bopIt<Matrix4x4>(out, lhs, rhs, op, context);
 	else if (lhs->isString() && rhs->isString())			success = stringBopIt(out, lhs, rhs, op, context);
-	else if (lhs->isArray() && rhs->isArray())				success = arrayBopIt(lhs, rhs, op, context);
+	else if (lhs->isArray())								success = arrayBopIt(lhs, rhs, op, context);
 	if (!success) {
 		if (inStrictMode())
 			return crash(invalidOperationError("Invalid/Unsupported operator for the given values!"));
