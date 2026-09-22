@@ -61,35 +61,35 @@ vendored.set_include_group("image", "stb")
 # Base systems
 
 base_systems: list[str] = [
-    "impl",
-    "audio",
-    "graph",
-    "mp",
-    "net",
-    "regex",
-    "data",
-    "tool",
-    "image",
-    "video",
-    "parser",
-    "lexer",
-    "file"
+	"impl",
+	"audio",
+	"graph",
+	"mp",
+	"net",
+	"regex",
+	"data",
+	"tool",
+	"image",
+	"video",
+	"parser",
+	"lexer",
+	"file"
 ]
 
 @subtask
 async def vendor_in_libraries():
-	await vendored.clean_cache()
-	await vendored.pack_all()
-	await pipe_into(["echo", f"'{vendored.mri_script()}'"], ["ar", "-M"])
-	await spawn(["ranlib", "obj/extern/extern.3p.a"])
+	_ = await vendored.clean_cache()
+	_ = await vendored.pack_all()
+	_ = await pipe_into(["echo", "\n".join(vendored.mri_script())], ["ar", "-M"])
+	_ = await spawn(["ranlib", "obj/extern/extern.3p.a"])
 
 @checkpoint
 async def begin():
-	await spawn(["rm", "-rf", f"{os.getcwd()}/output/*"])
+	_ = await spawn(["rm", "-rf", f"{os.getcwd()}/output/*"])
 	gp = Group()
-	gp.spawn(["mkdir", "-p", f"{os.getcwd()}/output/lib"])
-	gp.spawn(["mkdir", "-p", f"{os.getcwd()}/output/include"])
-	gp.spawn(["mkdir", "-p", f"{os.getcwd()}/obj/extern"])
+	_ = gp.spawn(["mkdir", "-p", f"{os.getcwd()}/output/lib"])
+	_ = gp.spawn(["mkdir", "-p", f"{os.getcwd()}/output/include"])
+	_ = gp.spawn(["mkdir", "-p", f"{os.getcwd()}/obj/extern"])
 	await gp.await_all()
 
 @checkpoint
@@ -103,22 +103,32 @@ async def end():
 def includes_for(subsystem: str) -> list[str]:
 	return vendored.include_group(subsystem)
 
+def final_mri(target: str):
+	return [
+		f"open {target}",
+		f"addlib  {os.getcwd()}/obj/extern/extern.3p.a",
+		"save",
+		"end"
+	]
+
 @subtask
 async def pack_library(target: str, lite: bool):
 	objects: list[str] = [f"{os.getcwd()}/obj/{target}/{file}" for file in os.listdir(f"{os.getcwd()}/obj/{target}") if f".{target}.o" in file]
 	if target != "release":
-		await spawn(["rm", "-rf", f"{os.getcwd()}/output/lib/libmakai.{target}.a"])
-		await spawn(["ar", "rcvs", f"{os.getcwd()}/output/lib/libmakai.{target}.a"] + objects)
+		flib = f"{os.getcwd()}/output/lib/libmakai.{target}.a"
+		_ = await spawn(["rm", "-rf", flib])
+		_ = await spawn(["ar", "rcvs", flib] + objects)
 	else:
-		await spawn(["rm", "-rf", f"{os.getcwd()}/output/lib/libmakai.a"])
-		await spawn(["ar", "rcvs", f"{os.getcwd()}/output/lib/libmakai.a"] + objects)
+		flib = f"{os.getcwd()}/output/lib/libmakai.a"
+		_ = await spawn(["rm", "-rf", flib])
+		_ = await spawn(["ar", "rcvs", flib] + objects)
 	if not lite:
 		await vendored.finalize("makai", target if target != "release" else None)
 
 @subtask
 async def compile_all(compiler: str, target: str, optimize: str, subsystems: list[str]|None = None):
 	tc_cpp	= Toolchain.get_for("c++", compiler, target)
-	await tc_cpp.clean_cache()
+	_ = await tc_cpp.clean_cache()
 	flags = Flags(
 		f"-O{optimize}",
 		"-I",

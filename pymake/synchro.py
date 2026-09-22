@@ -48,6 +48,7 @@ async def spawn(*args, **kwargs) -> Popen:
     return await wrap(*args, **kwargs, shell=False)
 
 async def pipe_into(from_proc: list[str], to_proc: list[str]) -> Popen:
+    print(" ".join(from_proc) + " | " + " ".join(to_proc))
     pin = await wrap(from_proc, shell=False, stdout=sp.PIPE)
     return await wrap(to_proc, shell=False, stdin=pin.stdout)
 

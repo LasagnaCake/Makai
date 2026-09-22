@@ -64,21 +64,15 @@ class Vendor:
         else:
             return []
 
-    def mri_script(self) -> str:
-        return f"""
-            create obj/extern/extern.3p.a
-            {
-                "\n".join(
-                    [
-                        "addlib " + self.mri_lib(x)
-                        for x in self.__vendored
-                        if self.__vendored[x].source is not None
-                    ]
-                )
-            }
-            save
-            end
-        """.replace("    ", "")
+    def mri_script(self) -> list[str]:
+        script: list[str] = ["create obj/extern/extern.3p.a"]
+        [
+            script.append("addlib " + self.mri_lib(x))
+            for x in self.__vendored
+            if self.__vendored[x].source is not None
+        ]
+        script.extend(["save", "end"])
+        return script
 
     def mri_lib(self, name: str) -> str:
         return self.__vendored[name].mri_name + ".a"
@@ -104,10 +98,10 @@ class Vendor:
         return inc
 
     async def clean_cache(self):
-        await spawn(
+        _ = await spawn(
             args=["rm", "-rf", "obj/extern/"]
         )
-        await spawn(
+        _ = await spawn(
             args=["mkdir", "-p", "obj/extern/"]
         )
         return self
@@ -132,19 +126,19 @@ class Vendor:
         )
         return await spawn(args=["echo", ""])
 
-    async def pack_all(self) -> str:
+    async def pack_all(self):
         sprocs = synchro.Group()
         for lib in self:
             sprocs.add(Vendor.pack(self, lib))
         await sprocs.await_all()
-        return self.mri_script()
 
     async def finalize(self, name: str, target: str|None = None) -> None:
         target = f".{target}" if target is not None else ""
-        MRI = f"""
-            open output/lib/lib{name}{target}.a
-            addlib obj/extern/extern.3p.a
-            save
-            end
-        """
-        await pipe_into(["echo", f"'{MRI}'"], ["ar", "-M"])
+        MRI = [
+            f"open {os.getcwd()}/output/lib/lib{name}{target}.a",
+            f"addlib {os.getcwd()}/obj/extern/extern.3p.a",
+            "save",
+            "end"
+        ]
+        _ = await pipe_into(["echo", "\n".join(MRI)], ["ar", "-M"])
+        _ = await spawn(["ranlib", f"{os.getcwd()}/output/lib/lib{name}{target}.a"])
