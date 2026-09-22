@@ -346,6 +346,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	struct Spread: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
+
+	struct TemplateTypeReification: ATransformer {
+		bool pathed = true;
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
 }
 
 #endif

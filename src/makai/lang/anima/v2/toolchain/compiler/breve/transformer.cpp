@@ -1415,6 +1415,8 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 ATransformer::Result TypeRequest::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result rest;
 	Namespace::TypeRef t;
+	if (node->content == Node::Content::AV2_TANC_SUBSCRIPT)
+		t = TemplateTypeReification().transform(context, node).type;
 	if (node->content == Node::Content::AV2_TANC_ARRAY)
 		t = ArrayTypeDecl().transform(context, node).type;
 	else if (node->content == Node::Content::AV2_TANC_NULLABLE_DECL)
@@ -3020,6 +3022,10 @@ ATransformer::Result SwitchMatch::transform(Context& context, Node::Instance con
 	else if (node->middle)
 		return ShortMatch().transform(context, node);
 	else return Match().transform(context, node);
+}
+
+ATransformer::Result TemplateTypeReification::transform(Context& context, Node::Instance const& node) {
+
 }
 
 Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {
