@@ -467,10 +467,6 @@ Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance co
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
-	if (parser.context.peek().type == LTS_TT_OPEN_BRACKET) {
-		auto const templateDecl = parser.nextExpression();
-		result->templateDecl = templateDecl;
-	}
 	auto name = parser.nextExpression();
 	if (optionalName && name->isBlock()) {
 		result->rightSide = name;
@@ -483,10 +479,19 @@ Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance co
 		MAKAILIB_DEBUGLN_FULL("+++++++++++++++ DECL::LHS = ", name->leftSide->base.text);
 		MAKAILIB_DEBUGLN_FULL("+++++++++++++++ DECL::MHS is ", Node::asString(name->middle->content));
 		MAKAILIB_DEBUGLN_FULL("+++++++++++++++ DECL::MHS = ", name->middle->base.text);
-		if (!name->leftSide->isPathOrName())
+		if (name->leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
+			result->templateDecl	= name->leftSide;
+			result->leftSide		= name->leftSide->leftSide;
+			result->middle			= name->middle;
+		} else if (!name->leftSide->isPathOrName())
 			parser.context.error("Expected name or path here!");
-		result->middle = name->middle;
-		result->leftSide = name->leftSide;
+		else {
+			result->middle		= name->middle;
+			result->leftSide	= name->leftSide;
+		}
+	} else if (name->leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
+			result->templateDecl	= name;
+			result->leftSide		= name->leftSide;
 	} else if (!name->isPathOrName())
 		parser.context.error("Expected path or name here!");
 	else result->leftSide = name;
@@ -504,7 +509,10 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
 	FunctionPrototypeResolver resolver;
-	result->leftSide = leftSide;
+	if (leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
+		result->templateDecl	= leftSide;
+		result->leftSide		= leftSide->leftSide;
+	} else result->leftSide = leftSide;
 	result->middle = resolver.resolve(parser, null, {});
 	result->rightSide = FunctionContentResolver().resolve(parser, null, {});
 	MAKAILIB_DEBUGLN_FULL("FunctionDecl:DONE!");
