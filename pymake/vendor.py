@@ -23,6 +23,7 @@ class Vendor:
     def __init__(self):
         self.__vendored = dict[str, Vendor.Library]()
         self.__mri_libs = dict[str, str]()
+        self.__include_groups = dict[str, list[str]]()
 
     def vendor(self, name: str, path: str = "", filename: str = "", shared: bool = False):
         if path == "":
@@ -41,7 +42,6 @@ class Vendor:
             "obj/extern/" + name,
             "obj/extern/" + "lib.3p." + name,
         )
-        return self.__vendored[name]
 
     def vendor_header_only(self, name: str, path: str = ""):
         if path == "":
@@ -54,7 +54,15 @@ class Vendor:
             "",
             "",
         )
-        return self.__vendored[name]
+
+    def set_include_group(self, name: str, *libs: str):
+        self.__include_groups[name] = [lib for lib in libs]
+
+    def include_group(self, name: str) -> list[str]:
+        if name in self.__include_groups:
+            return self.includes(*self.__include_groups[name])
+        else:
+            return []
 
     def mri_script(self) -> str:
         return f"""

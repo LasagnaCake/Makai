@@ -73,6 +73,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		BaseContext::Axiom				base;
 		List<BaseContext::Axiom>		interject;
 		bool							forAssignment = false;
+		Instance						templateDecl;
 
 		constexpr bool isPathOrName() const {
 			return content == Content::AV2_TANC_PATH || content == Content::AV2_TANC_NAME;

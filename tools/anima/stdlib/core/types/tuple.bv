@@ -1,0 +1,5 @@
+using import core.types.any
+
+
+struct [Types...] Tuple: (Types...) {
+}

@@ -470,6 +470,26 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		context.error("Symbol with this name already exists in the current scope!", node->leftSide);
 	auto const scope = context.declare(name);
 	auto& type = *(scope->type = scope->type.create());
+	if (node->templateDecl) {
+		context.error("Templates are not supported yet!");
+		auto const baseArgName = "<template>::" + node->name();
+		type.flags.isTemplate = true;
+		for (auto& arg: node->templateDecl->children) {
+			if (arg->content == Node::Content::AV2_TANC_NAME) {
+				auto const name = baseArgName + arg->value.getString();
+				auto const typeScope = context.declare(UTF8StringList::from(name));
+				auto const templateType = *(typeScope->type = typeScope->type.create());
+				templateType->name = arg->value.getString();
+				templateType->flags.isTemplate = true;
+				context.pop(1);
+				context.registerType(templateType);
+			} else if (arg->content == Node::Content::AV2_TANC_EXPANSION) {
+
+			} else if (arg->content == Node::Content::AV2_TANC_DECLARATION) {
+
+			} else context.error("Invalid template declaration!");
+		}
+	}
 	if (node->middle) {
 		auto const base = TypeRequest().transform(context, node->middle).type;
 		if (!base)

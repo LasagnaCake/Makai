@@ -35,8 +35,9 @@ class Builder:
         all_flags = concat(target.flags, target.flags, self.flags, flags)
         basename = folder.replace('/', '.')
         dir = folder if abspath else f"{os.getcwd()}/src/{folder}"
+        to_dir = folder if abspath else f"{os.getcwd()}/obj/{target.name}"
         #basename = basename[:basename.rfind(".")]
-        base_decl = [self.compiler, "-c", f"{dir}/{file}", "-o", f"{basename}.{file}.{target.name}.o"]
+        base_decl = [self.compiler, "-c", f"{dir}/{file}", "-o", f"{to_dir}/{basename}.{file}.{target.name}.o"]
         return await spawn(
             args=base_decl + all_flags.unpack()
         )
@@ -47,8 +48,9 @@ class Builder:
         all_flags = concat(target.flags, self.flags, flags)
         basename = folder.replace('/', '.')
         dir = folder if abspath else f"{os.getcwd()}/src/{folder}"
+        to_dir = folder if abspath else f"{os.getcwd()}/obj/{folder}"
         #basename = basename[:basename.rfind(".")]
-        base_decl = [self.compiler, f"{dir}/{file}", "-o", f"obj/{target.name}/{basename}.{file}.{target.name}{info().exec_type}"]
+        base_decl = [self.compiler, f"{dir}/{file}", "-o", f"{to_dir}/{basename}.{file}.{target.name}{info().exec_type}"]
         return await spawn(
             args=base_decl + all_flags.unpack()
         )

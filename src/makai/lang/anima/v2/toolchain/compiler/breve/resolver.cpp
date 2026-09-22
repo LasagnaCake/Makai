@@ -467,6 +467,10 @@ Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance co
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
+	if (parser.context.peek().type == LTS_TT_OPEN_BRACKET) {
+		auto const templateDecl = parser.nextExpression();
+		result->templateDecl = templateDecl;
+	}
 	auto name = parser.nextExpression();
 	if (optionalName && name->isBlock()) {
 		result->rightSide = name;

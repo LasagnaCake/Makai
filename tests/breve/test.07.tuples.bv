@@ -1,0 +1,7 @@
+using import core
+
+using Person = Tuple[string, string]
+
+extend Person {
+
+}
