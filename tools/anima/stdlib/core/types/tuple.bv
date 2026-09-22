@@ -1,5 +1,4 @@
 using import core.types.any
 
-
-struct [Types...] Tuple: (Types...) {
+struct Tuple[Types...]: decl (Types...) {
 }

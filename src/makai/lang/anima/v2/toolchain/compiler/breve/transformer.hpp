@@ -63,6 +63,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			Namespace::TypeRef arrayFor(Namespace::TypeRef const& type);
 			Namespace::TypeRef nullableFor(Namespace::TypeRef const& type);
 			Namespace::TypeRef tupleFor(List<Namespace::TypeRef> const& types);
+			Namespace::TypeRef unionFor(List<Namespace::TypeRef> const& types);
 
 			Namespace::TypeRef basicTypeOf(Makai::Data::Value const& val);
 
@@ -83,8 +84,20 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			Map<Handle<TypeDecl>, Namespace::TypeRef>			arrays;
 			Map<Handle<TypeDecl>, Namespace::TypeRef>			nullables;
 			Map<List<Namespace::TypeRef>, Namespace::TypeRef>	tuples;
+			Map<List<Namespace::TypeRef>, Namespace::TypeRef>	unions;
 
 			Node::Instance evaluate(UTF8String const& eval);
+
+			Result getExpression(Node::Instance const& node);
+			Result getType(Node::Instance const& node);
+
+			template <Type::Subclass<ATransformer> T>
+			Result transform(Node::Instance const& node) {
+				T tf;
+				return transform(tf, node);
+			}
+
+			Result transform(ATransformer& transformer, Node::Instance const& node);
 		};
 
 		virtual ~ATransformer();
@@ -287,6 +300,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
+	struct UnionTypeDecl: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
 	struct Await: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
@@ -349,6 +366,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 
 	struct TemplateTypeReification: ATransformer {
 		bool pathed = true;
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct TypeReification: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 }

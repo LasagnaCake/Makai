@@ -427,7 +427,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 
 ATransformer::Result Aliasing::transform(Context& context, Node::Instance const& node) {
 	auto const name = context.pathOf(node->leftSide);
-	auto scope = Expression().transform(context, node->rightSide).scope;
+	auto scope = context.getExpression(node->rightSide).scope;
 	if (!scope)
 		context.error("Requested symbol scope does not exist!", node->rightSide);
 	if (node->leftSide) {
@@ -448,7 +448,7 @@ ATransformer::Result Aliasing::transform(Context& context, Node::Instance const&
 }
 
 ATransformer::Result Using::transform(Context& context, Node::Instance const& node) {
-	auto scope = Expression().transform(context, node->leftSide).scope;
+	auto scope = context.getExpression(node->leftSide).scope;
 	if (!scope)
 		context.error("Namespace does not exist!", node->leftSide);
 	if (!scope->isPureNamespace())
@@ -472,13 +472,13 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	auto& type = *(scope->type = scope->type.create());
 	if (node->templateDecl) {
 		context.error("Templates are not supported yet!");
-		type.flags.isTemplate = true;
+		type.flags.isGeneric = true;
 		for (auto& arg: node->templateDecl->children) {
 			if (arg->content == Node::Content::AV2_TANC_NAME) {
 				auto const baseArgName = context.pathOf(arg);
 				auto const typeScope = context.declare(baseArgName);
 				auto& templateType = *(typeScope->type = typeScope->type.create());
-				templateType.flags.isTemplate = true;
+				templateType.flags.isDummyType = true;
 				context.pop(baseArgName.size());
 				context.registerType(typeScope);
 			} else if (arg->content == Node::Content::AV2_TANC_EXPANSION) {
@@ -489,7 +489,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		}
 	}
 	if (node->middle) {
-		auto const base = TypeRequest().transform(context, node->middle).type;
+		auto const base = context.getType(node->middle).type;
 		if (!base)
 			context.error("No type with this name exists!", node->middle);
 		type.base = base;
@@ -545,7 +545,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	MAKAILIB_DEBUGLN_FULL("Parsing fields...");
 	MAKAILIB_DEBUGLN_FULL("Field count: ", fields.size());
 	for (auto const& [field, id]: Range::expand(fields)) {
-		auto const decl = Expression().transform(context, field);
+		auto const decl = context.getExpression(field);
 		auto& var = *decl.scope->variable;
 		var.fieldOf = scope->type.asWeak();
 		type.fields[var.name] = decl.scope->variable;
@@ -568,7 +568,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	MAKAILIB_DEBUGLN_FULL("Parsing properties...");
 	MAKAILIB_DEBUGLN_FULL("Property count: ", properties.size());
 	for (auto& property: properties) {
-		auto const decl = Expression().transform(context, property);
+		auto const decl = context.getExpression(property);
 		auto& prop = *decl.scope->property;
 		if (prop.getter) {
 			auto& fn = *prop.getter;
@@ -603,7 +603,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	MAKAILIB_DEBUGLN_FULL("Parsing methods...");
 	MAKAILIB_DEBUGLN_FULL("Method count: ", methods.size());
 	for (auto& method: methods) {
-		auto const decl = Expression().transform(context, method);
+		auto const decl = context.getExpression(method);
 		auto& fn = *decl.scope->function;
 		for (auto& ov: fn.current) {
 			if (!ov->staticEntity && (ov->arguments.empty() or ov->arguments[0]->type != scope->type))
@@ -634,7 +634,7 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 	auto const scope = context.declare(name);
 	auto& type = *(scope->type = scope->type.create());
 	if (node->middle) {
-		auto const base = TypeRequest().transform(context, node->middle).type;
+		auto const base = context.getType(node->middle).type;
 		if (!base)
 			context.error("No type with this name exists!", node->middle);
 		if (!base->flags.isBasic)
@@ -682,7 +682,7 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 	int64 defx = 0;
 	for (auto const& [field, id]: Range::expand(fields)) {
 		if (field->rightSide) {
-			auto const vx = Expression().transform(context, field->rightSide);
+			auto const vx = context.getExpression(field->rightSide);
 			if (!vx.direct.isInteger())
 				context.error("Expected direct integer here!", field->rightSide);
 			defx = vx.direct.getSigned();
@@ -705,7 +705,7 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 	MAKAILIB_DEBUGLN_FULL("Parsing methods...");
 	MAKAILIB_DEBUGLN_FULL("Method count: ", methods.size());
 	for (auto& method: methods) {
-		auto const decl = Expression().transform(context, method);
+		auto const decl = context.getExpression(method);
 		auto& fn = *decl.scope->function;
 		for (auto& ov: fn.current) {
 			if (!ov->staticEntity && (ov->arguments.empty() or ov->arguments[0]->type != scope->type))
@@ -757,7 +757,7 @@ ATransformer::Result Block::transform(Context& context, Node::Instance const& no
 	ATransformer::Result result;
 	context.top()->impl->writeMainLine("begin");
 	for (auto const& child: node->children) {
-		result = Expression().transform(context, child);
+		result = context.getExpression(child);
 		if (result.scope && result.scope->variable) {
 			context.top()->impl->writeMainLine(result.scope->impl->toString());
 			if (!result.scope->variable->initializer)		continue;
@@ -773,7 +773,7 @@ ATransformer::Result Block::transform(Context& context, Node::Instance const& no
 ATransformer::Result SubExpression::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result result;
 	for (auto const& child: node->children) {
-		result = Expression().transform(context, child);
+		result = context.getExpression(child);
 		if (result.scope && result.scope->variable) {
 			context.top()->impl->writeMainLine(result.scope->impl->toString());
 			if (!result.scope->variable->initializer)		continue;
@@ -940,7 +940,7 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 		node->base.text == "return"
 	or	node->base.text == "error"
 	)
-		return Return().transform(context, node);
+		return context.transform<Return>(node);
 	Expression expr;
 	auto val = expr.transform(context, node->leftSide);
 	if (val.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
@@ -1038,7 +1038,7 @@ static Makai::String asFastOpQualifier(Core::BasicType const& type, ATransformer
 
 ATransformer::Result PostfixExpression::transform(Context& context, Node::Instance const& node) {
 	if (node->base.type == LTS_TT_ELLIPSIS)
-		return Spread().transform(context, node);
+		return context.transform<Spread>(node);
 	Expression expr;
 	auto const val = expr.transform(context, node->leftSide);
 	if (val.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
@@ -1144,7 +1144,7 @@ ATransformer::Result Cast::transform(Context& context, Node::Instance const& nod
 		context.impl()->writeMainLine("push", *lhs.source);
 	else if (lhs.isStackTop() && lhs.isCopied())
 		context.impl()->writeMainLine("copy", *lhs.source, "-> top");
-	auto const t = TypeRequest().transform(context, node->rightSide);
+	auto const t = context.getType(node->rightSide);
 	if (lhs.isCompilable())
 		return specialDirectResolve(context, lhs, t.type, node->base.text, node->leftSide);
 	auto const retType = t.type;
@@ -1188,7 +1188,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 		node->base.text == "as"
 	||	node->base.text == "is"
 	) {
-		auto const t = TypeRequest().transform(context, node->rightSide);
+		auto const t = context.getType(node->rightSide);
 		if (lhs.isCompilable())
 			return specialDirectResolve(context, lhs, t.type, node->base.text, node->leftSide);
 		if (node->base.text == "is") {
@@ -1329,15 +1329,15 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 		} else result.scope = ns;
 		return result;
 	} if (node->leftSide->content == Node::Content::AV2_TANC_FN_CALL) {
-		auto const fcall = Call().transform(context, node->leftSide);
+		auto const fcall = context.transform<Call>(node->leftSide);
 		path = context.pathOf(node->value.getString()).reverse();
 		result = fcall;
 	} else if (node->leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
-		auto const sub = Subscript().transform(context, node->leftSide);
+		auto const sub = context.transform<Subscript>(node->leftSide);
 		path = context.pathOf(node->value.getString()).reverse();
 		result = sub;
 	}  else if (node->leftSide->content == Node::Content::AV2_TANC_PATH) {
-		auto const nsx = PathExpression().transform(context, node->leftSide);
+		auto const nsx = context.transform<PathExpression>(node->leftSide);
 		path = context.pathOf(node->value.getString()).reverse();
 		result = nsx;
 		if (nsx.shouldBePushed())
@@ -1348,7 +1348,7 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 	} else if (node->leftSide->content == Node::Content::AV2_TANC_FAILABLE_PATH) {
 		auto const success =  "__success_" + node->name();
 		auto const fail =  "__fail_" + node->name();
-		auto const nsx = PathExpression().transform(context, node->leftSide);
+		auto const nsx = context.transform<PathExpression>(node->leftSide);
 		path = context.pathOf(node->value.getString()).reverse();
 		result = nsx;
 		if (nsx.shouldBePushed())
@@ -1378,36 +1378,38 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 	MAKAILIB_DEBUGLN_FULL("Expression Type: ", Node::asString(node->content));
 	switch (node->content) {
 		case Node::Content::AV2_TANC_EMPTY:				return {};
-		case Node::Content::AV2_TANC_VALUE:				return Direct().transform(context, node);
-		case Node::Content::AV2_TANC_BLOCK:				return Block().transform(context, node);
-		case Node::Content::AV2_TANC_ASSIGNMENT:		return Assignment().transform(context, node);
-		case Node::Content::AV2_TANC_DECLARATION:		return Declaration().transform(context, node);
-		case Node::Content::AV2_TANC_FN_CALL:			return Call().transform(context, node);
-		case Node::Content::AV2_TANC_DEFINITION:		return Definition().transform(context, node);
-		case Node::Content::AV2_TANC_PREFIX_OP:			return PrefixExpression().transform(context, node);
-		case Node::Content::AV2_TANC_INFIX_OP:			return InfixExpression().transform(context, node);
-		case Node::Content::AV2_TANC_POSTFIX_OP:		return PostfixExpression().transform(context, node);
-		case Node::Content::AV2_TANC_BRANCH:			return Branch().transform(context, node);
-		case Node::Content::AV2_TANC_INLINE_IF_ELSE:	return InlineIfElse().transform(context, node);
-		case Node::Content::AV2_TANC_LOOP:				return Loop().transform(context, node);
-		case Node::Content::AV2_TANC_INLINE_MINIMA:		return InlineAssembly().transform(context, node);
-		case Node::Content::AV2_TANC_ATTRIBUTE:			return AttributeExpression().transform(context, node);
-		case Node::Content::AV2_TANC_DROP:				return Drop().transform(context, node);
-		case Node::Content::AV2_TANC_NEW:				return Create().transform(context, node);
-		case Node::Content::AV2_TANC_IMPORT:			return Import().transform(context, node);
-		case Node::Content::AV2_TANC_ALIAS:				return Aliasing().transform(context, node);
-		case Node::Content::AV2_TANC_UNSCOPING:			return Using().transform(context, node);
-		case Node::Content::AV2_TANC_SUBSCRIPT:			return Subscript().transform(context, node);
-		case Node::Content::AV2_TANC_TYPE_EXTENSION:	return TypeExtension().transform(context, node);
-		case Node::Content::AV2_TANC_EMPTY_DECAY:		return NullDecay().transform(context, node);
-		case Node::Content::AV2_TANC_EVAL_BLOCK:		return Evaluation().transform(context, node);
-		case Node::Content::AV2_TANC_SWITCH:			return SwitchMatch().transform(context, node);
+		case Node::Content::AV2_TANC_VALUE:				return context.transform<Direct>(node);
+		case Node::Content::AV2_TANC_BLOCK:				return context.transform<Block>(node);
+		case Node::Content::AV2_TANC_ASSIGNMENT:		return context.transform<Assignment>(node);
+		case Node::Content::AV2_TANC_DECLARATION:		return context.transform<Declaration>(node);
+		case Node::Content::AV2_TANC_FN_CALL:			return context.transform<Call>(node);
+		case Node::Content::AV2_TANC_DEFINITION:		return context.transform<Definition>(node);
+		case Node::Content::AV2_TANC_PREFIX_OP:			return context.transform<PrefixExpression>(node);
+		case Node::Content::AV2_TANC_INFIX_OP:			return context.transform<InfixExpression>(node);
+		case Node::Content::AV2_TANC_POSTFIX_OP:		return context.transform<PostfixExpression>(node);
+		case Node::Content::AV2_TANC_BRANCH:			return context.transform<Branch>(node);
+		case Node::Content::AV2_TANC_INLINE_IF_ELSE:	return context.transform<InlineIfElse>(node);
+		case Node::Content::AV2_TANC_LOOP:				return context.transform<Loop>(node);
+		case Node::Content::AV2_TANC_INLINE_MINIMA:		return context.transform<InlineAssembly>(node);
+		case Node::Content::AV2_TANC_ATTRIBUTE:			return context.transform<AttributeExpression>(node);
+		case Node::Content::AV2_TANC_DROP:				return context.transform<Drop>(node);
+		case Node::Content::AV2_TANC_NEW:				return context.transform<Create>(node);
+		case Node::Content::AV2_TANC_IMPORT:			return context.transform<Import>(node);
+		case Node::Content::AV2_TANC_ALIAS:				return context.transform<Aliasing>(node);
+		case Node::Content::AV2_TANC_UNSCOPING:			return context.transform<Using>(node);
+		case Node::Content::AV2_TANC_SUBSCRIPT:			return context.transform<Subscript>(node);
+		case Node::Content::AV2_TANC_TYPE_EXTENSION:	return context.transform<TypeExtension>(node);
+		case Node::Content::AV2_TANC_EMPTY_DECAY:		return context.transform<NullDecay>(node);
+		case Node::Content::AV2_TANC_EVAL_BLOCK:		return context.transform<Evaluation>(node);
+		case Node::Content::AV2_TANC_SWITCH:			return context.transform<SwitchMatch>(node);
+		case Node::Content::AV2_TANC_REIFICATION:		return context.transform<TypeReification>(node);
+		case Node::Content::AV2_TANC_UNION_DECL:		return context.transform<UnionTypeDecl>(node);
 		case Node::Content::AV2_TANC_CAST:
-		case Node::Content::AV2_TANC_UNSAFE_CAST:		return Cast().transform(context, node);
+		case Node::Content::AV2_TANC_UNSAFE_CAST:		return context.transform<Cast>(node);
 		case Node::Content::AV2_TANC_NAME:
 		case Node::Content::AV2_TANC_PATH:
-		case Node::Content::AV2_TANC_FAILABLE_PATH:		return PathExpression().transform(context, node);
-		case Node::Content::AV2_TANC_EXPANSION:			return Spread().transform(context, node);
+		case Node::Content::AV2_TANC_FAILABLE_PATH:		return context.transform<PathExpression>(node);
+		case Node::Content::AV2_TANC_EXPANSION:			return context.transform<Spread>(node);
 		default: context.error("Unsupported expression!", node);
 	}
 }
@@ -1415,19 +1417,18 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 ATransformer::Result TypeRequest::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result rest;
 	Namespace::TypeRef t;
-	if (node->content == Node::Content::AV2_TANC_SUBSCRIPT)
-		t = TemplateTypeReification().transform(context, node).type;
-	if (node->content == Node::Content::AV2_TANC_ARRAY)
-		t = ArrayTypeDecl().transform(context, node).type;
-	else if (node->content == Node::Content::AV2_TANC_NULLABLE_DECL)
-		t = NullableTypeDecl().transform(context, node).type;
-	else if (node->content == Node::Content::AV2_TANC_DECLARATION)
-		t = StructureDecl().transform(context, node).type;
-	else if (node->content == Node::Content::AV2_TANC_FN_PROTOTYPE)
-		t = FunctionTypeDecl().transform(context, node).type;
-	else if (node->content == Node::Content::AV2_TANC_BLOCK)
-		t = TupleTypeDecl().transform(context, node).type;
-	else t = context.fetch(node)->type;
+	switch (node->content) {
+		using enum Node::Content;
+		case (AV2_TANC_REIFICATION):	t = context.transform<TypeReification>(node).type;			break;
+		case (AV2_TANC_SUBSCRIPT):		t = context.transform<TemplateTypeReification>(node).type;	break;
+		case (AV2_TANC_ARRAY):			t = context.transform<ArrayTypeDecl>(node).type;			break;
+		case (AV2_TANC_NULLABLE_DECL):	t = context.transform<NullableTypeDecl>(node).type;			break;
+		case (AV2_TANC_DECLARATION):	t = context.transform<StructureDecl>(node).type;			break;
+		case (AV2_TANC_FN_PROTOTYPE):	t = context.transform<FunctionTypeDecl>(node).type;			break;
+		case (AV2_TANC_BLOCK):			t = context.transform<TupleTypeDecl>(node).type;			break;
+		case (AV2_TANC_UNION_DECL):		t = context.transform<UnionTypeDecl>(node).type;			break;
+		default:						if (auto const nx = context.fetch(node)) t = nx->type;		break;
+	}
 	if (!t) context.error("Type does not exist!", node);
 	++t->uses;
 	return {.type = t};
@@ -1531,7 +1532,7 @@ static Makai::UTF8StringList resolveAttribute(
 
 ATransformer::Result AttributeExpression::transform(Context& context, Node::Instance const& node) {
 	MAKAILIB_DEBUGLN_FULL("<attrib-expr>");
-	auto const expr = Expression().transform(context, node->rightSide);
+	auto const expr = context.getExpression(node->rightSide);
 	if (!expr.scope) context.error("Expected scope here!", node->rightSide);
 	Makai::Dictionary<Metadata::Instance> attributes;
 	MAKAILIB_DEBUGLN_FULL("Resolving attributes for expression '", expr.scope->name, "'...");
@@ -1602,7 +1603,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	}
 	Namespace::TypeRef retType;
 	if (proto->leftSide) {
-		auto const ret = Expression().transform(context, proto->leftSide);
+		auto const ret = context.getExpression(proto->leftSide);
 		retType = ret.type;
 		if (!retType && !ret.scope)
 			context.error("Return type does not exist!", proto->leftSide);
@@ -1616,7 +1617,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	fn->current.pushBack(current);
 	current->scope = impl.asWeak();
 	for (auto& arg: required) {
-		auto const ax = Expression().transform(context, arg);
+		auto const ax = context.getExpression(arg);
 		current->arguments.pushBack(ax.scope->variable);
 		ax.scope->variable->fill();
 	}
@@ -1642,7 +1643,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		fn->current.pushBack(current);
 		current->arguments = prev->arguments;
 		overload->varc = current->arguments.size();
-		auto const ox = Expression().transform(context, opt);
+		auto const ox = context.getExpression(opt);
 		current->arguments.pushBack(ox.scope->variable);
 		auto const [fx, isExact] = fn->overloadFromVariables(current->arguments);
 		if (fx && fx->hasImplementation)
@@ -1666,7 +1667,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		context.functionStack.pushBack(current);
 		impl->impl->writePreLine("bind ref", argc, "[0 -> 0]");
 		impl->impl->writePreLine("clear", argc);
-		auto const def = Expression().transform(context, node->rightSide);
+		auto const def = context.getExpression(node->rightSide);
 		if (retType && def.type && retType != def.type)
 			context.error("Expression return type does not match function return type!", node);
 		else if (!retType) {
@@ -1716,7 +1717,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 ATransformer::Result Assignment::transform(Context& context, Node::Instance const& node) {
 	auto const ndecl = "__exists_" + node->name();
 	if (node->middle) {
-		auto lhs = Expression().transform(context, node->leftSide);
+		auto lhs = context.getExpression(node->leftSide);
 		if (lhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
 		if (!(lhs.source && (lhs.type->flags.isArray or lhs.type->basic == Core::BasicType::AV2_BT_VECTOR)))
 			context.error("Expected indexable value here!", node->leftSide);
@@ -1725,7 +1726,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 		else if (lhs.isStackTop() && lhs.isCopied()) {
 			context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
 		}
-		auto i = Expression().transform(context, node->middle);
+		auto i = context.getExpression(node->middle);
 		if (i.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->middle);
 		if (!(i.source && TypeDecl::stronger(i.type, context.basicType("uint64"))))
 			context.error("Expected integer here!", node->middle);
@@ -1746,7 +1747,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 			else context.error("Expected integer here!", node->middle);
 			context.top()->impl->writeMainLine("jump if not empty", ndecl);
 		}
-		auto const rhs = Expression().transform(context, node->rightSide);
+		auto const rhs = context.getExpression(node->rightSide);
 		if (rhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->rightSide);
 		if (!rhs.source)
 			context.error("Expected value here!", node->rightSide);
@@ -1774,7 +1775,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 			return {{"move top"}, lhs.scope, t, rhs.direct, rhs.likelihood};
 		} else context.error("Type mismatch in assignment expression!", node);
 	}
-	auto lhs = Expression().transform(context, node->leftSide);
+	auto lhs = context.getExpression(node->leftSide);
 	if (lhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
 	if (lhs.scope && lhs.scope->property) {
 		if (!lhs.scope->property->setter)
@@ -1785,7 +1786,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 			context.top()->impl->writeMainLine("push", *lhs.source);
 		else if (lhs.isStackTop() && lhs.isCopied())
 			context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
-		auto const rhs = Expression().transform(context, node->rightSide);
+		auto const rhs = context.getExpression(node->rightSide);
 		auto const [set, isExact] = prop.setter->overloadFromTypes({lhs.parent, rhs.type}, Function::FuzzySearch::AV2_TCF_FS_ALL_EXCEPT_FIRST);
 		if (!set)
 			context.error("No suitable setter for expression type", node->rightSide);
@@ -1797,7 +1798,7 @@ ATransformer::Result Assignment::transform(Context& context, Node::Instance cons
 	}
 	if (lhs.isStackTop() && lhs.isCopied())
 		context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
-	auto const rhs = Expression().transform(context, node->rightSide);
+	auto const rhs = context.getExpression(node->rightSide);
 	if (rhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->rightSide);
 	if (lhs.parent) {
 		context.top()->impl->main.popBack();
@@ -1876,7 +1877,7 @@ ATransformer::Result Import::transform(Context& context, Node::Instance const& n
 }
 
 ATransformer::Result Spread::transform(Context& context, Node::Instance const& node) {
-	auto result = Expression().transform(context, node->leftSide);
+	auto result = context.getExpression(node->leftSide);
 	result.spreaded = true;
 	return result;
 }
@@ -1895,15 +1896,15 @@ ATransformer::Result PropertyDecl::transform(Context& context, Node::Instance co
 	}
 	auto& property = *scope->property;
 	if (node->leftSide)
-		property.getter = PropertyGetter().transform(context, node->leftSide).scope->function;
+		property.getter = context.transform<PropertyGetter>(node->leftSide).scope->function;
 	if (node->rightSide)
-		property.setter = PropertySetter().transform(context, node->leftSide).scope->function;
+		property.setter = context.transform<PropertySetter>(node->leftSide).scope->function;
 	context.pop(path.size());
 	return {.scope = scope};
 }
 
 ATransformer::Result PropertyGetter::transform(Context& context, Node::Instance const& node) {
-	auto const decl = FunctionDecl().transform(context, node);
+	auto const decl = context.transform<FunctionDecl>(node);
 	if (decl.scope->function->current.size() != 1)
 		context.error("Default arguments are not allowed in property declarations!", node);
 	if (decl.scope->function->current.back()->arguments.size() != 1)
@@ -1912,7 +1913,7 @@ ATransformer::Result PropertyGetter::transform(Context& context, Node::Instance 
 }
 
 ATransformer::Result PropertySetter::transform(Context& context, Node::Instance const& node) {
-	auto const decl = FunctionDecl().transform(context, node);
+	auto const decl = context.transform<FunctionDecl>(node);
 	if (decl.scope->function->current.size() != 1)
 		context.error("Default arguments are not allowed in property declarations!", node);
 	if (decl.scope->function->current.back()->arguments.size() != 2)
@@ -1926,25 +1927,25 @@ ATransformer::Result NamespaceDecl::transform(Context& context, Node::Instance c
 		context.error("Redeclaration of previously-declared symbol!", node->leftSide);
 	auto const scope = context.declare(path);
 	scope->declaredAsNamespace = true;
-	Block().transform(context, node->rightSide);
+	context.transform<Block>(node->rightSide);
 	context.pop(path.size());
 	return {.scope = scope, .mayBeEmpty = false};
 }
 
 ATransformer::Result Declaration::transform(Context& context, Node::Instance const& node) {
 	if (node->base.type == LTS_TT_NAMESPACE_RESOLVE)
-		return FunctionDecl().transform(context, node);
+		return context.transform<FunctionDecl>(node);
 	if (node->base.type == LTS_TT_COLON || node->base.type == LTS_TT_DECLARE)
-		return VariableDecl().transform(context, node);
+		return context.transform<VariableDecl>(node);
 	if (node->base.type == LTS_TT_IDENTIFIER) {
 		if (node->base.text == "struct")
-			return StructureDecl().transform(context, node);
+			return context.transform<StructureDecl>(node);
 		if (node->base.text == "prop")
-			return PropertyDecl().transform(context, node);
+			return context.transform<PropertyDecl>(node);
 		if (node->base.text == "module")
-			return NamespaceDecl().transform(context, node);
+			return context.transform<NamespaceDecl>(node);
 		if (node->base.text == "enum")
-			return EnumDecl().transform(context, node);
+			return context.transform<EnumDecl>(node);
 	}
 	context.error("Invalid declaration!", node);
 }
@@ -1956,7 +1957,7 @@ static Makai::Data::Value callDirect(ATransformer::Context& context, Function::O
 ATransformer::Result Call::transform(Context& context, Node::Instance const& node) {
 	MAKAILIB_DEBUGLN_FULL("Left-side: ", node->leftSide->base.text);
 	auto const dx = context.impl()->main.size();
-	auto const fn = Expression().transform(context, node->leftSide);
+	auto const fn = context.getExpression(node->leftSide);
 	if (!fn.scope)
 		context.error("Symbol does not exist!", node->leftSide);
 	MAKAILIB_DEBUGLN_FULL(fn.scope->name);
@@ -1970,7 +1971,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 	Makai::Data::Value::ArrayType directArgs;
 	bool runtimeCall = false;
 	for (auto const& arg: node->children) {
-		auto const expr = Expression().transform(context, arg);
+		auto const expr = context.getExpression(arg);
 		if (expr.mayBeEmpty) context.error("One or more code paths may not result in a value!", arg);
 		if (!expr.source)
 			context.error("Expected value here!", arg);
@@ -2027,7 +2028,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		if (ret.isUndefined())
 			return {.type = context.basicType("void")};
 		else if (ret.isObject())
-			return Expression().transform(context, context.evaluate(ret["eval"].getString()));
+			return context.getExpression(context.evaluate(ret["eval"].getString()));
 		else return {{ret.isNull() ? Makai::String("nil") : (ret.toString() + " " + directName(context, ret.type())->basicNumberName())}, nullptr, context.basicTypeOf(ret), ret};
 	} else if (ov.variant.context < ExecutionContext::AV2_TCB_EC_COMPILE) {
 		if (ov.variadic && !(args.back()->flags.isArray && argResults.back().spreaded)) {
@@ -2052,7 +2053,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 }
 
 ATransformer::Result Subscript::transform(Context& context, Node::Instance const& node) {
-	auto const src = Expression().transform(context, node->leftSide);
+	auto const src = context.getExpression(node->leftSide);
 	if (!src.source)
 		context.error("Expected value here!", node->leftSide);
 	if (!(src.type->flags.isArray || src.type->basic == Core::BasicType::AV2_BT_VECTOR))
@@ -2062,7 +2063,7 @@ ATransformer::Result Subscript::transform(Context& context, Node::Instance const
 	else if (src.isStackTop() && src.isCopied()) {
 		context.top()->impl->writeMainLine("copy", *src.source, "-> top");
 	}
-	auto const index = Expression().transform(context, node->rightSide);
+	auto const index = context.getExpression(node->rightSide);
 	if (index.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->rightSide);
 	if (index.isCompilable()) {
 		if (!index.direct.isInteger() or index.direct.getSigned() < 0)
@@ -2093,7 +2094,7 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 	Namespace::TypeRef prev;
 	usize const count = node->children.size();
 	for (auto const& arg: node->children) {
-		auto const expr = Expression().transform(context, arg);
+		auto const expr = context.getExpression(arg);
 		if (expr.mayBeEmpty) context.error("One or more code paths may not result in a value!", arg);
 		if (!expr.source)
 			context.error("Expected value here!", arg);
@@ -2114,7 +2115,7 @@ ATransformer::Result Array::transform(Context& context, Node::Instance const& no
 }
 
 ATransformer::Result Create::transform(Context& context, Node::Instance const& node) {
-	auto t = TypeRequest().transform(context, node->leftSide).type;
+	auto t = context.getType(node->leftSide).type;
 	auto count = node->children.size();
 	String opstr;
 	if (t->flags.isArray) {
@@ -2122,7 +2123,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 	} else opstr = t->name;
 	if (node->rightSide) {
 		t = context.arrayFor(t);
-		auto const sz = Expression().transform(context, node->rightSide);
+		auto const sz = context.getExpression(node->rightSide);
 		if (sz.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->rightSide);
 		if (!sz.source)
 			context.error("Expected value here!", node->rightSide);
@@ -2164,7 +2165,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 						context.error("Field does not exist!", arg->leftSide);
 					if (filled.contains(field.front()))
 						context.error("Field has already been set!", arg->leftSide);
-					auto const expr = Expression().transform(context, arg->rightSide);
+					auto const expr = context.getExpression(arg->rightSide);
 					if (expr.mayBeEmpty) context.error("One or more code paths may not result in a value!", arg);
 					if (!expr.source)
 						context.error("Expected value here!", arg->rightSide);
@@ -2182,7 +2183,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 						++index;
 					if (index >= t->fields.size())
 						context.error("All fields have been already set!", arg);
-					auto const expr = Expression().transform(context, arg);
+					auto const expr = context.getExpression(arg);
 					if (expr.mayBeEmpty) context.error("One or more code paths may not result in a value!", arg);
 					if (!expr.source)
 						context.error("Expected value here!", arg);
@@ -2198,7 +2199,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 			}
 		} else if (t->flags.isArray) {
 			for (auto const& [arg, i]: Range::expand(node->children)) {
-				auto const expr = Expression().transform(context, arg);
+				auto const expr = context.getExpression(arg);
 				if (TypeDecl::stronger(expr.type, t->base) != t->base)
 					context.error("Type mismatch in array element!", arg);
 				context.top()->impl->writeMainLine("copy", expr.source.value(), "-> local[", tempStart + i, "]");
@@ -2215,7 +2216,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 					context.error("Vectors can only take at most four values!");
 				context.top()->impl->writeMainLine("new", opstr);
 				for (auto const& [arg, i]: Range::expand(node->children)) {
-					auto const expr = Expression().transform(context, arg);
+					auto const expr = context.getExpression(arg);
 					if (!TypeDecl::stronger(expr.type, context.basicType("float32")))
 						context.error("Expected float here!", node->rightSide);
 					else if (expr.shouldBePushed())
@@ -2235,7 +2236,7 @@ ATransformer::Result Create::transform(Context& context, Node::Instance const& n
 }
 
 ATransformer::Result Drop::transform(Context& context, Node::Instance const& node) {
-	auto const at = PathExpression().transform(context, node->leftSide);
+	auto const at = context.transform<PathExpression>(node->leftSide);
 	if (!at.source)
 		context.error("Expression does not result in a value!", node->leftSide);
 	if (!at.isCompilable())
@@ -2247,13 +2248,13 @@ ATransformer::Result InlineIfElse::transform(Context& context, Node::Instance co
 	if (!node->rightSide)
 		context.error("Missing [else] expression!");
 	MAKAILIB_DEBUGLN_FULL("Handling inline if-else...");
-	auto const iif = Branch().transform(context, node);
+	auto const iif = context.transform<Branch>(node);
 	if (!(iif.source and iif.type)) context.error("inline if-elses must result in a value!", node);
 	return iif;
 }
 
 ATransformer::Result Branch::transform(Context& context, Node::Instance const& node) {
-	auto const cond = Expression().transform(context, node->middle);
+	auto const cond = context.getExpression(node->middle);
 	auto const invert = (node->base.text == "unless" or node->base.text == "except");
 	MAKAILIB_DEBUGLN_FULL("If-Condition: ", cond.type ? cond.type->name : "ERR", "(must be ", invert ? "TRUE" : "FALSE", ")");
 	auto const varc = context.top()->varc;
@@ -2265,9 +2266,9 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 		context.pop(1);
 		ATransformer::Result expr;
 		if (cond.direct.isTruthy() != invert)
-			expr = Expression().transform(context, node->leftSide);
+			expr = context.getExpression(node->leftSide);
 		else if (node->rightSide)
-			expr = Expression().transform(context, node->rightSide);
+			expr = context.getExpression(node->rightSide);
 		return expr;
 	} else {
 		if (!cond.source)
@@ -2285,7 +2286,7 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 			auto const branchScope = context.declare(UTF8StringList::from("<if-true>" + node->name()));
 			branchScope->varc += ifScope->varc;
 			branchScope->implementContents = true;
-			ifTrue = Expression().transform(context, node->leftSide);
+			ifTrue = context.getExpression(node->leftSide);
 			mayBeEmpty = mayBeEmpty or ifTrue.mayBeEmpty;
 			if (ifTrue.source && ifTrue.shouldBePushed())
 				branchScope->impl->writeMainLine("push", ifTrue.source.value());
@@ -2302,7 +2303,7 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 			auto const branchScope = context.declare(UTF8StringList::from("<if-false>" + node->name()));
 			branchScope->varc += ifScope->varc;
 			branchScope->implementContents = true;
-			ifFalse = Expression().transform(context, node->rightSide);
+			ifFalse = context.getExpression(node->rightSide);
 			mayBeEmpty = mayBeEmpty or ifFalse.mayBeEmpty;
 			if (ifFalse.source && ifFalse.shouldBePushed())
 				branchScope->impl->writeMainLine("push", ifFalse.source.value());
@@ -2348,10 +2349,10 @@ ATransformer::Result Loop::transform(Context& context, Node::Instance const& nod
 	auto const loopScope = context.declare(scope);
 	loopScope->varc += varc;
 	loopScope->implementContents = true;
-	if (node->base.text == "do")			exprOut = DoLoop().transform(context, node);
-	else if (node->base.text == "while")	exprOut = WhileLoop().transform(context, node);
-	else if (node->base.text == "repeat")	exprOut = RepeatLoop().transform(context, node);
-	else if (node->base.text == "for")		exprOut = ForLoop().transform(context, node);
+	if (node->base.text == "do")			exprOut = context.transform<DoLoop>(node);
+	else if (node->base.text == "while")	exprOut = context.transform<WhileLoop>(node);
+	else if (node->base.text == "repeat")	exprOut = context.transform<RepeatLoop>(node);
+	else if (node->base.text == "for")		exprOut = context.transform<ForLoop>(node);
 	context.pop(scope.size());
 	auto const lpi = loopScope->compose();
 	MAKAILIB_DEBUGLN_FULL(loopScope->serialize().toFLOWString("  "));
@@ -2367,7 +2368,7 @@ ATransformer::Result ForLoop::transform(Context& context, Node::Instance const& 
 	loopScope->impl->writePreLine("decl 2");
 	Namespace::Instance varScope;
 	if (node->leftSide->content == Node::Content::AV2_TANC_DECLARATION)
-		varScope = VariableDecl().transform(context, node->leftSide).scope;
+		varScope = context.transform<VariableDecl>(node->leftSide).scope;
 	else {
 		auto const vname = context.pathOf(node->leftSide);
 		auto const scope = context.declare(vname);
@@ -2379,7 +2380,7 @@ ATransformer::Result ForLoop::transform(Context& context, Node::Instance const& 
 		context.pop(vname.size());
 	}
 	auto& elemVar = *varScope->variable;
-	auto const toIterate = Expression().transform(context, node->middle);
+	auto const toIterate = context.getExpression(node->middle);
 	String const traversalVar = Makai::toString("local[", loopScope->varc++, "]");
 	if (!toIterate.source)
 		context.error("Expected value here!", node->middle);
@@ -2405,7 +2406,7 @@ ATransformer::Result ForLoop::transform(Context& context, Node::Instance const& 
 		loopScope->impl->writeMainLine("copy move top ->", elemVar.getSource());
 		loopScope->impl->writeMainLine("pop");
 		elemVar.fill();
-		auto const loopExpr = Expression().transform(context, node->rightSide);
+		auto const loopExpr = context.getExpression(node->rightSide);
 		loopScope->impl->writePostLine("jump", loopStart);
 		loopScope->impl->writeMainLine("@target", loopEnd, ":");
 	}
@@ -2417,7 +2418,7 @@ ATransformer::Result WhileLoop::transform(Context& context, Node::Instance const
 	auto const loopEnd = context.top()->name + "_end" + node->name();
 	auto const loopScope = context.top();
 	loopScope->impl->writePreLine("@target", loopStart, ":");
-	auto const condExpr = Expression().transform(context, node->leftSide);
+	auto const condExpr = context.getExpression(node->leftSide);
 	if (!condExpr.isCompilable()) {
 		if (condExpr.shouldBePushed())
 			loopScope->impl->writeMainLine("push", condExpr.source.value());
@@ -2426,7 +2427,7 @@ ATransformer::Result WhileLoop::transform(Context& context, Node::Instance const
 		}
 		loopScope->impl->writeMainLine("jump if false", loopEnd);
 	} else if (!condExpr.direct) return {};
-	auto const loopExpr = Expression().transform(context, node->rightSide);
+	auto const loopExpr = context.getExpression(node->rightSide);
 	loopScope->impl->writePostLine("jump", loopStart);
 	loopScope->impl->writePostLine("@target", loopEnd, ":");
 	return {.scope = loopScope};
@@ -2450,7 +2451,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 	var.type = context.basicType("uint64").asWeak();
 	var.name = "##ITERATE::" + node->name();
 	context.pop(vsn.size());
-	auto const it = Expression().transform(context, node->leftSide);
+	auto const it = context.getExpression(node->leftSide);
 	String opq;
 	if (it.isCompilable() or it.source) {
 		if (!it.type)
@@ -2472,7 +2473,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 	if (!it.shouldBePushed())
 		context.top()->impl->writeMainLine("pop");
 	if (node->middle) {
-		auto const refVar = Expression().transform(context, node->middle);
+		auto const refVar = context.getExpression(node->middle);
 		if (!(refVar.scope and refVar.scope->variable))
 			context.error("Expected variable declaration here!", node->middle);
 		refVar.scope->variable->fill();
@@ -2480,7 +2481,7 @@ ATransformer::Result RepeatLoop::transform(Context& context, Node::Instance cons
 		var.type = refVar.scope->variable->type;
 	}
 	loopScope->impl->writePreLine("@target", loopStart, ":");
-	auto const loopExpr = Expression().transform(context, node->rightSide);
+	auto const loopExpr = context.getExpression(node->rightSide);
 	loopScope->impl->writePostLine("push ref", var.getSource());
 	loopScope->impl->writePostLine("op dec", opq);
 	loopScope->impl->writePostLine("jump if true", loopStart);
@@ -2493,9 +2494,9 @@ ATransformer::Result DoLoop::transform(Context& context, Node::Instance const& n
 	auto const loopEnd = context.top()->name + "_end" + node->name();
 	auto const loopScope = context.top();
 	loopScope->impl->writePreLine("@target", loopStart, ":");
-	auto const loopExpr = Expression().transform(context, node->rightSide);
+	auto const loopExpr = context.getExpression(node->rightSide);
 	if (node->leftSide) {
-		auto const condExpr = Expression().transform(context, node->leftSide);
+		auto const condExpr = context.getExpression(node->leftSide);
 		if (!condExpr.isCompilable()) {
 			if (condExpr.shouldBePushed())
 				loopScope->impl->writePostLine("push", condExpr.source.value());
@@ -2510,13 +2511,13 @@ ATransformer::Result DoLoop::transform(Context& context, Node::Instance const& n
 }
 
 ATransformer::Result Definition::transform(Context& context, Node::Instance const& node) {
-	if (node->base.text == "::")			return FunctionDecl().transform(context, node);
-	if (node->base.text == ":")				return VariableDecl().transform(context, node);
-	if (node->base.type == LTS_TT_DECLARE)	return VariableDecl().transform(context, node);
-	if (node->base.text == "prop")			return PropertyDecl().transform(context, node);
-	if (node->base.text == "struct")		return StructureDecl().transform(context, node);
-	if (node->base.text == "module")		return NamespaceDecl().transform(context, node);
-	if (node->base.text == "?")				return NullableTypeDecl().transform(context, node);
+	if (node->base.text == "::")			return context.transform<FunctionDecl>(node);
+	if (node->base.text == ":")				return context.transform<VariableDecl>(node);
+	if (node->base.type == LTS_TT_DECLARE)	return context.transform<VariableDecl>(node);
+	if (node->base.text == "prop")			return context.transform<PropertyDecl>(node);
+	if (node->base.text == "struct")		return context.transform<StructureDecl>(node);
+	if (node->base.text == "module")		return context.transform<NamespaceDecl>(node);
+	if (node->base.text == "?")				return context.transform<NullableTypeDecl>(node);
 	context.error("Unimplemented support for given declaration!", node);
 }
 
@@ -2532,7 +2533,7 @@ ATransformer::Result InlineAssembly::transform(Context& context, Node::Instance 
 ATransformer::Result TheEntireProgram::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result result;
 	for (auto const& child: node->children)
-		result = Expression().transform(context, child);
+		result = context.getExpression(child);
 	return result;
 }
 
@@ -2541,13 +2542,13 @@ ATransformer::Result ArrayTypeDecl::transform(Context& context, Node::Instance c
 		context.error("Expected array type!", node);
 	if (node->children.size() > 1)
 		context.error("Arrays can only contain one type!", node);
-	auto const t = context.arrayFor(TypeRequest().transform(context, node->children.front()).type);
+	auto const t = context.arrayFor(context.getType(node->children.front()).type);
 	context.registerType(t->scope.asStrong());
 	return {.type = t};
 }
 
 ATransformer::Result NullableTypeDecl::transform(Context& context, Node::Instance const& node) {
-	auto const t = context.nullableFor(TypeRequest().transform(context, node).type);
+	auto const t = context.nullableFor(context.getType(node).type);
 	context.registerType(t->scope.asStrong());
 	return {.type = t};
 }
@@ -2556,9 +2557,9 @@ ATransformer::Result FunctionTypeDecl::transform(Context& context, Node::Instanc
 	auto const scope = context.declare(UTF8StringList::from("<proto>" + node->name()));
 	auto& type = *(scope->type = scope->type.create());
 	type.flags.isFunction = true;
-	type.base = TypeRequest().transform(context, node->leftSide).type;
+	type.base = context.getType(node->leftSide).type;
 	for (auto& arg: node->children)
-		type.args.pushBack(TypeRequest().transform(context, arg).type);
+		type.args.pushBack(context.getType(arg).type);
 	context.pop(1);
 	context.registerType(scope);
 	return {.type = scope->type};
@@ -2569,24 +2570,40 @@ ATransformer::Result TupleTypeDecl::transform(Context& context, Node::Instance c
 		context.error("Tuple must contain at least one type!", node);
 	List<Namespace::TypeRef> types;
 	for (auto const& [child, index]: Range::expand(node->children)) {
-		auto const type = TypeRequest().transform(context, child);
+		auto const type = context.getType(child);
 		if (!type.type)
 			context.error("Expected type declaration here!");
 		types.pushBack(type.type);
 	}
-	context.pop(1);
 	return {.type = context.tupleFor(types)};
 }
 
+ATransformer::Result UnionTypeDecl::transform(Context& context, Node::Instance const& node) {
+	if (node->children.empty())
+		context.error("Union type must contain at least one type!", node);
+	List<Namespace::TypeRef> types;
+	Map<Namespace::TypeRef, bool> visited;
+	for (auto const& [child, index]: Range::expand(node->children)) {
+		auto const type = context.getType(child);
+		if (!type.type)
+			context.error("Expected type declaration here!");
+		if (visited.contains(type))
+			context.error("Re-declaration of union type!", child);
+		visited[type] = true;
+		types.pushBack(type.type);
+	}
+	return {.type = context.unionFor(types)};
+}
+
 ATransformer::Result TypeExtension::transform(Context& context, Node::Instance const& node) {
-	auto const type = TypeRequest().transform(context, node->leftSide);
+	auto const type = context.getType(node->leftSide);
 	AsNonConst<decltype(type)> trait;
 	context.scopeStack.pushBack(type.type->scope.asStrong());
 	if (node->middle) {
 		// TODO: This
 	}
 	for (auto& extension: node->children) {
-		auto const ext = Expression().transform(context, extension);
+		auto const ext = context.getExpression(extension);
 		if (!ext.scope)
 			context.error("Invalid expression!", extension);
 		auto const ns = ext.scope;
@@ -2615,8 +2632,8 @@ ATransformer::Result TypeExtension::transform(Context& context, Node::Instance c
 }
 
 ATransformer::Result Await::transform(Context& context, Node::Instance const& node) {
-	if (node->base.text != "await") return AwaitBlock().transform(context, node);
-	else return AwaitOne().transform(context, node);
+	if (node->base.text != "await") return context.transform<AwaitBlock>(node);
+	else return context.transform<AwaitOne>(node);
 }
 
 ATransformer::Result AwaitOne::transform(Context& context, Node::Instance const& node) {
@@ -2625,7 +2642,7 @@ ATransformer::Result AwaitOne::transform(Context& context, Node::Instance const&
 	auto const awaitStart =  "__await_start_" + node->name();
 	auto const awaitEnd = "__await_end_" + node->name();
 	awaitScope->impl->writePreLine("@target", awaitStart, ":");
-	auto expr = Expression().transform(context, node->leftSide);
+	auto expr = context.getExpression(node->leftSide);
 	auto const awaitType = TypeDecl::stronger(expr.type, context.basicType("uint64"));
 	if (expr.isCompilable())
 		context.error("Cannot await on direct expressions!");
@@ -2665,7 +2682,7 @@ ATransformer::Result AwaitBlock::transform(Context& context, Node::Instance cons
 	awaitScope->impl->writePreLine("decl", node->children.size());
 	bool const awaitAny = node->base.text == "yield";
 	for (auto const& [chk, index]: Range::expand(node->children)) {
-		auto const expr = Expression().transform(context, node->leftSide);
+		auto const expr = context.getExpression(node->leftSide);
 		if (!expr.source)
 			context.error("Await block expressions can only be used in checkable values!");
 		if (expr.isCompilable())
@@ -2693,7 +2710,7 @@ ATransformer::Result AwaitBlock::transform(Context& context, Node::Instance cons
 ATransformer::Result NullDecay::transform(Context& context, Node::Instance const& node) {
 	auto const exit = "__null_decay_" + node->name() + "_end";
 	ATransformer::Result result;
-	auto const lhs = Expression().transform(context, node);
+	auto const lhs = context.getExpression(node);
 	if (lhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
 	if (!(lhs.type && lhs.type->flags.isNullable))
 		context.error("Expression must result in a nullable value!", node->leftSide);
@@ -2703,7 +2720,7 @@ ATransformer::Result NullDecay::transform(Context& context, Node::Instance const
 		context.top()->impl->writeMainLine("copy", *lhs.source, "-> top");
 	context.top()->impl->writeMainLine("push val top");
 	context.top()->impl->writeMainLine("jump if not empty", exit);
-	auto const rhs = Expression().transform(context, node);
+	auto const rhs = context.getExpression(node);
 	if (rhs.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->rightSide);
 	if (!(lhs.type->base != rhs.type))
 		context.error("Type mismatch in null decay!", node->rightSide);
@@ -2717,9 +2734,9 @@ ATransformer::Result NullDecay::transform(Context& context, Node::Instance const
 
 ATransformer::Result Evaluation::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result result;
-	auto const lhs = Expression().transform(context, node);
+	auto const lhs = context.getExpression(node);
 	if (lhs.isCompilable() && lhs.direct.isString())
-		return Expression().transform(context, context.evaluate(lhs.direct.getString()));
+		return context.getExpression(context.evaluate(lhs.direct.getString()));
 	context.error("Invalid evaluation!", node->leftSide);
 }
 
@@ -2729,7 +2746,7 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 	auto const switchScope = context.declare(UTF8StringList::from("<switch>" + node->name()));
 	switchScope->varc += varc;
 	switchScope->implementContents = true;
-	auto const switchExpr = Expression().transform(context, node->leftSide);
+	auto const switchExpr = context.getExpression(node->leftSide);
 	if (switchExpr.mayBeEmpty)
 		context.error("One or more paths paths may not return a value!", node->leftSide);
 	usize pickExprLoc = 0;
@@ -2744,14 +2761,14 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 		if (!switchExpr.direct.isInteger())
 			context.error("Expected enumerable value here!", node->leftSide);
 		for (auto& caseExpr: node->children) {
-			auto const match = Expression().transform(context, caseExpr->leftSide);
+			auto const match = context.getExpression(caseExpr->leftSide);
 			if (!match.isCompilable())
 				context.error("Expected direct value here!", caseExpr->leftSide);
 			if (!match.direct.isInteger())
 				context.error("Expected enumerable value here!", caseExpr->leftSide);
 			if (match.direct.getSigned() != switchExpr.direct.getSigned()) continue;
 			context.pop(1);
-			return Expression().transform(context, caseExpr->rightSide);
+			return context.getExpression(caseExpr->rightSide);
 		}
 		context.error("No matching case found!", node->leftSide);
 	}
@@ -2779,7 +2796,7 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 		caseScope->varc += switchScope->varc;
 		caseScope->implementContents = true;
 		if (caseExpr->leftSide->base.text != "else") {
-			auto const match = Expression().transform(context, caseExpr->leftSide);
+			auto const match = context.getExpression(caseExpr->leftSide);
 			if (!match.isCompilable())
 				context.error("Expected direct value here!", caseExpr->leftSide);
 			if (match.type != switchType)
@@ -2792,7 +2809,7 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 			hasDefault = true;
 			isDefaultCase = true;
 		} else context.error("Redeclaration of default case!", caseExpr->leftSide);
-		auto const then = Expression().transform(context, caseExpr->rightSide);
+		auto const then = context.getExpression(caseExpr->rightSide);
 		mayBeEmpty = mayBeEmpty or then.mayBeEmpty;
 		if (!isFirstCase && prevCaseType != then.type)
 			context.error("Case result mismatch!", caseExpr->rightSide);
@@ -2845,7 +2862,7 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 		caseScope->varc += matchScope->varc;
 		caseScope->implementContents = true;
 		if (caseExpr->leftSide->base.text != "else") {
-			auto const match = Expression().transform(context, caseExpr->leftSide);
+			auto const match = context.getExpression(caseExpr->leftSide);
 			if (match.shouldBePushed())
 				caseScope->impl->writeMainLine("push", match.source.value());
 			else if (match.isStackTop() && match.isCopied())
@@ -2856,7 +2873,7 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 			defaultCaseExpr = caseExpr;
 			continue;
 		} else context.error("Redeclaration of default case!", caseExpr->leftSide);
-		auto const then = Expression().transform(context, caseExpr->rightSide);
+		auto const then = context.getExpression(caseExpr->rightSide);
 		mayBeEmpty = mayBeEmpty or then.mayBeEmpty;
 		if (!isFirstCase && prevCaseType != then.type)
 			context.error("Case result mismatch!", caseExpr->rightSide);
@@ -2881,7 +2898,7 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 		auto const caseScope = context.declare(UTF8StringList::from("<default>" + defaultCaseExpr->name()));
 		caseScope->varc += matchScope->varc;
 		caseScope->implementContents = true;
-		auto const then = Expression().transform(context, defaultCaseExpr->rightSide);
+		auto const then = context.getExpression(defaultCaseExpr->rightSide);
 		if (!isFirstCase && prevCaseType != then.type)
 			context.error("Case result mismatch!", defaultCaseExpr->rightSide);
 		else if (isFirstCase)
@@ -2939,7 +2956,7 @@ ATransformer::Result ShortMatch::transform(Context& context, Node::Instance cons
 		var.id = matchScope->varc++;
 		var.name = "##QUERY::" + node->name();
 		context.pop(vsn.size());
-		auto const query = Expression().transform(context, node->middle);
+		auto const query = context.getExpression(node->middle);
 		if (!query.source)
 			context.error("Expected value here!", node->middle);
 		matchScope->impl->writeMainLine("copy", *query.source, " ->", var.getSource());
@@ -2952,7 +2969,7 @@ ATransformer::Result ShortMatch::transform(Context& context, Node::Instance cons
 		caseScope->varc += matchScope->varc;
 		caseScope->implementContents = true;
 		if (caseExpr->leftSide->base.text != "else") {
-			auto const match = Expression().transform(context, caseExpr->leftSide);
+			auto const match = context.getExpression(caseExpr->leftSide);
 			if (match.type != matchVar->type)
 				context.error("Case type is not matched value type!", caseExpr->leftSide);
 			if (match.shouldBePushed())
@@ -2967,7 +2984,7 @@ ATransformer::Result ShortMatch::transform(Context& context, Node::Instance cons
 			defaultCaseExpr = caseExpr;
 			continue;
 		} else context.error("Redeclaration of default case!", caseExpr->leftSide);
-		auto const then = Expression().transform(context, caseExpr->rightSide);
+		auto const then = context.getExpression(caseExpr->rightSide);
 		mayBeEmpty = mayBeEmpty or then.mayBeEmpty;
 		if (!isFirstCase && prevCaseType != then.type)
 			context.error("Case result mismatch!", caseExpr->rightSide);
@@ -2992,7 +3009,7 @@ ATransformer::Result ShortMatch::transform(Context& context, Node::Instance cons
 		auto const caseScope = context.declare(UTF8StringList::from("<default>" + defaultCaseExpr->name()));
 		caseScope->varc += matchScope->varc;
 		caseScope->implementContents = true;
-		auto const then = Expression().transform(context, defaultCaseExpr->rightSide);
+		auto const then = context.getExpression(defaultCaseExpr->rightSide);
 		if (!isFirstCase && prevCaseType != then.type)
 			context.error("Case result mismatch!", defaultCaseExpr->rightSide);
 		else if (isFirstCase)
@@ -3018,14 +3035,18 @@ ATransformer::Result ShortMatch::transform(Context& context, Node::Instance cons
 
 ATransformer::Result SwitchMatch::transform(Context& context, Node::Instance const& node) {
 	if (node->leftSide)
-		return Switch().transform(context, node);
+		return context.transform<Switch>(node);
 	else if (node->middle)
-		return ShortMatch().transform(context, node);
-	else return Match().transform(context, node);
+		return context.transform<ShortMatch>(node);
+	else return context.transform<Match>(node);
 }
 
 ATransformer::Result TemplateTypeReification::transform(Context& context, Node::Instance const& node) {
+	return {};
+}
 
+ATransformer::Result TypeReification::transform(Context& context, Node::Instance const& node) {
+	return context.getType(node->leftSide);
 }
 
 Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {
@@ -3089,11 +3110,13 @@ Namespace::TypeRef ATransformer::Context::tupleFor(List<Namespace::TypeRef> cons
 		auto const tup = Namespace::TypeRef::create();
 		tup->scope = scope.asWeak();
 		for (auto const& [type, index]: Range::expand(types)) {
+			auto const vscope = declare(Makai::toString(type->scope->name, index));
 			tup->name += type->name;
-			auto& varg = *(scope->variable = scope->variable.create());
+			auto& varg = *(vscope->variable = vscope->variable.create());
 			varg.type = type.asWeak();
-			varg.name = Makai::toString("_", index);
-			tup->fields[varg.name] = scope->variable;
+			varg.name = vscope->name;
+			varg.id = index;
+			tup->fields[varg.name] = vscope->variable;
 			varg.parentScope = scope.asWeak();
 			varg.fieldOf = tup;
 			pop(1);
@@ -3103,6 +3126,46 @@ Namespace::TypeRef ATransformer::Context::tupleFor(List<Namespace::TypeRef> cons
 		registerType(scope);
 		return tup;
 	} else return tuples[types];
+}
+
+Namespace::TypeRef ATransformer::Context::unionFor(List<Namespace::TypeRef> const& types) {
+	usize id = 0;
+	if (!unions.contains(types)) {
+		auto const scope = Namespace::Instance::create("<union>::" + Makai::toString(++id));
+		scopeStack.pushBack(scope);
+		auto const tup = Namespace::TypeRef::create();
+		tup->scope = scope.asWeak();
+		for (auto const& [type, index]: Range::expand(types)) {
+			auto const vscope = declare(Makai::toString(type->scope->name, index));
+			tup->name += type->name;
+			auto& varg = *(vscope->variable = vscope->variable.create());
+			varg.type = type.asWeak();
+			varg.name = vscope->name;
+			varg.id = 0;
+			tup->fields[varg.name] = vscope->variable;
+			varg.parentScope = scope.asWeak();
+			varg.fieldOf = tup;
+			pop(1);
+		}
+		tup->name += "_Union";
+		pop(1);
+		registerType(scope);
+		return tup;
+	} else return unions[types];
+}
+
+ATransformer::Result ATransformer::Context::transform(ATransformer& transformer, Node::Instance const& node) {
+	return transformer.transform(*this, node);
+}
+
+ATransformer::Result ATransformer::Context::getExpression(Node::Instance const& node) {
+	static auto expr = Expression();
+	return transform(expr, node);
+}
+
+ATransformer::Result ATransformer::Context::getType(Node::Instance const& node) {
+	static auto expr = TypeRequest();
+	return transform(expr, node);
 }
 
 static Makai::String idName(usize const id) {

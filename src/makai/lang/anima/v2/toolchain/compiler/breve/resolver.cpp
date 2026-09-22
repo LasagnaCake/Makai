@@ -730,6 +730,24 @@ Node::Instance DropExpressionResolver::resolve(Parser& parser, Node::Instance co
 	return result;
 }
 
+Node::Instance ReificationResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_REIFICATION;
+	result->leftSide = parser.nextExpression();
+	return result;
+}
+
+Node::Instance UnionResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_UNION_DECL;
+	result->leftSide = parser.nextExpression();
+	if (result->leftSide->content != Node::Content::AV2_TANC_BLOCK)
+		parser.context.error("Expected parenthesized expression here!");
+	return result;
+}
+
 Node::Instance CreateExpressionResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;

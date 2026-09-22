@@ -310,6 +310,18 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		virtual ~MatchResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
+
+	struct ReificationResolver: AResolver {
+		ReificationResolver(): AResolver() {}
+		virtual ~ReificationResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
+	struct UnionResolver: AResolver {
+		UnionResolver(): AResolver() {}
+		virtual ~UnionResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
 }
 
 #endif

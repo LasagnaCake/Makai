@@ -74,7 +74,7 @@ contexts:
     - match: '\b(await|sync|yield|defer)\b'
       scope: keyword.control.synchro.breve
 
-    - match: '\b(using|import)\b'
+    - match: '\b(use|using|import)\b'
       scope: keyword.control.import.breve
 
     - match: '\b((type|name|count)of)\b'
@@ -173,13 +173,16 @@ contexts:
     - match: '\b(struct)\b'
       scope: storage.type.struct
 
+    - match: '\b(join)\b'
+      scope: storage.type.adt
+
     - match: '\b(trait)\b'
       scope: storage.type.trait
 
     - match: '\b(enum)\b'
       scope: storage.type.enum
 
-    - match: '\b(extend|with)\b'
+    - match: '\b(extend|with|decl)\b'
       scope: storage.type.impl
 
     - match: '\b(prop|module)\b'
