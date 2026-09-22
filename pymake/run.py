@@ -103,19 +103,11 @@ async def end():
 def includes_for(subsystem: str) -> list[str]:
 	return vendored.include_group(subsystem)
 
-def final_mri(target: str):
-	return [
-		f"open {target}",
-		f"addlib  {os.getcwd()}/obj/extern/extern.3p.a",
-		"save",
-		"end"
-	]
-
 @subtask
 async def pack_library(target: str, lite: bool):
 	objects: list[str] = [f"{os.getcwd()}/obj/{target}/{file}" for file in os.listdir(f"{os.getcwd()}/obj/{target}") if f".{target}.o" in file]
 	if target != "release":
-		flib = f"{os.getcwd()}/output/lib/libmakai.{target}.a"
+		flib = f"output/lib/libmakai.{target}.a"
 		_ = await spawn(["rm", "-rf", flib])
 		_ = await spawn(["ar", "rcvs", flib] + objects)
 	else:
@@ -128,7 +120,11 @@ async def pack_library(target: str, lite: bool):
 @subtask
 async def compile_all(compiler: str, target: str, optimize: str, subsystems: list[str]|None = None):
 	tc_cpp	= Toolchain.get_for("c++", compiler, target)
-	_ = await tc_cpp.clean_cache()
+	if subsystems is None:
+		_ = await tc_cpp.clean_cache()
+	else:
+		for sub in subsystems:
+			await spawn(["rm", "-rf", f"{os.getcwd()}/obj/*{".".join(sub.split("/"))}.*.{target}.o"])
 	flags = Flags(
 		f"-O{optimize}",
 		"-I",
@@ -144,6 +140,7 @@ async def compile_all(compiler: str, target: str, optimize: str, subsystems: lis
 			]
 		).await_all()
 	else:
+		sub = "/".join(sub.split("."))
 		await join_groups(
 			*[
 				tc_cpp.compile_folder(f"makai/{sub}", flags + includes_for(sub.split('/')[0]))
@@ -165,6 +162,7 @@ async def pymake_main():
 	)
 	parser.add_argument("_")
 	parser.add_argument("-t", "--task", action="extend", dest="tasks", nargs="+", choices=["vendor", "devmode", "debug", "release", "all", "tools"])
+	parser.add_argument("-p", "--pack", action="extend", dest="packs", nargs="+", choices=["devmode", "debug", "release", "all"])
 	parser.add_argument("-o", default="2", choices=["g", "s", "0", "1", "2", "3"], dest="optimize")
 	parser.add_argument("-mm", "--math-mode", default="fast", choices=["fast", "normal", "safe"], dest="math")
 	parser.add_argument("-DT", "--debug-tooling", action="store_true", dest="debug-tools")
@@ -173,6 +171,8 @@ async def pymake_main():
 	parser.add_argument("-tc", "--toolchain", dest="compiler", default="gcc", choices=["gcc", "clang", "mingw-win", "mingw-linux"])
 	parser.add_argument("-x", "--os", dest="os", choices=["win", "linux"], default="win")
 	parser.add_argument("-S", "--sync", action="store_true", default=False, dest="sync")
+	parser.add_argument("--tools", default="none", dest="tooling", choices=["none", "devmode", "debug", "release"])
+	parser.add_argument("--art-libs", default="none", dest="art_libs", choices=["none", "devmode", "debug", "release"])
 	cfg = parser.parse_args(argv)
 	Group.in_parallel = not cfg.sync
 	osinfo.target_os = cfg.os
@@ -193,15 +193,17 @@ async def pymake_main():
 		else:
 			compile_all(cfg.compiler, task, cfg.optimize, subs)
 	await next_step()
-	for task in cfg.tasks:
-		if task == "all":
+	for pack in cfg.packs:
+		if pack == "all":
 			pack_library("devmode", cfg.lite, subs)
 			pack_library("debug", cfg.lite, subs)
 			pack_library("release", cfg.lite, subs)
-		elif task != "vendor":
+		else:
 			pack_library(task, cfg.lite)
 	await next_step()
-	if False:
+	if cfg.tooling != "none":
+		pass
+	if cfg.art_libs != "none":
 		pass
 	await end()
 def run():

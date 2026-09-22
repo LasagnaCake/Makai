@@ -135,8 +135,8 @@ class Vendor:
     async def finalize(self, name: str, target: str|None = None) -> None:
         target = f".{target}" if target is not None else ""
         MRI = [
-            f"open {os.getcwd()}/output/lib/lib{name}{target}.a",
-            f"addlib {os.getcwd()}/obj/extern/extern.3p.a",
+            f"open output/lib/lib{name}{target}.a",
+            f"addlib obj/extern/extern.3p.a",
             "save",
             "end"
         ]

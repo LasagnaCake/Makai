@@ -120,6 +120,7 @@ bool Engine::yieldCycle() {
 		case AV2_IN_INITIALIZE:		v2Initialize();		break;
 		case AV2_IN_BREAKPOINT:		v2Breakpoint();		break;
 		case AV2_IN_SPREAD:			v2Spread();			break;
+		case AV2_IN_TEST:			v2Test();			break;
 		case AV2_IN_NO_OP: break;
 //		default: crash(invalidInstructionError());
 	}
@@ -2078,4 +2079,7 @@ void Engine::v2Spread() {
 			})
 		) break;
 	}
+}
+
+void Engine::v2Test() {
 }
