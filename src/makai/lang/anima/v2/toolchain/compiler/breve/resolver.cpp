@@ -489,16 +489,15 @@ Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance co
 			result->middle		= name->middle;
 			result->leftSide	= name->leftSide;
 		}
-	} else if (name->leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
-			result->templateDecl	= name;
-			result->leftSide		= name->leftSide;
+	} else if (name->content == Node::Content::AV2_TANC_SUBSCRIPT) {
+		result->templateDecl	= name;
+		result->leftSide		= name->leftSide;
 	} else if (!name->isPathOrName())
 		parser.context.error("Expected path or name here!");
 	else result->leftSide = name;
-	auto const def = parser.nextExpression();
-	if (def->content != Node::Content::AV2_TANC_BLOCK)
+	if (parser.context.peek().type != LTS_TT_OPEN_CURLY)
 		parser.context.error("Expected block expression here!");
-	result->rightSide = def;
+	result->rightSide = parser.nextExpression();
 	MAKAILIB_DEBUGLN_FULL("NamedBlock:DONE!");
 	return result;
 }
