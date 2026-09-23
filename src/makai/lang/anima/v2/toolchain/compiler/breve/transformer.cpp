@@ -2400,17 +2400,19 @@ ATransformer::Result ForLoop::transform(Context& context, Node::Instance const& 
 		context.top()->impl->writeMainLine("op inv");
 		context.top()->impl->writeMainLine("copy move top ->", traversalVar);
 		context.top()->impl->writeMainLine("pop");
-		loopScope->impl->writeMainLine("@target", loopStart, ":");
 		loopScope->impl->writeMainLine("push ref", traversalVar);
 		loopScope->impl->writeMainLine("count");
-		loopScope->impl->writeMainLine("jump if false", loopEnd);
+		loopScope->impl->writeMainLine("jump if zero", loopEnd);
+		loopScope->impl->writeMainLine("@target", loopStart, ":");
 		loopScope->impl->writeMainLine("push ref", traversalVar);
 		loopScope->impl->writeMainLine("op apop");
 		loopScope->impl->writeMainLine("copy move top ->", elemVar.getSource());
 		loopScope->impl->writeMainLine("pop");
 		elemVar.fill();
 		auto const loopExpr = context.getExpression(node->rightSide);
-		loopScope->impl->writePostLine("jump", loopStart);
+		loopScope->impl->writeMainLine("push ref", traversalVar);
+		loopScope->impl->writeMainLine("count");
+		loopScope->impl->writeMainLine("jump if positive", loopStart);
 		loopScope->impl->writeMainLine("@target", loopEnd, ":");
 	}
 	return {.scope = loopScope};
