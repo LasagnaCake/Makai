@@ -8,7 +8,8 @@ using
 	CTL::TreeMap,
 	CTL::List,
 	CTL::KeyValuePair,
-	CTL::TypeInfo
+	CTL::TypeInfo,
+	CTL::String
 ;
 
 template<typename T>
@@ -90,7 +91,7 @@ void print(TreeMap<K, V, I> const& m, K const& k) {
 template<template<typename K, typename V> class TMap = ListMap>
 void testMap() {
 	using MapType = TMap<int, int>;
-	DEBUGLN("<", TypeInfo<MapType>::name(), ">");
+	DEBUGLN("<", String(TypeInfo<MapType>::name()), ">");
 	MapType mp({
 		{0, 1},
 		{1, 2},
@@ -135,7 +136,7 @@ void testMap() {
 	mp.erase(29);
 	print(mp);
 	mp.clear(); print(mp);
-	DEBUGLN("</", TypeInfo<MapType>::name(), ">");
+	DEBUGLN("</", String(TypeInfo<MapType>::name()), ">");
 }
 
 int main() {

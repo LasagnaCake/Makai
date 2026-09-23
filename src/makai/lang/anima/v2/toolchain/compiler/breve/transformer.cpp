@@ -955,6 +955,7 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 		context.error("Invalid expression (Does not result in a value)!", node->leftSide);
 	if (val.isCompilable() && node->base.text != "typeof") {
 		auto const result = uopDirectResolve(val.direct, node->base);
+		MAKAILIB_DEBUGLN_FULL("Operation (UOP) :: ", node->base.text, " ", val.direct.toString(), " = ", result.toString());
 		if (!result.isUndefined())
 			return {{result.toString() + " " + directName(context, result.type())->basicNumberName()}, val.scope, directName(context, result.type()), result, val.likelihood + likelihoodOf(node)};
 	}
@@ -1046,6 +1047,7 @@ ATransformer::Result PostfixExpression::transform(Context& context, Node::Instan
 		context.error("Invalid expression (Does not result in a value)!", node->leftSide);
 	if (val.isCompilable() && node->base.text != "typeof") {
 		auto const result = uopDirectResolve(val.direct, node->base);
+		MAKAILIB_DEBUGLN_FULL("Operation (UOP) :: ", val.direct.toString(), " ", node->base.text, " = ", result.toString());
 		if (!result.isUndefined())
 			return {{result.toString() + " " + directName(context, result.type())->basicNumberName()}, val.type->scope.asStrong(), directName(context, result.type()), result, val.likelihood};
 	}
@@ -1217,6 +1219,7 @@ ATransformer::Result InfixExpression::transform(Context& context, Node::Instance
 	MAKAILIB_DEBUGLN_FULL("Right-Type = ", rhs.direct.toString());
 	if (lhs.isCompilable() && rhs.isCompilable()) {
 		auto result = bopDirectResolve(lhs.direct, rhs.direct, node->base);
+		MAKAILIB_DEBUGLN_FULL("Operation (BOP) :: ", lhs.direct.toString(), " ", node->base.text, " ", rhs.direct.toString(), " = ", result.toString());
 		if (!result.isUndefined()) {
 			result = directCast(result, *TypeDecl::stronger(lhs.type, rhs.type)->basic);
 			return {

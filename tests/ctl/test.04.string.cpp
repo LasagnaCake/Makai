@@ -137,7 +137,7 @@ void testUTF8String() {
 template<template<typename K, typename V> class TMap = ListMap, class T = String>
 void testStringMap() {
 	using MapType = TMap<T, T>;
-	DEBUGLN("<", TypeInfo<MapType>::name(), ">");
+	DEBUGLN("<", String(TypeInfo<MapType>::name()), ">");
 	MapType mp = MapType({
 		{"Avocado", "Abacate"},
 //		{"Apple", "Maca"},
@@ -167,7 +167,7 @@ void testStringMap() {
 	print(mp.values());
 	print(mp.items());
 	mp.clear();	printMap(mp);
-	DEBUGLN("</", TypeInfo<MapType>::name(), ">");
+	DEBUGLN("</", String(TypeInfo<MapType>::name()), ">");
 }
 
 void testStringConversion() {
