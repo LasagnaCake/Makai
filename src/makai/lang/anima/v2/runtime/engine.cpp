@@ -856,10 +856,7 @@ static bool arrayUopIt(Object::Storage const& val, Operator const op, Runtime::C
 				} else return false;
 			}
 			case AV2_UOP_INVERSE: {
-				if (!val->reverse()) return false;
-				context.pop();
-				context.push(val);
-				return true;
+				return val->reverse();
 			}
 			default: return false;
 		}

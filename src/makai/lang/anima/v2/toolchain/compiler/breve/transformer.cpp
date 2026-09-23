@@ -748,7 +748,7 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 
 ATransformer::Result Exit::transform(Context& context, Node::Instance const& node) {
 	if (node->base.text == "exit")		context.top()->impl->writeMainLine("ret");
-	else if (node->base.text == "halt")	context.top()->impl->writeMainLine("halt");
+	else if (node->base.text == "halt")	context.top()->impl->writeMainLine("stop");
 	else context.error("Invalid/Unsupported expression!");
 	return {.mayBeEmpty = node->base.text == "exit"};
 }
@@ -2393,10 +2393,13 @@ ATransformer::Result ForLoop::transform(Context& context, Node::Instance const& 
 		if (!elemVar.type) elemVar.type = toIterate.type->base;
 		else if (TypeDecl::stronger(elemVar.type.asStrong(), toIterate.type->base) != elemVar.type)
 			context.error("Element type is stronger than variable type!", node->middle);
-		context.top()->impl->writeMainLine("copy", toIterate.source.value(), "->", traversalVar);
-		if (toIterate.isStackTop())
-			context.top()->impl->writeMainLine("pop");
+		if (toIterate.source && toIterate.shouldBePushed())
+			loopScope->impl->writeMainLine("push", toIterate.source.value());
+		else if (toIterate.isStackTop() && toIterate.isCopied())
+			loopScope->impl->writeMainLine("copy", *toIterate.source, "-> top");
 		context.top()->impl->writeMainLine("op inv");
+		context.top()->impl->writeMainLine("copy move top ->", traversalVar);
+		context.top()->impl->writeMainLine("pop");
 		loopScope->impl->writeMainLine("@target", loopStart, ":");
 		loopScope->impl->writeMainLine("push ref", traversalVar);
 		loopScope->impl->writeMainLine("count");
@@ -2587,9 +2590,9 @@ ATransformer::Result UnionTypeDecl::transform(Context& context, Node::Instance c
 		auto const type = context.getType(child);
 		if (!type.type)
 			context.error("Expected type declaration here!");
-		if (visited.contains(type))
+		if (visited.contains(type.type))
 			context.error("Re-declaration of union type!", child);
-		visited[type] = true;
+		visited[type.type] = true;
 		types.pushBack(type.type);
 	}
 	return {.type = context.unionFor(types)};

@@ -49,6 +49,14 @@ namespace Meta {
 		struct Any<T, Types...> {
 			using Type = If<Type::Different<T, Invalid>, T, Unwrap<Any<Types...>>>;
 		};
+
+		template <class T, usize I, class... Types>
+		consteval ssize find() {
+			if constexpr (I >= sizeof...(Types)) return -1;
+			else if constexpr (Type::Equal<T, typename NthInPack<I, Types...>::Type>)
+				return I;
+			else return find<T, Types..., I+1>();
+		}
 	}
 
 	/// @brief Returns the Nth type in a series of types.
@@ -87,6 +95,11 @@ namespace Meta {
 	/// @tparam ...Types Types.
 	template <class... Types>
 	using Any = Unwrap<Impl::Any<Types...>>;
+
+	template <class T, usize I, class... Types>
+	consteval ssize find() {
+		return Impl::find<T, 0, Types..., I+1>();
+	}
 }
 
 CTL_NAMESPACE_END
