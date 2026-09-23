@@ -14,5 +14,6 @@
 #include "verify.hpp"
 #include "forcestate.hpp"
 #include "nameof.hpp"
+#include "typehash.hpp"
 
 #endif // CTL_TYPETRAITS_H

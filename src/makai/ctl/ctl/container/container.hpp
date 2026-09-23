@@ -17,6 +17,7 @@
 #include "span.hpp"
 #include "tuple.hpp"
 #include "union.hpp"
+#include "variant.hpp"
 #include "view.hpp"
 #include "map/map.hpp"
 #include "pointer/pointer.hpp"

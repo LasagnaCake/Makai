@@ -3,18 +3,26 @@
 
 #include "../namespace.hpp"
 #include "../templates.hpp"
-#include "nullable.hpp"
 #include "../meta/pack.hpp"
 #include "../typetraits/decay.hpp"
+#include "../typetraits/cast.hpp"
 #include "../memory/core.hpp"
+#include "nullable.hpp"
 
 CTL_NAMESPACE_BEGIN
+
+namespace Type::Container::Union {
+	template <class... Types>
+	concept Unitable = (... && (
+		Type::Equal<Types, AsNormal<Types>>
+	));
+}
 
 namespace Impl {
 	template <usize N, class... Types>
 	struct SumType;
 
-	template <usize N, class T>
+	template <usize N, Type::Container::Union::Unitable T>
 	struct [[gnu::packed, gnu::aligned(1)]] SumType<N, T> {
 		constexpr static usize INDEX = N;
 
@@ -25,7 +33,7 @@ namespace Impl {
 		}
 
 		template <usize I>
-		constexpr Nullable<T> get() const {
+		constexpr Nullable<T const&> get() const {
 			if constexpr (N != 0) return null;
 			else return internal.value;
 		}
@@ -45,7 +53,7 @@ namespace Impl {
 		} internal;
 	};
 
-	template <usize N, class T, class... Types>
+	template <usize N, Type::Container::Union::Unitable T, class... Types>
 	struct [[gnu::packed, gnu::aligned(1)]] SumType<N, T, Types...> {
 		constexpr static usize INDEX = N;
 
@@ -56,7 +64,7 @@ namespace Impl {
 		}
 
 		template <usize I>
-		constexpr Nullable<Meta::Select<I, T, Types...>> get() const {
+		constexpr Nullable<Meta::Select<I, T, Types...> const&> get() const {
 			if constexpr (N == 0) return internal.value;
 			else return internal.rest.template get<I-1>();
 		}
@@ -80,49 +88,65 @@ namespace Impl {
 		} internal;
 	};
 
-	template <class... Types>
+
+	template <class First, class... Types>
 	struct [[gnu::packed, gnu::aligned(1)]] Union {
-		enum class Value;
+		static_assert(sizeof...(Types) > 1, "Union types must have two or more type!");
+		static_assert(
+			Type::Container::Union::Unitable<First, Types...>
+			&&	(
+				...&& (
+					Type::NonVoid<Types>
+				&&	Type::NoneOf<Types, Empty>
+				)
+			), "One or more types are not union-safe!"
+		);
 
-		struct IDestructor {
-			constexpr virtual ~IDestructor() {}
-			constexpr virtual owner<IDestructor> clone() const = 0;
-			constexpr virtual owner<IDestructor> newWithAddress(pointer const ptr) const = 0;
-		};
+		constexpr static bool const CAN_BE_EMPTY = Type::OneOf<First, Empty, void>;
 
-		template <class T>
-		struct Destructor {
-			ref<T> value;
-			constexpr virtual ~Destructor() {MX::destruct(value);}
+		using BaseType = Meta::If<CAN_BE_EMPTY, SumType<0, Types...>, SumType<0, First, Types...>>;
 
-			constexpr virtual owner<IDestructor> clone() const override {
-				return new Destructor{value};
-			}
+		template <usize N>
+		using Select = Meta::If<CAN_BE_EMPTY, Meta::Select<N, Types...>, Meta::Select<N, First, Types...>>;
 
-			constexpr virtual owner<IDestructor> newWithAddress(pointer const ptr) const override {
-				return new Destructor{ptr};
-			}
-		};
+		enum class ValueType: ssize {EMPTY = -1};
 
-		template <class T>
-		consteval static Nullable<usize> indexof() {
-			auto const id = Meta::find<T, Types...>();
-			if (id == -1) return null;
-			return id;
+		template <Type::OneOf<Types...> T>
+		consteval static ssize indexof() {
+			if constexpr (CAN_BE_EMPTY)
+				return Meta::find<T, Types...>();
+			else return Meta::find<T, First, Types...>();
 		}
 
 		template <Type::OneOf<Types...> T>
-		constexpr Nullable<T&> get() {
-			if (tid != indexof<T>())
+		consteval static ValueType match() {
+			return ValueType{indexof<T>()};
+		}
+
+		template <usize N>
+		constexpr auto get() {
+			if (tid != N)
 				return null;
-			return sum.template get<indexof<T>().value()>();
+			return sum.template get<N>();
+		}
+
+		template <usize N>
+		constexpr auto get() const {
+			if (tid != N)
+				return null;
+			return sum.template get<N>();
 		}
 
 		template <Type::OneOf<Types...> T>
-		constexpr Nullable<T> get() const {
-			if (tid != indexof<T>())
-				return null;
-			return sum.template get<indexof<T>().value()>();
+		constexpr auto get() {
+			if (!tid) return null;
+			return get<indexof<T>()>();
+		}
+
+		template <Type::OneOf<Types...> T>
+		constexpr auto get() const {
+			if (!tid) return null;
+			return get<indexof<T>()>();
 		}
 
 		template <Type::OneOf<Types...> T>
@@ -131,49 +155,116 @@ namespace Impl {
 		}
 
 		template <Type::OneOf<Types...> T>
-		constexpr operator Nullable<T>() const {
+		constexpr operator Nullable<T const&>() const {
 			return get<T>();
 		}
 
 		template <Type::OneOf<Types...> T>
-		constexpr Union& set(Decay::Unwrap<T> value) {
-			constexpr auto id = indexof<T>().value();
-			if (destructor)
-				delete destructor;
+		constexpr Union& set(Decay::Unwrap<T> value)
+		requires (Type::NoneOf<T, Empty, void>) {
+			constexpr auto id = indexof<T>();
+			unset();
 			sum.template set<id>(value);
-			auto& newValue = sum.template get<id>();
-			destructor = new Destructor<T>(&newValue);
+			tid = id;
 			return *this;
 		}
 
-		constexpr ~Union() {
-			if (destructor)
-				delete destructor;
+		template <Type::Equal<Empty> T>
+		constexpr Union& set(Decay::Unwrap<T> value)
+	 	requires (CAN_BE_EMPTY) {
+			return unset();
 		}
 
-		constexpr Union(Union const& other): tid(other.tid), sum(other.sum), destructor(tid ? other.destructor->newWithAddress(anull(sum)) : nullptr) {
+		constexpr Union& clear() requires (CAN_BE_EMPTY) {
+			return unset();
 		}
 
-		constexpr Union(Union&& other): tid(move(other.tid)), sum(move(other.sum)), destructor(move(other.destructor)) {
-			other.destructor = nullptr;
+		constexpr ~Union() {unset();}
+
+		constexpr Union()		requires (CAN_BE_EMPTY) {}
+		constexpr Union(Empty)	requires (CAN_BE_EMPTY) {}
+
+		constexpr Union(Union const& other): tid(other.tid), sum(other.sum) {
+		}
+
+		constexpr Union(Union&& other): tid(move(other.tid)), sum(move(other.sum)) {
 		}
 
 		template <Type::OneOf<Types...> T>
-		constexpr Union(Decay::Unwrap<T> value) {
+		constexpr Union(Decay::Unwrap<T> value)
+		requires Type::NoneOf<T, Empty, void> {
 			set<T>(value);
 		}
 
+		template <class... TVisits>
+		constexpr bool visit(TVisits const&... visits) {
+			return (... or visitFor(visits));
+		}
+
+		template <class... TVisits>
+		constexpr bool visit(TVisits const&... visits) const {
+			return (... or visitFor(visits));
+		}
+
+		constexpr ValueType type() const {
+			if (!tid) return ValueType::EMPTY;
+			return Cast::as<ValueType>(*tid);
+		}
+
+		template <class T>
+		constexpr bool is() const {
+			if (!tid && indexof<T>() == -1) return true;
+			return tid == indexof<T>();
+		}
+
+		constexpr bool is(ValueType const t) const {
+			if (!tid && t == ValueType::EMPTY) return true;
+			return tid == Cast::as<usize>(t);
+		}
+
 	private:
-		ref<IDestructor>		destructor = nullptr;
-		Nullable<usize>			tid;
-		SumType<0, Types...>	sum;
+		constexpr Union& unset() {
+			if (tid)
+				destruct<0>();
+			tid = null;
+			return *this;
+		}
+
+		template <usize N>
+		constexpr void destruct() {
+			using Tx = Select<N>;
+			if (N == tid) MX::destruct<Tx>(&get<Tx>());
+			else destruct<N+1>();
+		}
+
+		template <Type::NoneOf<void, Empty> T, Type::Functional<void(T&)> TVisit>
+		constexpr bool visitFor(TVisit const& fn) {
+			if (tid != indexof<T>()) return false;
+			fn(get<T>().value());
+			return true;
+		}
+
+		template <Type::NoneOf<void, Empty> T, Type::Functional<void(T const&)> TVisit>
+		constexpr bool visitFor(TVisit const& fn) const {
+			if (tid != indexof<T>()) return false;
+			fn(get<T>().value());
+			return true;
+		}
+
+		Nullable<usize>	tid;
+		BaseType		sum;
 	};
 }
 
 template <class... Types>
-struct Union: Impl::Union<Types...> {
+using Union = Impl::Union<Types...>;
 
-};
+template <class... Types>
+using Join = Meta::Any<
+	Meta::When<sizeof...(Types) == 0, Meta::Invalid>,
+	Meta::When<sizeof...(Types) == 1, Meta::First<Types...>>,
+	Union<Types...>
+>;
 
 CTL_NAMESPACE_END
 

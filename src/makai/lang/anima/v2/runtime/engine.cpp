@@ -429,42 +429,42 @@ void Engine::v2Call() {
 		loc = Makai::Cast::bit<uint64>(current);
 	}
 	MAKAILIB_DEBUGLN_FULL("Handling call...");
-	if (invocation.external) {
+	if (invocation.ffi) {
 		advance(true);
 		auto const lib = Makai::Cast::bit<uint64>(current);
 		advance(true);
 		auto const argc	= Makai::Cast::bit<uint32>(current.name);
 		auto const ret	= Makai::Cast::as<Core::BasicType>(current.type >> 24);
-		if (invocation.ffi)
-			callForeign(invocation, lib, loc, argc, ret)
-			.then(
-				[&] (auto const& v) {
-					if (invocation.noResult) return;
-					if (!v || v->isEmptyType())
-						crash(invalidFunctionError("Expected return type, but function is void"));
-					else context.globalValueStack.pushBack(v);
+		callForeign(invocation, lib, loc, argc, ret)
+		.then(
+			[&] (auto const& v) {
+				if (invocation.noResult) return;
+				if (!v || v->isEmptyType())
+					crash(invalidFunctionError("Expected return type, but function is void"));
+				else context.globalValueStack.pushBack(v);
+			}
+		).onError(
+			[&] (auto const& e) {
+				if (invocation.optional) {
+					if (!invocation.noResult)
+						context.globalValueStack.pushBack(nullptr);
+					return;
 				}
-			).onError(
-				[&] (auto const& e) {
-					if (invocation.optional) {
-						if (!invocation.noResult)
-							context.globalValueStack.pushBack(nullptr);
-						return;
-					}
-					Makai::String err = "FOREIGN FUNCTION: ";
-					switch (e) {
-						using enum ForeignCallError;
-						case AV2_RE_FCE_MISSING_ARGS:				err += "Not enough args for function";			break;
-						case AV2_RE_FCE_MISSING_FUNCTION_NAME:		err += "Missing function name";					break;
-						case AV2_RE_FCE_MISSING_LIBRARY_NAME:		err += "Missing library name";					break;
-						case AV2_RE_FCE_LIBRARY_NOT_LOADED:			err += "Library failed to load";				break;
-						case AV2_RE_FCE_FUNCTION_DOES_NOT_EXIST:	err += "Function does not exist in library";	break;
-						case AV2_RE_FCE_INVALID_ARG_TYPE:			err += "Invalid argument type for function";	break;
-						case AV2_RE_FCE_INVALID_RETURN_TYPE:		err += "Invalid return type for function";		break;
-					}
-					crash(invalidFunctionError(err));
+				Makai::String err = "FOREIGN FUNCTION: ";
+				switch (e) {
+					using enum ForeignCallError;
+					case AV2_RE_FCE_MISSING_ARGS:				err += "Not enough args for function";			break;
+					case AV2_RE_FCE_MISSING_FUNCTION_NAME:		err += "Missing function name";					break;
+					case AV2_RE_FCE_MISSING_LIBRARY_NAME:		err += "Missing library name";					break;
+					case AV2_RE_FCE_LIBRARY_NOT_LOADED:			err += "Library failed to load";				break;
+					case AV2_RE_FCE_FUNCTION_DOES_NOT_EXIST:	err += "Function does not exist in library";	break;
+					case AV2_RE_FCE_INVALID_ARG_TYPE:			err += "Invalid argument type for function";	break;
+					case AV2_RE_FCE_INVALID_RETURN_TYPE:		err += "Invalid return type for function";		break;
 				}
-			);
+				crash(invalidFunctionError(err));
+			}
+		);
+	} else if (invocation.external) {
 		decltype(context.globalValueStack) args;
 		if (auto argc = context.art.argumentCountOf(loc)) {
 			StackStateScopePrinter s3p{context};

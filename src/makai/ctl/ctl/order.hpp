@@ -4,7 +4,6 @@
 #include <compare>
 
 #include "namespace.hpp"
-#include "typeinfo.hpp"
 #include "templates.hpp"
 
 CTL_NAMESPACE_BEGIN
@@ -30,7 +29,7 @@ namespace Compat {
 
 /// @brief Result of a threeway comparison.
 struct ValueOrder {
-	/// @brief Constructs a `ValueOrder` from a given `StandardOrder`. 
+	/// @brief Constructs a `ValueOrder` from a given `StandardOrder`.
 	/// @param value Order.
 	constexpr ValueOrder(StandardOrder const& value): val(value) {}
 
@@ -65,7 +64,7 @@ struct ValueOrder {
 	constexpr StandardOrder operator<=>(StandardOrder const& order) const {
 		return  ValueOrder(val <=> order);
 	}
-	
+
 	/// @brief Threeway comparison operator (value).
 	/// @tparam T Value type.
 	/// @param value Value to compare with.
@@ -94,7 +93,7 @@ struct ValueOrder {
 	/// @param other `ValueOrder` to compare with.
 	/// @return Whether the order values are equal.
 	constexpr bool operator==(ValueOrder const& other) const	{return val == other.val;	}
-	
+
 	/// @brief Returns whether the order is EQUAL.
 	[[nodiscard]]
 	friend constexpr bool operator==(ValueOrder const& a, int)	{return a.val == StandardOrder::EQUAL;		}
@@ -127,7 +126,7 @@ struct ValueOrder {
 	/// @brief Returns whether the order is GREATER or EQUAL.
 	[[nodiscard]]
 	friend constexpr bool operator>=(int, ValueOrder const& b)	{return b >= int();	}
-	
+
 	/// @brief `StandardOrder` type conversion.
 	constexpr operator StandardOrder()	{return order();		}
 	/// @brief Returns the order value.

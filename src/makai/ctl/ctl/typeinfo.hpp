@@ -2,12 +2,13 @@
 #define CTL_TYPE_INFO_H
 
 #include "algorithm/bitwise.hpp"
-#include "typetraits/traits.hpp"
 #include "meta/logic.hpp"
+#include "typetraits/traits.hpp"
 #include "typetraits/enum.hpp"
+#include "typetraits/nameof.hpp"
+#include "typetraits/typehash.hpp"
 #include "namespace.hpp"
-#include <typeinfo>
-#include <cxxabi.h>
+#include "templates.hpp"
 
 CTL_NAMESPACE_BEGIN
 
@@ -16,35 +17,17 @@ namespace Base {
 	template<class T>
 	struct BasicInfo {
 		/// @brief Info type.
-		typedef T	DataType;
+		typedef T DataType;
 
 		/// @brief Size of type.
 		constexpr static usize SIZE		= sizeof(T);
 		/// @brief Bit size of type.
 		constexpr static usize BIT_SIZE	= SIZE * 8;
 
-		/// @brief Default constructor.
-		constexpr BasicInfo() {}
-		/// @brief Copy constructor (deleted).
-		constexpr BasicInfo(BasicInfo const& other)	= delete;
-		/// @brief Move constructor (deleted).
-		constexpr BasicInfo(BasicInfo&& other)		= delete;
-
-		/// @brief Compares two types.
-		/// @param other Type to compare with.
-		/// @return Whether they're equal.
-		constexpr bool operator==(BasicInfo const& other) {return id->hash_code() == other.id->hash_code();}
-
-		/// @brief Returns the raw name of the type.
-		/// @return Raw name of the type.
-		constexpr static cstring rawName()	{return id->name();}
 		/// @brief Returns the name of the type.
 		/// @return Type name.
-		constexpr static cstring name()		{return abi::__cxa_demangle(id->name(), 0, 0, nullptr);}
-
-	private:
-		/// @brief Underlying type info structure.
-		constexpr static ref<const std::type_info> id = &typeid(T);
+		constexpr static auto name()		{return nameof<T>();			}
+		constexpr static TypeHash hash()	{return TypeHash::forType<T>();	}
 	};
 }
 
@@ -132,6 +115,14 @@ namespace Limit {
 	template <Type::Number T> constexpr T const MIN		= TypeInfo<T>::LOWEST;
 	template <Type::Number T> constexpr T const STRIDE	= TypeInfo<T>::SMALLEST;
 }
+
+/// @brief Tags the deriving class as knowing information about itself.
+/// @tparam TSelf Self type.
+template<class TSelf>
+struct Reflective: SelfIdentified<TSelf> {
+	/// @brief Self type.
+	using Self	= TypeInfo<TSelf>;
+};
 
 CTL_NAMESPACE_END
 

@@ -2,7 +2,6 @@
 #define CTL_CLASS_TEMPLATES_H
 
 #include "ctypes.hpp"
-#include "typeinfo.hpp"
 #include "meta/pack.hpp"
 #include "namespace.hpp"
 #include "typetraits/traits.hpp"
@@ -15,8 +14,6 @@ template<class TSelf>
 struct SelfIdentified {
 	/// @brief Self type.
 	using SelfType	= TSelf;
-	/// @brief Type info of self.
-	using Self		= TypeInfo<TSelf>;
 };
 
 /// @brief Tags the deriving class as having content related to a specific type.
@@ -74,7 +71,7 @@ struct Indexed {
 	using IndexType	= AsSigned<SizeType>;
 
 	/// @brief Maximum size of size type.
-	constexpr static SizeType MAX_SIZE = TypeInfo<SizeType>::HIGHEST;
+	constexpr static SizeType MAX_SIZE = static_cast<SizeType>(-1);
 
 	static_assert(IndexType(-1) == -1);
 };

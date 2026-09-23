@@ -11,8 +11,13 @@ namespace Meta {
 		template<bool COND, class True, class False>	struct DualType:						TypeContainer<True> {};
 		template<class True, class False>				struct DualType<false, True, False>:	TypeContainer<False> {};
 
-		struct Invalid;
+		namespace {struct _Invalid;}
+
+		using Invalid = _Invalid;
 	}
+
+
+	using Invalid = Impl::Invalid;
 
 	/// @brief Decays to either `TTrue` or `TFalse`, depending on the condition.
 	/// @tparam TTrue Type to decay to when `COND` is true.
