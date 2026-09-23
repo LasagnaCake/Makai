@@ -338,4 +338,4 @@ package-tooling-deb:
 #export lite-solver = $(call lite-solver-pass2,$(1))
 configure-ubuntu:
 	sudo apt update
-	sudo apt install --yes libgl1-mesa-dev
+	sudo apt install --yes libgl1-mesa-dev opencl-dev

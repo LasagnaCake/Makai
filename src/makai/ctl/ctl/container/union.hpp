@@ -233,7 +233,7 @@ namespace Impl {
 		template <usize N>
 		constexpr void destruct() {
 			using Tx = Select<N>;
-			if (N == tid) MX::destruct<Tx>(&get<Tx>());
+			if (N == tid) MX::destruct(&get<Tx>());
 			else destruct<N+1>();
 		}
 

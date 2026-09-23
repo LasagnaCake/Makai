@@ -75,6 +75,19 @@ struct Variant {
 	constexpr Variant(Variant&& other):			resource(move(other.resource))	{other.resource = nullptr;	}
 	constexpr Variant(Variant const& other):	Variant(move(other.clone()))	{							}
 
+	constexpr Nullable<TypeHash> type() const {
+		if (!resource) return null;
+		return resource->hash();
+	}
+
+	constexpr bool empty() const {
+		return resource;
+	}
+
+	constexpr operator bool() const {
+		return !empty();
+	}
+
 private:
 	owner<IResource> resource = nullptr;
 };
