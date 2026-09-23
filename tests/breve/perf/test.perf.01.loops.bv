@@ -4,19 +4,19 @@ using import core
 
 @Main
 main :: () {
-	@Direct count := (10 pow 5) as uint64
+	@Direct count := (10 pow 8) as uint64
 	IO.writeLine("Doing ", count, " loops...")
 	@ByCopy start := OS.Time.localNow(OS.Time.Precision.NANOS)
 	@ByCopy lap := start 
 	IO.writeLine("Loop iteration #0")
 	repeat @ByCopy i: uint64 => count {
-		@ByCopy it := ((count+1-i) % (10 pow 4))
+		@ByCopy it := ((count+1-i) % (10 pow 7))
 		unless (it > 0) {
 			@ByRef delta := (OS.Time.localNow(OS.Time.Precision.NANOS) - lap)
 			IO.writeLine("Loop iteration #", count+1-i, " (lap: ", delta, "ns)")
 			lap = OS.Time.localNow(OS.Time.Precision.NANOS)
 		}
 	}
-	total := ((OS.Time.localNow(OS.Time.Precision.NANOS) - start) / ((10 pow 9.0) as float))
-	IO.writeLine("\nResult::{\n  total-time: ", total, "\n}")
+	@ByCopy total := (OS.Time.localNow(OS.Time.Precision.NANOS) - start)
+	IO.writeLine("\nResult::{\n  total-time: ", total * (1.0 * 10 pow 9.0), "\n  total-time-ns: ", total, "\n}")
 }
