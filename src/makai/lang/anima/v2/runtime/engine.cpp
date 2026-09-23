@@ -747,6 +747,7 @@ static bool bopIt(Object::Storage const& out, Object::Storage const& lhs, Object
 			case AV2_BOP_ADD:	*out = *context.art.newValue<T>(lhs->toValue<T>() + rhs->toValue<T>()); return true;
 			case AV2_BOP_SUB:	*out = *context.art.newValue<T>(lhs->toValue<T>() - rhs->toValue<T>()); return true;
 			case AV2_BOP_MUL:	*out = *context.art.newValue<T>(lhs->toValue<T>() * rhs->toValue<T>()); return true;
+			case AV2_BOP_DIV:	*out = *context.art.newValue<T>(lhs->toValue<T>() / rhs->toValue<T>()); return true;
 			default: break;
 		}
 	}
@@ -999,10 +1000,11 @@ static void fbop(T& lhs, T& rhs, Operator const op) {
 			case Operator::AV2_BOP_ADD: lhs += rhs; return;
 			case Operator::AV2_BOP_SUB: lhs -= rhs; return;
 			case Operator::AV2_BOP_MUL: lhs *= rhs; return;
+			case Operator::AV2_BOP_DIV: lhs /= rhs; return;
 			default: return;
 		}
 		if constexpr (Makai::Type::Number<T>) switch (op) {
-			using TCalc = Makai::Meta::If<Makai::Type::Real<T>, T, floatmax>;
+			using TCalc = Makai::Meta::If<Makai::Type::Real<T>, T, double>;
 			case Operator::AV2_BOP_REM: {
 				if constexpr (Makai::Type::Real<T>)
 					lhs = Makai::Math::mod(lhs, rhs);
