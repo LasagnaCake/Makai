@@ -394,26 +394,33 @@ constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base
 ///		- `long double`s: 32 decimal spaces.
 template<Type::Real F, Type::ASCII T>
 constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2) {
+	constexpr F const ROUNDING_FACTOR = 4.99;
 	usize zeroes = Math::pow<F>(10, precision);
+	MX::exzero(buf, bufSize);
+	--bufSize;
 	if (val < 0) {
 		*(buf++) = '-';
 		val = -val;
-		--bufSize;
-	} else {
-		*(buf++) = '+';
-		--bufSize;
+	} else *(buf++) = '+';
+	ssize const num	= val * zeroes + ROUNDING_FACTOR;
+	ssize whole		= num;
+	ssize frac		= (val - ssize(val)) * zeroes + ROUNDING_FACTOR;
+	if (!frac) {
+		auto const ns = itoa(ssize(val), buf, bufSize-1);
+		if (usize(ns) >= bufSize) return ns;
+		buf[ns] = '.';
+		buf[ns+1] = '0';
+		return ns + 2;
 	}
-	ssize const num	= val * zeroes + 0.49;
-	ssize frac		= (val - ssize(val)) * zeroes + 0.49;
-	auto const lhs = itoa(num, buf, bufSize);
-	if (usize(lhs) >= bufSize || !frac) return lhs;
-	ssize exp = precision-1;
-	while (frac /= 10)
-		--exp;
-	if (exp <= 0) return lhs+1;
-	MX::excopy(buf+exp+1, buf+exp, bufSize-exp-1);
-	buf[exp] = '.';
-	return lhs+2;
+	usize wholeOffset = precision;
+	usize fracOffset = precision;
+	while (whole /= 10 && wholeOffset)	--wholeOffset;
+	while (frac /= 10 && fracOffset)	--fracOffset;
+	auto const ns = itoa(whole, buf + wholeOffset, bufSize-wholeOffset);
+	if (usize(ns) >= bufSize) return ns;
+	MX::memmove(buf + fracOffset + 1, buf + fracOffset, bufSize - fracOffset - 1);
+	buf[fracOffset] = 0;
+	return ns + 2;
 }
 
 CTL_NAMESPACE_END
