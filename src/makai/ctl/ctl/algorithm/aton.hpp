@@ -403,13 +403,14 @@ constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = s
 		*(buf++) = '+';
 		--bufSize;
 	}
-	ssize num	= val * zeroes;
-	ssize whole	= ssize(val) * zeroes;
+	ssize const num	= val * zeroes + 0.49;
+	ssize frac		= (val - ssize(val)) * zeroes + 0.49;
 	auto const lhs = itoa(num, buf, bufSize);
-	if (usize(lhs) >= bufSize) return lhs;
-	ssize exp = 0;
-	while (whole /= 10) ++exp;
-	if (!exp) return lhs+1;
+	if (usize(lhs) >= bufSize || !frac) return lhs;
+	ssize exp = precision-1;
+	while (frac /= 10)
+		--exp;
+	if (exp <= 0) return lhs+1;
 	MX::excopy(buf+exp+1, buf+exp, bufSize-exp-1);
 	buf[exp] = '.';
 	return lhs+2;
