@@ -410,7 +410,7 @@ constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = s
 	ssize exp = 0;
 	while (whole /= 10) ++exp;
 	if (!exp) return lhs+1;
-	MX::excopy(buf+exp,buf+exp+1, bufSize-exp);
+	MX::excopy(buf+exp,buf+exp+1, bufSize-exp-1);
 	buf[exp] = '.';
 	return lhs+2;
 }
