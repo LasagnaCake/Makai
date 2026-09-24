@@ -54,6 +54,9 @@ extend vector {
 
 	normalTo	:: (@ByRef self: vector, other: vector) => (other - self).normal
 
+	@Static ZERO	:: () => new vector{0, 0, 0, 0}
+	@Static ONE		:: () => new vector{1, 1, 1, 1}
+
 	@Static RIGHT	:: () => new vector{+1, 0, 0, 0}
 	@Static LEFT	:: () => new vector{-1, 0, 0, 0}
 	@Static UP		:: () => new vector{0, +1, 0, 0}
