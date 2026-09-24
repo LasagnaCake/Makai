@@ -1,5 +1,5 @@
-#ifndef CTL_ALGORITHM_ATOI_H
-#define CTL_ALGORITHM_ATOI_H
+#ifndef CTL_ALGORITHM_ATON_H
+#define CTL_ALGORITHM_ATON_H
 
 #include "validate.hpp"
 #include "transform.hpp"
@@ -327,50 +327,39 @@ constexpr bool atof(As<const T[S]> const& str, F& out, usize const base = 0) {
 /// @return Size of resulting number string.
 template<Type::Integer I, Type::ASCII T>
 constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base = 10, bool const addBase = true) {
-	// Digits
 	cstring const digits = "0123456789abcdefghijklmnopqrstuv";
-	// If empty buffer, or buffer is too small for a non-decimal base
 	if ((!bufSize) || (bufSize < 4 && base != 10))
 		return -1;
-	// Clear buffer
 	MX::exzero(buf, bufSize);
-	// Get stating points
 	usize
 		offset = 0,
 		i = bufSize-2
 	;
-	// If value is 0, set buffer to zero and return
 	if (!val) {
 		buf[0] = '0';
 		return 1;
 	}
-	// If value is negative, append negative sign and invert value
 	if (val < 0) {
 		buf[offset++] = '-';
 		val = -val;
 	}
-	// If not decimal, append base identifier accoordingly
 	if (addBase && base != 10) {
 		buf[offset++] = '0';
 		switch (base) {
-			case 2:		buf[offset] = 'b'; ++offset; break;
-			case 3:		buf[offset] = 't'; ++offset; break;
-			case 4:		buf[offset] = 'q'; ++offset; break;
-			case 8:		buf[offset] = 'o'; ++offset; break;
-			case 16:	buf[offset] = 'x'; ++offset; break;
-			case 32:	buf[offset] = 'y'; ++offset; break;
+			case 2:		buf[offset++] = 'b'; break;
+			case 3:		buf[offset++] = 't'; break;
+			case 4:		buf[offset++] = 'q'; break;
+			case 8:		buf[offset++] = 'o'; break;
+			case 16:	buf[offset++] = 'x'; break;
+			case 32:	buf[offset++] = 'y'; break;
 			default: break;
 		}
 	}
-	// Calculate number value
-	for(; val && (i-offset); --i, val /= base) {
+	for(; val && (i-offset); --i, val /= base)
 		buf[i] = digits[val % base];
-	}
-	// Move stuff around to beginning of buffer
 	MX::excopy(buf+offset, buf+offset+i, bufSize-i);
 	if (!offset)
 		MX::excopy(buf, buf+1, bufSize-i);
-	// Return full size of number string
 	return (bufSize - i - 2 + offset);
 }
 
@@ -392,35 +381,64 @@ constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base
 ///		- `double`s: 16 decimal spaces.
 ///
 ///		- `long double`s: 32 decimal spaces.
-template<Type::Real F, Type::ASCII T>
-constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2) {
-	constexpr F const ROUNDING_FACTOR = 4.99;
-	usize zeroes = Math::pow<F>(10, precision);
+template<Type::Real F, Type::ASCII T, F R = F(0.499)>
+constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2, bool const shortened = false) {
+	if (bufSize < precision) return -1;
+	constexpr F const ROUNDING_FACTOR = R;
+	F const zeroes = Math::pow<F>(10, precision);
 	MX::exzero(buf, bufSize);
-	--bufSize;
 	if (val < 0) {
+		if (bufSize < usize(4 - shortened)) return -1;
+		--bufSize;
 		*(buf++) = '-';
 		val = -val;
-	} else *(buf++) = '+';
-	ssize const num	= val * zeroes + ROUNDING_FACTOR;
-	ssize whole		= num;
-	ssize frac		= (val - ssize(val)) * zeroes + ROUNDING_FACTOR;
-	if (!frac) {
-		auto const ns = itoa(ssize(val), buf, bufSize-1);
-		if (usize(ns) >= bufSize) return ns;
-		buf[ns] = '.';
-		buf[ns+1] = '0';
-		return ns + 2;
+	} else if (!shortened) {
+		if (bufSize < usize(4 - shortened * 2)) return -1;
+		--bufSize;
+		*(buf++) = '+';
 	}
-	usize wholeOffset = precision;
-	usize fracOffset = precision;
-	while (whole /= 10 && wholeOffset)	--wholeOffset;
-	while (frac /= 10 && fracOffset)	--fracOffset;
-	auto const ns = itoa(whole, buf + wholeOffset, bufSize-wholeOffset);
-	if (usize(ns) >= bufSize) return ns;
-	MX::memmove(buf + fracOffset + 1, buf + fracOffset, bufSize - fracOffset - 1);
-	buf[fracOffset] = 0;
-	return ns + 2;
+	if (!bufSize) return -1;
+	usize num	= usize(val * zeroes + ROUNDING_FACTOR);
+	usize whole	= usize(usize(val) * zeroes + ROUNDING_FACTOR);
+	usize frac	= num - whole;
+	if (val == 0) [[unlikely]] {
+		if (!shortened)
+			*(buf++) = '0';
+		*(buf++) = '.';
+		*(buf++) = '0';
+		return 4 - shortened + 1;
+	} if (val < 1) {
+		usize zcount = 0;
+		if (!shortened)
+			*(buf++) = '0';
+		*(buf++) = '.';
+		bufSize -= 2;
+		if (!bufSize) return -1;
+		while (bufSize && usize(val * Math::pow<F>(10, zcount) + ROUNDING_FACTOR) != num) {
+			*(++buf) = '0';
+			++zcount;
+			--bufSize;
+		}
+		if (!bufSize) return -1;
+		auto ns = itoa<usize>(frac, buf, bufSize, 10, false);
+		if (ns == -1) return ns;
+		return ns + zcount + 4 - shortened + 1;
+	} else if (!frac) {
+		auto ns = itoa<usize>(usize(val), buf, bufSize-1, 10, false);
+		if (ns == -1) return -1;
+		if (usize(ns) >= (bufSize-2)) return ns;
+		buf[ns++] = '.';
+		if (!shortened)
+			buf[ns++] = '0';
+		return ns + 1;
+	} else [[likely]] {
+		auto const x = itoa<usize>(val, buf, bufSize, 10, false);
+		if (x == -1) return -1;
+		if (usize(x) >= bufSize) return x;
+		auto const y = ftoa<F>(val - usize(val), buf + x, bufSize - x, precision, true);
+		if (y == -1) return -1;
+		return x + y;
+	}
 }
 
 CTL_NAMESPACE_END
