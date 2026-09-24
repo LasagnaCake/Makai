@@ -858,6 +858,8 @@ static Makai::Data::Value uopDirectResolve(Makai::Data::Value const& v, Token co
 
 template<class T>
 static Makai::Data::Value bopDirectResolveEX(T const& a, T const& b, Token const& tok) {
+	if constexpr (Makai::Type::Number<T>)
+		MAKAILIB_DEBUGLN_FULL("Operands <", Makai::String(Makai::nameof<T>()), "> :: [", a, ", ", b, "] -> [", tok.text, "]");
 	if constexpr (Makai::Type::Equal<T, bool>) {
 		switch (tok.type) {
 			case LTS_TT_BIT_AND:	return a && b;
@@ -911,8 +913,8 @@ static Makai::Data::Value bopDirectResolveEX(T const& a, T const& b, Token const
 static Makai::Data::Value bopDirectResolve(Makai::Data::Value const& a, Makai::Data::Value const& b, Token const& tok) {
 	switch ((a.type() > b.type() ? a.type() : b.type())) {
 		case Makai::Data::Value::Kind::DVK_BOOLEAN:		return bopDirectResolveEX(a.getBoolean(),	b.getBoolean(),		tok);
-		case Makai::Data::Value::Kind::DVK_SIGNED:		return bopDirectResolveEX(a.getSigned(),	b.getSigned(),		tok);
 		case Makai::Data::Value::Kind::DVK_UNSIGNED:	return bopDirectResolveEX(a.getUnsigned(),	b.getUnsigned(),	tok);
+		case Makai::Data::Value::Kind::DVK_SIGNED:		return bopDirectResolveEX(a.getSigned(),	b.getSigned(),		tok);
 		case Makai::Data::Value::Kind::DVK_REAL:		return bopDirectResolveEX(a.getReal(),		b.getReal(),		tok);
 		case Makai::Data::Value::Kind::DVK_VECTOR:		return bopDirectResolveEX(a.getVector(),	b.getVector(),		tok);
 		default: {
