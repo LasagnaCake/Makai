@@ -394,32 +394,25 @@ constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base
 ///		- `long double`s: 32 decimal spaces.
 template<Type::Real F, Type::ASCII T>
 constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2) {
-	// Get amount of zeroes to add to number
 	usize zeroes = Math::pow<F>(10, precision);
-	// If value is negative, append negative sign and invert value
 	if (val < 0) {
 		*(buf++) = '-';
 		val = -val;
 		--bufSize;
+	} else {
+		*(buf++) = '+';
+		--bufSize;
 	}
-	// Get whole part of number
-	ssize whole = val;
-	// Get fractional part
-	usize frac = ((val - whole) * zeroes + 0.49);
-	ssize lhs = 0, rhs = 0;
-	// Fill in whole part of number to string, return if error
-	if ((lhs = ::CTL::itoa<ssize>(whole, buf, bufSize)) == -1) return -1;
-	// Check if buffer is not full, else append comma and re-check
+	ssize num	= val * zeroes;
+	ssize whole	= ssize(val) * zeroes;
+	auto const lhs = itoa(num, buf, bufSize);
 	if (usize(lhs) >= bufSize) return lhs;
-	buf[lhs++] = '.';
-	usize exp = frac;
-	while ((exp /= 10) && usize(lhs) < bufSize)
-		buf[lhs++] = '0';
-	if (usize(lhs) >= bufSize) return lhs;
-	// Fill in fractional part, returning if error
-	if ((rhs = ::CTL::itoa<ssize>(frac, buf+lhs, bufSize-lhs)) == -1) return -1;
-	// Return full size of number string
-	return lhs+rhs+1;
+	ssize exp = 0;
+	while (whole /= 10) ++exp;
+	if (!exp) return lhs+1;
+	MX::excopy(buf+exp,buf+exp+1, bufSize-exp);
+	buf[exp] = '.';
+	return lhs+2;
 }
 
 CTL_NAMESPACE_END
