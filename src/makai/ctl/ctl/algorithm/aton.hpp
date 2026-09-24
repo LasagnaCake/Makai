@@ -412,6 +412,9 @@ constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = s
 	// Check if buffer is not full, else append comma and re-check
 	if (usize(lhs) >= bufSize) return lhs;
 	buf[lhs++] = '.';
+	usize exp = frac;
+	while ((exp /= 10) && usize(lhs) < bufSize)
+		buf[lhs++] = '0';
 	if (usize(lhs) >= bufSize) return lhs;
 	// Fill in fractional part, returning if error
 	if ((rhs = ::CTL::itoa<ssize>(frac, buf+lhs, bufSize-lhs)) == -1) return -1;
