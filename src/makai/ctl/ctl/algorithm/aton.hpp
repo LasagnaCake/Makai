@@ -396,6 +396,7 @@ constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base
 ///		- `long double`s: 32 decimal spaces.
 template<Type::Real F, Type::ASCII T>
 constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2) {
+	constexpr F const ROUNDING_FACTOR = 0.499999;
 	if (bufSize < precision) return -1;
 	MX::exzero(buf, bufSize);
 	if (bufSize < usize(4)) return -1;
@@ -405,25 +406,20 @@ constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, usize const precision = 
 		val = -val;
 	} else *(buf++) = '+';
 	if (!bufSize) return -1;
-	ssize magnitude = Math::log10(val);
-	// Based off of https://stackoverflow.com/a/7097567
-	ssize sz = 0;
-	while (val > precision && bufSize) {
-		F const weight = Math::pow<F>(10, magnitude);
-		if (weight > 0 && bufSize) {
-			F const digit = usize(val / weight);
-			val -= digit * weight;
-			*(buf++) = '0' + digit;
-			if (!--bufSize) break;
-			if (magnitude == 0 && val > 0) {
-				*(buf++) = '0' + digit;
-				--bufSize;
-			}
-			--magnitude;
-		}
-		++sz;
+	usize num = usize(val + ROUNDING_FACTOR);
+	usize frac = 0;
+	usize zcount = val < 0;
+	while (num != val) {
+		num = val * Math::pow<F>(10, ++zcount) + ROUNDING_FACTOR;
+		if (val < 0) ++ zcount;
 	}
-	return sz+1;
+	if (!frac)
+		return itoa(num, buf, bufSize, 10, false);
+	ssize const full = itoa(num, buf + zcount, bufSize - zcount, 10, false);
+	if (full == -1) return -1;
+	MX::excopy(buf + frac + 1, buf + frac, full - frac);
+	buf[frac] = '.';
+	return full+2;
 }
 
 
