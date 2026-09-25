@@ -385,6 +385,7 @@ template<Type::Real F, Type::ASCII T, F R = F(0.499)>
 constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2) {
 	if (bufSize < precision) return -1;
 	constexpr F const ROUNDING_FACTOR = R;
+	constexpr F const epsilon = Math::pow<F>(10, -(sizeof(F) * 2.0));
 	MX::exzero(buf, bufSize);
 	if (val < 0) {
 		if (bufSize < usize(4)) return -1;
@@ -397,15 +398,18 @@ constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = s
 		*(buf++) = '+';
 	}
 	if (!bufSize) return -1;
+	usize num	= usize(val + ROUNDING_FACTOR);
 	usize whole	= usize(usize(val) + ROUNDING_FACTOR);
+	usize ufrac	= (num - whole);
 	F frac	= val - whole;
 	usize shift = 0;
-	while (frac) {
+	while (!Math::compare<F>(frac, ufrac, epsilon)) {
 		++shift;
+		num		= usize(val * shift + ROUNDING_FACTOR);
 		whole	= usize(usize(val) * shift + ROUNDING_FACTOR);
-		frac	= val - whole;
+		ufrac	= (num - whole);
+		frac	= (val * shift + ROUNDING_FACTOR) - whole;
 	}
-	usize ufrac	= (val - whole) + ROUNDING_FACTOR;
 	usize fracSize = 0, wholeSize = 0;
 	while (val /= 10)	++wholeSize;
 	while (frac /= 10)	++fracSize;
