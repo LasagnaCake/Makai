@@ -1453,10 +1453,10 @@ public:
 	///		- `double`s: 16 decimal spaces.
 	///
 	///		- `long double`s: 32 decimal spaces.
-	template<Type::Real T>
+	template<Type::Real T, auto round = RoundingMode::halfAwayFromZero<T>>
 	constexpr static SelfType fromNumber(T const& val, usize const precision = sizeof(T)*2) {
 		SelfType result(sizeof(T)*4, '\0');
-		ssize sz = ftoa<T, DataType>(val, result.data(), result.size(), precision);
+		ssize sz = ftoa<T, DataType, R>(val, result.data(), result.size(), precision, rounding);
 		if (sz < 0) throw FailedActionException("Float-to-String conversion failure!");
 		result.resize(sz);
 		return result;

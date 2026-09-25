@@ -145,7 +145,7 @@ inline float128	toBool(String const& s)	{return String::toNumber<bool>(s);	}
 template<Type::Number T>
 constexpr String toString(T const& value)
 requires (!(Type::Equal<T, bool> || Type::ASCII<T>)) {
-	return String::fromNumber<T>(value);
+	return String::fromNumber<T>(value, sizeof(T)*2);
 }
 
 /// @brief Character-to-string conversion.
