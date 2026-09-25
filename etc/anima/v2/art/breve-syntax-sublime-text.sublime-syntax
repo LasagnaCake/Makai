@@ -8,6 +8,7 @@ scope: source.breve
 variables:
   id: '[A-Za-z_][A-Za-z_0-9]*'
   op: '[+\-*/%&|^~<>:?!]{1,2}'
+  num: '(\+\-)?[0-9._]+'
 contexts:
   main:
     - match: ''
@@ -40,8 +41,32 @@ contexts:
       push: backtick_string
 
   numbers:
-    - match: '\b(\+-)?[0-9._]+\b'
-      scope: constant.numeric.breve
+    - match: '\b{{num}}(e{{num}})?(\.{{id}})?\b'
+      scope: constant.numeric.common.breve
+
+    - match: '\b0b[0-1]+\b'
+      scope: constant.numeric.base-2.breve
+
+    - match: '\b0t[0-2]+\b'
+      scope: constant.numeric.base-3.breve
+
+    - match: '\b0q[0-3]+\b'
+      scope: constant.numeric.base-4.breve
+
+    - match: '\b0h[0-5]+\b'
+      scope: constant.numeric.base-6.breve
+
+    - match: '\b0o[0-7]+\b'
+      scope: constant.numeric.base-8.breve
+
+    - match: '\b0d[0-9]+\b'
+      scope: constant.numeric.base-10.breve
+
+    - match: '\b0x[0-9A-Fa-f]+\b'
+      scope: constant.numeric.base-16.breve
+
+    - match: '\b0y[0-9A-Za-z]+\b'
+      scope: constant.numeric.base-32.breve
 
   templates:
     - match: '\#{{id}}'
