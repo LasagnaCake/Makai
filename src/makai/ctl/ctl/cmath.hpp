@@ -221,10 +221,12 @@ static_assert(compare<double>(pow<double>(10, 1), 10));
 static_assert(compare<double>(pow<double>(10, 2), 100));
 static_assert(compare<double>(pow<double>(10, 5), 100000));
 static_assert(compare<double>(pow<double>(10, 10), 10000000000));
+static_assert(compare<double>(pow<double>(10, 16), 10000000000000000));
 static_assert(compare<double>(pow<double>(10, -1), 0.1));
 static_assert(compare<double>(pow<double>(10, -2), 0.01));
 static_assert(compare<double>(pow<double>(10, -5), 0.000001));
 static_assert(compare<double>(pow<double>(10, -10), 0.00000000001));
+static_assert(compare<double>(pow<double>(10, -16), 0.00000000000000001));
 
 /// @brief Calculates the root of a number.
 /// @tparam F Floating point type.

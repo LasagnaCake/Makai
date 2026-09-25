@@ -28,7 +28,7 @@ struct BlendTextureEffect {
     bool enabled;
     sampler2D image;
     vec3 strength;
-    uint32 equation;
+    uint equation;
 };
 
 struct NormalMapEffect {
@@ -45,8 +45,8 @@ struct EmissionEffect {
 struct WarpEffect {
     bool enabled;
     sampler2D image;
-    uint32 channelX;
-    uint32 channelY;
+    uint channelX;
+    uint channelY;
 };
 
 uniform vec4 albedo = vec4(1);
@@ -105,7 +105,7 @@ uniform float contrast = 1;
 uniform bool hashAlpha = false;
 
 // [ DEBUG MODE ]
-uniform uint32 debugView = 0;
+uniform uint debugView = 0;
 
 uniform AmbientData ambient = AmbientData(vec3(1), 1);
 uniform LightEffect lights = LightEffect(false);
@@ -195,7 +195,7 @@ vec4 applyBrightnessAndContrast(vec4 color) {
     return vec4(((res - 0.5f) * max(contrast, 0)) + 0.5f, color.a);
 }
 
-vec3 equate(vec3 a, vec3 b, uint32 mode) {
+vec3 equate(vec3 a, vec3 b, uint mode) {
     switch (mode & 0x0Fu) {
         case 0x00:
         return a * b;
@@ -229,8 +229,8 @@ void main(void) {
     vec2 texelUV = fragUV;
 
     if (warp.enabled) {
-        uint32 wcx = clamp(warp.channelX, 0u, 3u);
-        uint32 wcy = clamp(warp.channelY, 0u, 3u);
+        uint wcx = clamp(warp.channelX, 0u, 3u);
+        uint wcy = clamp(warp.channelY, 0u, 3u);
         vec4 warpFac = texture(warp.image, warpUV);
         vec2 warpCoord = vec2(warpFac[wcx], warpFac[wcy]) * 2 - 1;
         texelUV = fragUV + warpCoord;

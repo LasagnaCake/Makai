@@ -206,12 +206,12 @@ vec4 applyRainbow(vec4 color, vec2 coords) {
 vec4 getPixelColor(vec2 uv) {
 	if (!useBlur) return texture(screen, uv);
 	return (
-		texture(screen, uv) +
-		texture(screen, uv + vec2(blurStrength.x, 0)) +
-		texture(screen, uv - vec2(blurStrength.x, 0)) +
-		texture(screen, uv + vec2(0, blurStrength.y)) +
-		texture(screen, uv - vec2(0, blurStrength.y))
-	) * 0.2;
+		4 * texture(screen, uv) +
+		texture(screen, uv + vec2(blurStrength.x - 0.5, blurStrength.y + 0.5)) +
+		texture(screen, uv - vec2(blurStrength.x + 0.5, blurStrength.y + 0.5)) +
+		texture(screen, uv + vec2(blurStrength.x - 0.5, blurStrength.y - 0.5)) +
+		texture(screen, uv - vec2(blurStrength.x + 0.5, blurStrength.y - 0.5))
+	) * (1.0/8.0);
 }
 
 float getOutlineValue(vec2 uv, vec2 oSize) {
