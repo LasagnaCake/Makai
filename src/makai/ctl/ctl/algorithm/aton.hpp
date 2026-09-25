@@ -288,8 +288,8 @@ constexpr bool atof(ref<T const> const str, usize size, F& out, usize const base
 		if (!atoi<ssize>(str, size - (exponent != -1 ? exponent : 0), ival, base))
 			return false;
 		out = ival;
-		F ev = 0;
-		if (exponent != -1 && !atof<F>(str + exponent + 1, exponent - 1, ev, base))
+		ssize ev = 0;
+		if (exponent != -1 && !atoi<ssize>(str + exponent + 1, exponent - 1, ev, base))
 			return false;
 		if (exponent != -1) out *= Math::pow<F>(10, ev);
 		return true;
@@ -304,8 +304,8 @@ constexpr bool atof(ref<T const> const str, usize size, F& out, usize const base
 	delete[] ns;
 	// Convert integer to string by "reverse scientific notation" and return
 	out = ival * Math::pow<F>(10, -ssize(size-sep));
-	F ev = 0;
-	if (exponent != -1 && !atof<F>(str + exponent + 1, exponent - 1, ev, base))
+	ssize ev = 0;
+	if (exponent != -1 && !atoi<ssize>(str + exponent + 1, exponent - 1, ev, base))
 		return false;
 	if (exponent != -1) out *= Math::pow<F>(10, ev);
 	return true;
@@ -423,7 +423,7 @@ constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, usize const precision = 
 		}
 		++sz;
 	}
-	return sz;
+	return sz+1;
 }
 
 
@@ -456,7 +456,7 @@ constexpr ssize ftosa(F val, ref<T> buf, usize bufSize, usize const precision = 
 		val *= 10;
 		--zcount;
 	}
-	auto const s = ftoa<F, T>(val, buf, bufSize, precision);
+	auto const s = ftoda<F, T>(val, buf, bufSize, precision);
 	if (s == -1) return -1;
 	if (usize(s) >= bufSize-3) return s;
 	buf += s;
@@ -489,7 +489,7 @@ constexpr ssize ftosa(F val, ref<T> buf, usize bufSize, usize const precision = 
 template<Type::Real F, Type::ASCII T>
 constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2) {
 	ssize magnitude = Math::log10(val);
-	if (magnitude > 13 || mag < -9)
+	if (magnitude > 13 || magnitude < -9)
 		return ftosa<F, T>(val, buf, bufSize, precision);
 	else return ftoda<F, T>(val, buf, bufSize, precision);
 }
