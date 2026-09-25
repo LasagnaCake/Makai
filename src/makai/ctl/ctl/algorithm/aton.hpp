@@ -408,7 +408,7 @@ constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, usize const precision = 
 	if (!bufSize) return -1;
 	usize num = usize(val + ROUNDING_FACTOR);
 	usize frac = 0;
-	usize zcount = val < 0;
+	usize zcount = val < 1;
 	while (num != val) {
 		val *= 10;
 		num = val + ROUNDING_FACTOR;
@@ -419,13 +419,13 @@ constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, usize const precision = 
 		return -1;
 	if (!frac)
 		return itoa<usize>(num, buf, bufSize, 10, false);
-	for (usize i = 0; i < zcount; ++i)
-		buf[i] = '0';
+	for (usize i = 0; i < zcount; ++i) buf[i] = '0';
 	ssize const full = itoa<usize>(num, buf + zcount, bufSize - zcount, 10, false);
 	if (full == -1) return -1;
-	MX::excopy(buf + frac + 1, buf + frac, bufSize - frac - 1);
-	buf[frac] = '.';
-	return full+2;
+	auto const whole = (frac - zcount);
+	MX::excopy(buf + whole + 1, buf + whole, bufSize - whole - 1);
+	buf[whole] = '.';
+	return full+zcount+2;
 }
 
 
