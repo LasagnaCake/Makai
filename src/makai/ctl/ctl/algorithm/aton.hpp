@@ -412,16 +412,17 @@ constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = s
 		if (!shortened)
 			*(buf++) = '0';
 		*(buf++) = '.';
-		bufSize -= 2;
+		bufSize -= 2 - shortened;
 		if (!bufSize) return -1;
-		while (bufSize && usize(val * Math::pow<F>(10, zcount) + ROUNDING_FACTOR) != num) {
+		while (bufSize && usize((val *= 10) + ROUNDING_FACTOR) != num) {
 			*(++buf) = '0';
 			++zcount;
 			--bufSize;
+			printf("%d\n",int(zcount));
 		}
 		if (!bufSize) return -1;
 		auto ns = itoa<usize>(frac, buf, bufSize, 10, false);
-		if (ns == -1) return ns;
+		if (ns == -1) return -1;
 		return ns + zcount + 4 - shortened + 1;
 	} else if (!frac) {
 		auto ns = itoa<usize>(usize(val), buf, bufSize-1, 10, false);
@@ -439,6 +440,28 @@ constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = s
 		if (y == -1) return -1;
 		return x + y;
 	}
+}
+
+template<Type::Real F, Type::ASCII T, F R = F(0.499)>
+constexpr ssize ftosa(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2, bool const shortened = false) {
+	ssize zcount = 0;
+	while (Math::abs(val) > 1) {
+		val /= 10;
+		++zcount;
+	}
+	while (Math::abs(val) < 1) {
+		val *= 10;
+		--zcount;
+	}
+	auto const s = ftoa(val, buf, bufSize, precision, shortened);
+	if (s == -1) return -1;
+	if (usize(s) >= bufSize-3) return s;
+	buf += s;
+	bufSize -= s+1;
+	*(++buf) = 'e';
+	auto const e = itoa(zcount, buf, bufSize, 10, false);
+	if (s == -1) return -1;
+	return s + e;
 }
 
 CTL_NAMESPACE_END
