@@ -387,6 +387,7 @@ constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = s
 	constexpr F const ROUNDING_FACTOR = R;
 	F const zeroes = Math::pow<F>(10, precision);
 	MX::exzero(buf, bufSize);
+	bool hasPositiveSign = false;
 	if (val < 0) {
 		if (bufSize < usize(4 - shortened)) return -1;
 		--bufSize;
@@ -396,6 +397,7 @@ constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = s
 		if (bufSize < usize(4 - shortened * 2)) return -1;
 		--bufSize;
 		*(buf++) = '+';
+		hasPositiveSign = true;
 	}
 	if (!bufSize) return -1;
 	usize num	= usize(val * zeroes + ROUNDING_FACTOR);
@@ -418,12 +420,11 @@ constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = s
 			*(++buf) = '0';
 			++zcount;
 			--bufSize;
-			printf("%d\n",int(zcount));
 		}
 		if (!bufSize) return -1;
 		auto ns = itoa<usize>(frac, buf, bufSize, 10, false);
 		if (ns == -1) return -1;
-		return ns + zcount + 4 - shortened + 1;
+		return ns + zcount + 4 - shortened * (hasPositiveSign + 1) + 1;
 	} else if (!frac) {
 		auto ns = itoa<usize>(usize(val), buf, bufSize-1, 10, false);
 		if (ns == -1) return -1;
