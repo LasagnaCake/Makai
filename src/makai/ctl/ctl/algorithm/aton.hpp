@@ -382,65 +382,43 @@ constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base
 ///
 ///		- `long double`s: 32 decimal spaces.
 template<Type::Real F, Type::ASCII T, F R = F(0.499)>
-constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2, bool const shortened = false) {
+constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2) {
 	if (bufSize < precision) return -1;
 	constexpr F const ROUNDING_FACTOR = R;
-	F const zeroes = Math::pow<F>(10, precision);
 	MX::exzero(buf, bufSize);
-	bool hasPositiveSign = false;
 	if (val < 0) {
-		if (bufSize < usize(4 - shortened)) return -1;
+		if (bufSize < usize(4)) return -1;
 		--bufSize;
 		*(buf++) = '-';
 		val = -val;
-	} else if (!shortened) {
-		if (bufSize < usize(4 - shortened * 2)) return -1;
+	} else {
+		if (bufSize < usize(4)) return -1;
 		--bufSize;
 		*(buf++) = '+';
-		hasPositiveSign = true;
 	}
 	if (!bufSize) return -1;
-	usize num	= usize(val * zeroes + ROUNDING_FACTOR);
-	usize whole	= usize(usize(val) * zeroes + ROUNDING_FACTOR);
-	usize frac	= num - whole;
-	if (val == 0) [[unlikely]] {
-		if (!shortened)
-			*(buf++) = '0';
-		*(buf++) = '.';
-		*(buf++) = '0';
-		return 4 - shortened + 1;
-	} if (val < 1) {
-		usize zcount = 0;
-		if (!shortened)
-			*(buf++) = '0';
-		*(buf++) = '.';
-		bufSize -= 2 - shortened;
-		if (!bufSize) return -1;
-		while (bufSize && usize((val *= 10) + ROUNDING_FACTOR) != num) {
-			*(++buf) = '0';
-			++zcount;
-			--bufSize;
-		}
-		if (!bufSize) return -1;
-		auto ns = itoa<usize>(frac, buf, bufSize, 10, false);
-		if (ns == -1) return -1;
-		return ns + zcount + 4 - shortened * (hasPositiveSign + 1) + 1;
-	} else if (!frac) {
-		auto ns = itoa<usize>(usize(val), buf, bufSize-1, 10, false);
-		if (ns == -1) return -1;
-		if (usize(ns) >= (bufSize-2)) return ns;
-		buf[ns++] = '.';
-		if (!shortened)
-			buf[ns++] = '0';
-		return ns + 1;
-	} else [[likely]] {
-		auto const x = itoa<usize>(val, buf, bufSize, 10, false);
-		if (x == -1) return -1;
-		if (usize(x) >= bufSize) return x;
-		auto const y = ftoa<F>(val - usize(val), buf + x, bufSize - x, precision, true);
-		if (y == -1) return -1;
-		return x + y;
+	usize whole	= usize(usize(val) + ROUNDING_FACTOR);
+	F frac	= val - whole;
+	usize shift = 0;
+	while (frac) {
+		++shift;
+		whole	= usize(usize(val) * shift + ROUNDING_FACTOR);
+		frac	= val - whole;
 	}
+	usize ufrac	= (val - whole) + ROUNDING_FACTOR;
+	usize fracSize = 0, wholeSize = 0;
+	while (val /= 10)	++wholeSize;
+	while (frac /= 10)	++fracSize;
+	auto const numSize = (wholeSize + shift + fracSize);
+	printf("Number Size: [%d]\n", int(numSize));
+	if (bufSize < numSize) return -1;
+	for (usize i = 0; i < numSize; ++i) buf[i] = '0';
+	auto lhs = itoa<usize>(whole, buf, bufSize, 10, false);
+	if (lhs == -1) return -1;
+	buf[++lhs] = '.';
+	auto const rhs = itoa<usize>(ufrac, buf + lhs + shift, bufSize - lhs - shift, 10, false);
+	if (rhs == -1) return -1;
+	return numSize + 1;
 }
 
 template<Type::Real F, Type::ASCII T, F R = F(0.499)>
@@ -454,13 +432,13 @@ constexpr ssize ftosa(F val, ref<T> buf, usize bufSize, usize const precision = 
 		val *= 10;
 		--zcount;
 	}
-	auto const s = ftoa(val, buf, bufSize, precision, shortened);
+	auto const s = ftoa<F, T, R>(val, buf, bufSize, precision, shortened);
 	if (s == -1) return -1;
 	if (usize(s) >= bufSize-3) return s;
 	buf += s;
 	bufSize -= s+1;
 	*(++buf) = 'e';
-	auto const e = itoa(zcount, buf, bufSize, 10, false);
+	auto const e = itoa<usize>(zcount, buf, bufSize, 10, false);
 	if (s == -1) return -1;
 	return s + e;
 }
