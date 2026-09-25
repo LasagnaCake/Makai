@@ -272,6 +272,11 @@ constexpr bool atof(ref<T const> const str, usize size, F& out, usize const base
 		toLowerChar(str[size-1]) == 'f'
 	||	toLowerChar(str[size-1]) == 'd'
 	) --size;
+	ssize exponent = -1;
+	for (usize i = size; i > 0; --i) if (str[i-1] == 'e' || str[i-1] == 'z') {
+		exponent = i-1;
+		break;
+	}
 	// Find separator character
 	usize sep = 0;
 	while (sep < size)
@@ -280,9 +285,13 @@ constexpr bool atof(ref<T const> const str, usize size, F& out, usize const base
 	// If no separator was found, convert number and return
 	ssize ival = 0;
 	if (sep == size) {
-		if (!atoi<ssize>(str, size, ival, base))
+		if (!atoi<ssize>(str, size - (exponent != -1 ? exponent : 0), ival, base))
 			return false;
 		out = ival;
+		F ev = 0;
+		if (exponent != -1 && !atof<F>(str + exponent + 1, exponent - 1, ev, base))
+			return false;
+		if (exponent != -1) out *= Math::pow<F>(10, ev);
 		return true;
 	}
 	// Create new string without separator
@@ -295,6 +304,10 @@ constexpr bool atof(ref<T const> const str, usize size, F& out, usize const base
 	delete[] ns;
 	// Convert integer to string by "reverse scientific notation" and return
 	out = ival * Math::pow<F>(10, -ssize(size-sep));
+	F ev = 0;
+	if (exponent != -1 && !atof<F>(str + exponent + 1, exponent - 1, ev, base))
+		return false;
+	if (exponent != -1) out *= Math::pow<F>(10, ev);
 	return true;
 }
 
@@ -381,52 +394,59 @@ constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base
 ///		- `double`s: 16 decimal spaces.
 ///
 ///		- `long double`s: 32 decimal spaces.
-template<Type::Real F, Type::ASCII T, F R = F(0.499)>
-constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2) {
+template<Type::Real F, Type::ASCII T>
+constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2) {
 	if (bufSize < precision) return -1;
-	constexpr F const ROUNDING_FACTOR = R;
-	constexpr F const epsilon = Math::pow<F>(10, -(sizeof(F) * 2.0));
 	MX::exzero(buf, bufSize);
+	if (bufSize < usize(4)) return -1;
+	--bufSize;
 	if (val < 0) {
-		if (bufSize < usize(4)) return -1;
-		--bufSize;
 		*(buf++) = '-';
 		val = -val;
-	} else {
-		if (bufSize < usize(4)) return -1;
-		--bufSize;
-		*(buf++) = '+';
-	}
+	} else *(buf++) = '+';
 	if (!bufSize) return -1;
-	usize num	= usize(val + ROUNDING_FACTOR);
-	usize whole	= usize(usize(val) + ROUNDING_FACTOR);
-	usize ufrac	= (num - whole);
-	F frac	= val - whole;
-	usize shift = 0;
-	while (!Math::compare<F>(frac, ufrac, epsilon)) {
-		++shift;
-		num		= usize(val * shift + ROUNDING_FACTOR);
-		whole	= usize(usize(val) * shift + ROUNDING_FACTOR);
-		ufrac	= (num - whole);
-		frac	= (val * shift + ROUNDING_FACTOR) - whole;
+	ssize magnitude = Math::log10(val);
+	// Based off of https://stackoverflow.com/a/7097567
+	ssize sz = 0;
+	while (val > precision && bufSize) {
+		F const weight = Math::pow<F>(10, magnitude);
+		if (weight > 0 && bufSize) {
+			F const digit = usize(val / weight);
+			val -= digit * weight;
+			*(buf++) = '0' + digit;
+			if (!--bufSize) break;
+			if (magnitude == 0 && val > 0) {
+				*(buf++) = '0' + digit;
+				--bufSize;
+			}
+			--magnitude;
+		}
+		++sz;
 	}
-	usize fracSize = 0, wholeSize = 0;
-	while (val /= 10)	++wholeSize;
-	while (frac /= 10)	++fracSize;
-	auto const numSize = (wholeSize + shift + fracSize);
-	printf("Number Size: [%d]\n", int(numSize));
-	if (bufSize < numSize) return -1;
-	for (usize i = 0; i < numSize; ++i) buf[i] = '0';
-	auto lhs = itoa<usize>(whole, buf, bufSize, 10, false);
-	if (lhs == -1) return -1;
-	buf[++lhs] = '.';
-	auto const rhs = itoa<usize>(ufrac, buf + lhs + shift, bufSize - lhs - shift, 10, false);
-	if (rhs == -1) return -1;
-	return numSize + 1;
+	return sz;
 }
 
-template<Type::Real F, Type::ASCII T, F R = F(0.499)>
-constexpr ssize ftosa(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2, bool const shortened = false) {
+
+/// @brief Converts a floating point number into a string of characters.
+/// @tparam F Floating point type.
+/// @tparam T Character type.
+/// @param val Floating point number to convert.
+/// @param buf Output string buffer of the conversion.
+/// @param bufSize String buffer size.
+/// @param
+///		precision Amount of decimal spaces to include.
+///		By default, it is equal to double the byte size of the floating point type.
+/// @return Size of resulting number string.
+/// @note
+///		Default value of `precision` for:
+///
+///		- `float`s: 8 decimal spaces.
+///
+///		- `double`s: 16 decimal spaces.
+///
+///		- `long double`s: 32 decimal spaces.
+template<Type::Real F, Type::ASCII T>
+constexpr ssize ftosa(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2) {
 	ssize zcount = 0;
 	while (Math::abs(val) > 1) {
 		val /= 10;
@@ -436,7 +456,7 @@ constexpr ssize ftosa(F val, ref<T> buf, usize bufSize, usize const precision = 
 		val *= 10;
 		--zcount;
 	}
-	auto const s = ftoa<F, T, R>(val, buf, bufSize, precision, shortened);
+	auto const s = ftoa<F, T>(val, buf, bufSize, precision);
 	if (s == -1) return -1;
 	if (usize(s) >= bufSize-3) return s;
 	buf += s;
@@ -445,6 +465,33 @@ constexpr ssize ftosa(F val, ref<T> buf, usize bufSize, usize const precision = 
 	auto const e = itoa<usize>(zcount, buf, bufSize, 10, false);
 	if (s == -1) return -1;
 	return s + e;
+}
+
+
+/// @brief Converts a floating point number into a string of characters.
+/// @tparam F Floating point type.
+/// @tparam T Character type.
+/// @param val Floating point number to convert.
+/// @param buf Output string buffer of the conversion.
+/// @param bufSize String buffer size.
+/// @param
+///		precision Amount of decimal spaces to include.
+///		By default, it is equal to double the byte size of the floating point type.
+/// @return Size of resulting number string.
+/// @note
+///		Default value of `precision` for:
+///
+///		- `float`s: 8 decimal spaces.
+///
+///		- `double`s: 16 decimal spaces.
+///
+///		- `long double`s: 32 decimal spaces.
+template<Type::Real F, Type::ASCII T>
+constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2) {
+	ssize magnitude = Math::log10(val);
+	if (magnitude > 13 || mag < -9)
+		return ftosa<F, T>(val, buf, bufSize, precision);
+	else return ftoda<F, T>(val, buf, bufSize, precision);
 }
 
 CTL_NAMESPACE_END
