@@ -136,6 +136,8 @@ namespace Impl {
 					case 'b':	++c; return base ? base : 2;
 					case 'd':	++c; return base ? base : 10;
 					case 'o':	++c; return base ? base : 8;
+					case 'w':	++c; return base ? base : 6;
+					case 'z':	++c; return base ? base : 36;
 					default: break;
 				}
 			}
@@ -341,7 +343,7 @@ constexpr bool atof(As<const T[S]> const& str, F& out, usize const base = 0) {
 /// @return Size of resulting number string.
 template<Type::Integer I, Type::ASCII T>
 constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base = 10, bool const addBase = true) {
-	cstring const digits = "0123456789abcdefghijklmnopqrstuv";
+	cstring const digits = "0123456789abcdefghijklmnopqrstuvwxyz";
 	if ((!bufSize) || (bufSize < 4 && base != 10))
 		return -1;
 	MX::exzero(buf, bufSize);
@@ -363,9 +365,12 @@ constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base
 			case 2:		buf[offset++] = 'b'; break;
 			case 3:		buf[offset++] = 't'; break;
 			case 4:		buf[offset++] = 'q'; break;
+			case 6:		buf[offset++] = 'h'; break;
 			case 8:		buf[offset++] = 'o'; break;
+			case 12:	buf[offset++] = 'w'; break;
 			case 16:	buf[offset++] = 'x'; break;
 			case 32:	buf[offset++] = 'y'; break;
+			case 36:	buf[offset++] = 'z'; break;
 			default: break;
 		}
 	}
@@ -418,6 +423,7 @@ namespace RoundingMode {
 /// @param
 ///		precision Amount of decimal spaces to include.
 ///		By default, it is equal to double the byte size of the floating point type.
+/// @param round Rounding mode. By default, it is `RoundingMode::halfAwayFromZero`.
 /// @return Size of resulting number string.
 /// @note
 ///		Default value of `precision` for:
@@ -459,7 +465,7 @@ constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, usize const precision = 
 	auto const whole = (frac - zcount);
 	MX::excopy(buf + whole + 1, buf + whole, bufSize - whole - 1);
 	buf[whole] = '.';
-	return full+zcount+2;
+	return full+zcount+1;
 }
 
 
@@ -472,6 +478,7 @@ constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, usize const precision = 
 /// @param
 ///		precision Amount of decimal spaces to include.
 ///		By default, it is equal to double the byte size of the floating point type.
+/// @param round Rounding mode. By default, it is `RoundingMode::halfAwayFromZero`.
 /// @return Size of resulting number string.
 /// @note
 ///		Default value of `precision` for:
@@ -513,6 +520,7 @@ constexpr ssize ftosa(F val, ref<T> buf, usize bufSize, usize const precision = 
 /// @param
 ///		precision Amount of decimal spaces to include.
 ///		By default, it is equal to double the byte size of the floating point type.
+/// @param round Rounding mode. By default, it is `RoundingMode::halfAwayFromZero`.
 /// @return Size of resulting number string.
 /// @note
 ///		Default value of `precision` for:

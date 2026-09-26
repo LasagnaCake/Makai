@@ -491,10 +491,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Namespace::Instance resolve(UTF8StringList const& path) const;
 		Namespace::Instance push(UTF8StringList const& path);
 		void pop(usize const count);
-		Namespace::Instance top() const;
-		Namespace::Instance parent() const;
+		Namespace::Instance top();
+		Namespace::Instance parent();
 
-		Implementation::Instance impl() const;
+		Implementation::Instance impl();
 
 		void addGlobalAttribute(Namespace::AttributeRef const& attrib);
 

@@ -377,6 +377,7 @@ bool ATransformer::Result::shouldBePushed() const {
 
 Namespace::Instance ATransformer::Context::nearestVarScope() const {
 	for (auto& sco: Range::reverse(scopeStack)) {
+		if (!sco) continue;
 		if (sco->isPureNamespace() && sco->declaredAsNamespace) continue;
 		return sco;
 	}
@@ -3132,7 +3133,7 @@ Namespace::TypeRef ATransformer::Context::tupleFor(List<Namespace::TypeRef> cons
 			pop(1);
 		}
 		tup->name += "_Tuple";
-		pop(1);
+		scopeStack.popBack();
 		registerType(scope);
 		return tup;
 	} else return tuples[types];
@@ -3158,7 +3159,7 @@ Namespace::TypeRef ATransformer::Context::unionFor(List<Namespace::TypeRef> cons
 			pop(1);
 		}
 		tup->name += "_Union";
-		pop(1);
+		scopeStack.popBack();
 		registerType(scope);
 		return tup;
 	} else return unions[types];

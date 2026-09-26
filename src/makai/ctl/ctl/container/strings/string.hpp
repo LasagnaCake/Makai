@@ -1439,6 +1439,7 @@ public:
 
 	/// @brief Floating-point-to-string conversion.
 	/// @tparam T Floating point type.
+	/// @tparam round Rounding mode. By default, it is `RoundingMode::halfAwayFromZero`.
 	/// @param val Value to convert.
 	/// @param
 	///		precision Amount of decimal spaces to include.
@@ -1456,7 +1457,7 @@ public:
 	template<Type::Real T, auto round = RoundingMode::halfAwayFromZero<T>>
 	constexpr static SelfType fromNumber(T const& val, usize const precision = sizeof(T)*2) {
 		SelfType result(sizeof(T)*4, '\0');
-		ssize sz = ftoa<T, DataType, R>(val, result.data(), result.size(), precision, rounding);
+		ssize sz = ftoa<T, DataType>(val, result.data(), result.size(), precision, round);
 		if (sz < 0) throw FailedActionException("Float-to-String conversion failure!");
 		result.resize(sz);
 		return result;

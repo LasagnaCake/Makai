@@ -75,15 +75,19 @@ Namespace::Instance Intermediate::resolve(UTF8StringList const& path) const {
 Namespace::Instance Intermediate::push(UTF8StringList const& path) {
 	if (path.empty()) return scopeStack.back();
 	if (path.size() == 1) {
+		MAKAILIB_DEBUGLN_FULL("Subpath = ", path.front().toString());
 		if (scopeStack.empty() && root->subspaces.contains(path.front())) {
 			scopeStack.pushBack(root->subspaces[path.front()]);
+			if (!scopeStack.back()) throw Error::FailedAction("The fuck");
 			return scopeStack.back();
 		}
 		else if (scopeStack.size() && scopeStack.back()->subspaces.contains(path.front())) {
 			scopeStack.pushBack(scopeStack.front()->subspaces[path.front()]);
+			if (!scopeStack.back()) throw Error::FailedAction("The fuck");
 			return scopeStack.back();
 		}
 	}
+	MAKAILIB_DEBUGLN_FULL("Subpath = ", path.front().toString());
 	Namespace::Instance ns = ns.create(path.front());
 	if (scopeStack.empty())
 		root->subspaces[ns->name] = ns;
@@ -91,6 +95,7 @@ Namespace::Instance Intermediate::push(UTF8StringList const& path) {
 	scopeStack.pushBack(ns);
 	if (path.size() > 1)
 		return push(path.sliced(1));
+	if (!scopeStack.back()) throw Error::FailedAction("The fuck");
 	return scopeStack.back();
 }
 
@@ -1245,17 +1250,23 @@ bool TypeDecl::derivedFrom(Namespace::TypeRef const& other) const {
 	return base->derivedFrom(other);
 }
 
-Namespace::Instance Intermediate::top() const {
+Namespace::Instance Intermediate::top() {
+	while (scopeStack.size() && !scopeStack.back())
+		scopeStack.popBack();
 	if (scopeStack.empty()) return root;
+	if (!scopeStack.back()) throw Error::NullPointer("what");
 	return scopeStack.back();
 }
 
-Namespace::Instance Intermediate::parent() const {
+Namespace::Instance Intermediate::parent() {
+	while (scopeStack.size() && !scopeStack.back())
+		scopeStack.popBack();
 	if (scopeStack.size() < 2) return root;
+	if (!scopeStack[-2]) throw Error::NullPointer("what");
 	return scopeStack[-2];
 }
 
-Implementation::Instance Intermediate::impl() const {
+Implementation::Instance Intermediate::impl() {
 	return top()->impl;
 }
 
