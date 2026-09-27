@@ -447,8 +447,9 @@ constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, usize const precision = 
 	if (!val) return itoa<usize>(val, buf, bufSize, 10, false) + 1;
 	if (!bufSize) return -1;
 	usize num = round(val, sign);
+	bool const fractoid = val < 1;
 	usize frac = 0;
-	usize zcount = val < 1;
+	usize zcount = fractoid;
 	while (num != val) {
 		val *= 10;
 		num = round(val, sign);
@@ -464,8 +465,8 @@ constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, usize const precision = 
 	if (full == -1) return -1;
 	auto const whole = (frac - zcount);
 	MX::excopy(buf + whole + 1, buf + whole, bufSize - whole - 1);
-	buf[whole] = '.';
-	return full+zcount+1;
+	buf[whole+fractoid] = '.';
+	return full+zcount+2;
 }
 
 
