@@ -342,7 +342,7 @@ constexpr bool atof(As<const T[S]> const& str, F& out, usize const base = 0) {
 /// @param base Whether to append the base identifier to the string. By default, it is `true`.
 /// @return Size of resulting number string.
 template<Type::Integer I, Type::ASCII T>
-constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const& base = 10, bool const addBase = true) {
+constexpr ssize itoa(I val, ref<T> const buf, usize const bufSize, I const base = 10, bool const addBase = true) {
 	cstring const digits = "0123456789abcdefghijklmnopqrstuvwxyz";
 	if ((!bufSize) || (bufSize < 4 && base != 10))
 		return -1;
@@ -434,8 +434,7 @@ namespace RoundingMode {
 ///
 ///		- `long double`s: 32 decimal spaces.
 template<Type::Real F, Type::ASCII T, Type::Functional<usize(F const, ssize const)> R>
-constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2, R const& round = RoundingMode::halfAwayFromZero<F>) {
-	if (bufSize < precision) return -1;
+constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, R const& round = RoundingMode::halfAwayFromZero<F>) {
 	MX::exzero(buf, bufSize);
 	if (bufSize < usize(4)) return -1;
 	--bufSize;
@@ -460,12 +459,18 @@ constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, usize const precision = 
 		return -1;
 	if (!frac)
 		return itoa<usize>(num, buf, bufSize, 10, false) + 1;
-	for (usize i = 0; i < zcount; ++i) buf[i] = '0';
+	if (fractoid) {
+		*(buf++) = '0';
+		*(buf++) = '.';
+		bufSize -= 2;
+	}
+	auto const maxZeroes = zcount < bufSize ? zcount : bufSize;
+	for (usize i = 0; i < maxZeroes; ++i) buf[i] = '0';
 	ssize const full = itoa<usize>(num, buf + zcount, bufSize - zcount, 10, false);
 	if (full == -1) return -1;
 	auto const whole = (frac - zcount);
 	MX::excopy(buf + whole + 1, buf + whole, bufSize - whole - 1);
-	buf[whole+fractoid] = '.';
+	if (!fractoid) buf[whole] = '.';
 	return full+zcount+2;
 }
 
@@ -490,7 +495,7 @@ constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, usize const precision = 
 ///
 ///		- `long double`s: 32 decimal spaces.
 template<Type::Real F, Type::ASCII T, Type::Functional<usize(F const, ssize const)> R>
-constexpr ssize ftosa(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2, R const& round = RoundingMode::halfAwayFromZero<F>) {
+constexpr ssize ftosa(F val, ref<T> buf, usize bufSize, R const& round = RoundingMode::halfAwayFromZero<F>) {
 	ssize zcount = 0;
 	while (Math::abs(val) > 1) {
 		val /= 10;
@@ -500,7 +505,7 @@ constexpr ssize ftosa(F val, ref<T> buf, usize bufSize, usize const precision = 
 		val *= 10;
 		--zcount;
 	}
-	auto const s = ftoda<F, T, R>(val, buf, bufSize, precision, round);
+	auto const s = ftoda<F, T, R>(val, buf, bufSize, round);
 	if (s == -1) return -1;
 	if (usize(s) >= bufSize-3) return s;
 	buf += s;
@@ -532,11 +537,11 @@ constexpr ssize ftosa(F val, ref<T> buf, usize bufSize, usize const precision = 
 ///
 ///		- `long double`s: 32 decimal spaces.
 template<Type::Real F, Type::ASCII T, Type::Functional<usize(F const, ssize const)> R>
-constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, usize const precision = sizeof(F)*2, R const& round = RoundingMode::halfAwayFromZero<F>) {
+constexpr ssize ftoa(F val, ref<T> buf, usize bufSize, R const& round = RoundingMode::halfAwayFromZero<F>) {
 	ssize magnitude = Math::log10(val);
 	if (magnitude > 13 || magnitude < -9)
-		return ftosa<F, T, R>(val, buf, bufSize, precision, round);
-	else return ftoda<F, T, R>(val, buf, bufSize, precision, round);
+		return ftosa<F, T, R>(val, buf, bufSize, round);
+	else return ftoda<F, T, R>(val, buf, bufSize, round);
 }
 
 CTL_NAMESPACE_END

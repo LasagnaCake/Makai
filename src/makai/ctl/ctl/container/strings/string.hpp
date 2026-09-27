@@ -1415,7 +1415,7 @@ public:
 	/// @param text Whether to convert as text ("true" or "false"), or a number (0 or 1).
 	/// @return Converted value as string.
 	template<Type::Equal<bool> T>
-	constexpr static SelfType fromNumber(T const& val, bool const text = false) {
+	constexpr static SelfType fromNumber(T const val, bool const text = false) {
 		if (text) return val ? "true" : "false";
 		return val ? "1" : "0";
 	}
@@ -1428,7 +1428,7 @@ public:
 	/// @return Converted value as string.
 	/// @throw FailedActionException if conversion fails.
 	template<Type::Integer T>
-	constexpr static SelfType fromNumber(T const& val, T const& base = 10, bool const addBase = true)
+	constexpr static SelfType fromNumber(T const val, T const base = 10, bool const addBase = true)
 	requires Type::Different<T, bool> {
 		SelfType result(sizeof(T)*8, '\0');
 		ssize sz = itoa<T, DataType>(val, result.data(), result.size(), base, addBase);
@@ -1441,9 +1441,6 @@ public:
 	/// @tparam T Floating point type.
 	/// @tparam round Rounding mode. By default, it is `RoundingMode::halfAwayFromZero`.
 	/// @param val Value to convert.
-	/// @param
-	///		precision Amount of decimal spaces to include.
-	///		By default, it is equal to double the byte size of the floating point type.
 	/// @return Converted value as string.
 	/// @throw FailedActionException if conversion fails.
 	/// @note
@@ -1455,9 +1452,9 @@ public:
 	///
 	///		- `long double`s: 32 decimal spaces.
 	template<Type::Real T, auto round = RoundingMode::halfAwayFromZero<T>>
-	constexpr static SelfType fromNumber(T const& val, usize const precision = sizeof(T)*2) {
+	constexpr static SelfType fromNumber(T const val) {
 		SelfType result(sizeof(T)*4, '\0');
-		ssize sz = ftoa<T, DataType>(val, result.data(), result.size(), precision, round);
+		ssize sz = ftoa<T, DataType>(val, result.data(), result.size(), round);
 		if (sz < 0) throw FailedActionException("Float-to-String conversion failure!");
 		result.resize(sz);
 		return result;
