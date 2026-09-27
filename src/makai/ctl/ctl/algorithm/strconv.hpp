@@ -142,10 +142,20 @@ inline float128	toBool(String const& s)	{return String::toNumber<bool>(s);	}
 /// @tparam T Number type.
 /// @param value Value to convert.
 /// @return Resulting string.
-template<Type::Number T>
-constexpr String toString(T const& value)
+template<Type::Float T>
+constexpr String toString(T const value)
 requires (!(Type::Equal<T, bool> || Type::ASCII<T>)) {
 	return String::fromNumber<T>(value, sizeof(T)*2);
+}
+
+/// @brief Number-to-string conversion.
+/// @tparam T Number type.
+/// @param value Value to convert.
+/// @return Resulting string.
+template<Type::Integer T>
+constexpr String toString(T const value)
+requires (!(Type::Equal<T, bool> || Type::ASCII<T>)) {
+	return String::fromNumber<T>(value, 10);
 }
 
 /// @brief Character-to-string conversion.
@@ -153,7 +163,7 @@ requires (!(Type::Equal<T, bool> || Type::ASCII<T>)) {
 /// @param value Value to convert.
 /// @return Resulting string.
 template<Type::Equal<char> T>
-constexpr String toString(T const& value) {
+constexpr String toString(T const value) {
 	return String() + value;
 }
 
@@ -162,7 +172,7 @@ constexpr String toString(T const& value) {
 /// @param value Value to convert.
 /// @return Resulting string.
 template<Type::Equal<bool> T>
-constexpr String toString(T const& value, bool const text = false) {
+constexpr String toString(T const value, bool const text = false) {
 	return String::fromNumber<bool>(value, text);
 }
 
