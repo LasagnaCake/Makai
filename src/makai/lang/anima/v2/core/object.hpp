@@ -3,6 +3,7 @@
 
 #include "type.hpp"
 #include "database.hpp"
+#include "allocator.hpp"
 
 namespace Makai::Anima::V2::Core {
 	template <class T>
@@ -15,7 +16,7 @@ namespace Makai::Anima::V2::Core {
 
 	struct Object {
 		using Storage = ObjectStorage;
-		using Memory = MemorySlice<byte>;
+		using Memory = MemorySlice<byte, GlobalPagedAllocator>;
 
 		~Object();
 

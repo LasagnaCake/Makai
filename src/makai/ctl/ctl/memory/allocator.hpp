@@ -246,6 +246,139 @@ struct ContextAwareAllocatable:
 	using ContextAllocatorType = ContextAllocator<TAlloc, TConstAlloc, TData>;
 };
 
+template<Type::NonVoid T>
+struct PagedAllocator {
+	struct Page {
+		owner<Page> next;
+
+		inline ref<Node> top() {
+			if (!next) return this;
+			return next->top();
+		}
+
+		inline void attach(ref<Node> const tail) {
+			if (!next) next = tail;
+		}
+
+		owner<T>	memory;
+		usize		free;
+		usize		used;
+
+		bool contains(owner<T> const addr) const {
+			return start <= addr && addr <= (memory + free + used);
+		}
+	};
+
+	struct Section> {
+		owner<Section> prev;
+
+		inline ref<Node> top() {
+			if (!next) return this;
+			return next->top();
+		}
+
+		inline void attach(ref<Node> const tail) {
+			if (!next) next = tail;
+		}
+
+		ref<Page>	page;
+		ref<T>		start;
+		usize		size;
+	};
+
+	PagedAllocator(usize const minPageSize): minPageSize(minPageSize) {
+		pages = new Page{
+			.memory = MX::malloc<T>(minPageSize),
+			.free = minPageSize,
+			.used = 0
+		};
+	}
+
+	~PagedAllocator() {
+		auto page = pages;
+		while (page) {
+			auto prev = page;
+			page = page->next;
+			MX::free(prev->memory);
+			delete prev;
+		}
+		if (page) delete page;
+		auto section = free;
+		while (section) {
+			auto next = section;
+			section = section->prev;
+			delete next;
+		}
+		if (section) delete section;
+	}
+
+	owner<T> allocate(usize const sz) {
+		if (!sz) return nullptr;
+		auto pageSize = minPageSize;
+		auto next		= free;
+		auto section	= free;
+		while (section && section->size < sz) {
+			if (!section->size) {
+				prev->prev = section->prev;
+				delete section;
+				section = prev->prev;
+				continue;
+			}
+			next = section;
+			section = section->prev;
+		}
+		if (section) {
+			auto const mem = section->start;
+			section->start += (ref<T>)sz;
+			section->size -= sz;
+			return mem;
+		}
+		auto const top = pages->top();
+		auto page = pages;
+		while (page && page->free < sz)
+			page = page->next;
+		if (page) {
+			auto const mem = page->memory + page->used;
+			page->used += sz;
+			page->free -= sz;
+			return mem;
+		}
+		if (sz > pageSize)
+			while (pageSize < sz) pageSize <<= 2;
+		top->attach(
+			new Page{
+				MX::malloc(pageSize),
+				pageSize,
+				0
+			}
+		);
+		auto const mem = top->memory + page->used;
+		top->used += sz;
+		top->free -= sz;
+		return mem;
+	}
+
+	void deallocate(owner<T> const mem, usize const sz) {
+		if (!(mem && sz)) return;
+		auto page = pages;
+		while (page && !page->contains(mem))
+			page = page->next;
+		if (!page) return;
+		auto const newSection = new Section{
+			.page = page,
+			.start = mem,
+			.size = sz
+		};
+		if (free)
+			newSection->prev = free;
+		free = newSection;
+	}
+
+	owner<Page>		pages;
+	owner<Section>	free;
+	usize const		minPageSize;
+};
+
 CTL_NAMESPACE_END
 
 #endif // CTL_MEMORY_ALLOCATOR_H
