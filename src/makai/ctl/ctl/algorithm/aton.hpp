@@ -448,7 +448,7 @@ constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, R const& round = Roundin
 	usize num = round(val, sign);
 	bool const fractoid = val < 1;
 	usize frac = 0;
-	usize zcount = fractoid;
+	usize zcount = 0;
 	while (num != val) {
 		val *= 10;
 		num = round(val, sign);
@@ -466,12 +466,12 @@ constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, R const& round = Roundin
 	}
 	auto const maxZeroes = zcount < bufSize ? zcount : bufSize;
 	for (usize i = 0; i < maxZeroes; ++i) buf[i] = '0';
-	ssize const full = itoa<usize>(num, buf + zcount, bufSize - zcount, 10, false);
+	ssize const full = itoa<usize>(num, buf + (zcount-1), bufSize - (zcount-1), 10, false);
 	if (full == -1) return -1;
 	auto const whole = (frac - zcount);
 	MX::excopy(buf + whole + 1, buf + whole, bufSize - whole - 1);
 	if (!fractoid) buf[whole] = '.';
-	return full+zcount+2;
+	return full+zcount+3;
 }
 
 
