@@ -17,8 +17,8 @@ namespace Type {
 		/// @brief Type must be a valid allocator for `TData`.
 		template<template <class> class T, class TData>
 		concept Allocator = requires (T<TData> t, usize sz, owner<TData> p) {
-			{t.allocate(sz)}	-> Type::Equal<owner<TData>>	;
-			{t.deallocate(p)}	-> Type::Equal<void>			;
+			{t.allocate(sz)}		-> Type::Equal<owner<TData>>	;
+			{t.deallocate(p, sz)}	-> Type::Equal<void>			;
 		};
 
 		/// @brief Type must be a valid constant allocator for `TData`.
@@ -246,17 +246,21 @@ struct ContextAwareAllocatable:
 	using ContextAllocatorType = ContextAllocator<TAlloc, TConstAlloc, TData>;
 };
 
+constexpr usize const ONE_KIBIBYTE = usize(1) << 10;
+constexpr usize const ONE_MIBIBYTE = usize(1) << 20;
+constexpr usize const ONE_GIBIBYTE = usize(1) << 40;
+
 template<Type::NonVoid T>
 struct PagedAllocator {
 	struct Page {
 		owner<Page> next;
 
-		inline ref<Node> top() {
+		inline ref<Page> top() {
 			if (!next) return this;
 			return next->top();
 		}
 
-		inline void attach(ref<Node> const tail) {
+		inline void attach(ref<Page> const tail) {
 			if (!next) next = tail;
 		}
 
@@ -265,19 +269,19 @@ struct PagedAllocator {
 		usize		used;
 
 		bool contains(owner<T> const addr) const {
-			return start <= addr && addr <= (memory + free + used);
+			return memory <= addr && addr <= (memory + free + used);
 		}
 	};
 
-	struct Section> {
+	struct Section {
 		owner<Section> prev;
 
-		inline ref<Node> top() {
-			if (!next) return this;
-			return next->top();
+		inline ref<Section> back() {
+			if (!prev) return this;
+			return prev->back();
 		}
 
-		inline void attach(ref<Node> const tail) {
+		inline void attach(ref<Section> const tail) {
 			if (!next) next = tail;
 		}
 
@@ -286,7 +290,7 @@ struct PagedAllocator {
 		usize		size;
 	};
 
-	PagedAllocator(usize const minPageSize): minPageSize(minPageSize) {
+	PagedAllocator(usize const minPageSize = ONE_MIBIBYTE): minPageSize(minPageSize) {
 		pages = new Page{
 			.memory = MX::malloc<T>(minPageSize),
 			.free = minPageSize,
@@ -315,17 +319,17 @@ struct PagedAllocator {
 	owner<T> allocate(usize const sz) {
 		if (!sz) return nullptr;
 		auto pageSize = minPageSize;
-		auto next		= free;
-		auto section	= free;
+		auto prevSection	= free;
+		auto section		= free;
 		while (section && section->size < sz) {
 			if (!section->size) {
-				prev->prev = section->prev;
+				prevSection->prev = section->prev;
 				delete section;
-				section = prev->prev;
+				section = prevSection->prev;
 				continue;
 			}
-			next = section;
-			section = section->prev;
+			prevSection = section;
+			section = prevSection->prev;
 		}
 		if (section) {
 			auto const mem = section->start;
@@ -335,8 +339,18 @@ struct PagedAllocator {
 		}
 		auto const top = pages->top();
 		auto page = pages;
-		while (page && page->free < sz)
+		auto nextPage = page;
+		while (page && page->free < sz) {
 			page = page->next;
+			if (!page->used) {
+				nextPage->next = page->next;
+				delete page;
+				page = nextPage->next;
+				continue;
+			}
+			nextPage = page;
+			page = nextPage->prev;
+		}
 		if (page) {
 			auto const mem = page->memory + page->used;
 			page->used += sz;

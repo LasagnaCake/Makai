@@ -16,7 +16,7 @@ namespace Makai::Anima::V2::Core {
 
 	struct Object {
 		using Storage = ObjectStorage;
-		using Memory = MemorySlice<byte, GlobalPagedAllocator>;
+		using Memory = MemorySlice<byte, Allocator>;
 
 		~Object();
 

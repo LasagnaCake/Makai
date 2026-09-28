@@ -4,15 +4,22 @@
 #include "../../../../compat/ctl.hpp"
 
 namespace Makai::Anima::V2::Core {
+	template <class T>
 	struct Allocator {
-		Allocator();
-		~Allocator();
+		Allocator() {}
 
-		owner<byte> allocate(usize const sz);
-		void deallocate(owner<byte> const mem, usize const sz);
+		~Allocator() {}
+
+		owner<T> allocate(usize const sz) {
+			return memory.allocate(sz);
+		}
+
+		void deallocate(owner<T> const mem, usize const sz) {
+			memory.deallocate(mem, sz);
+		}
 
 	private:
-		static PagedAllocator<byte> memory;
+		inline static PagedAllocator<T> memory{ONE_MIBIBYTE};
 	};
 }
 
