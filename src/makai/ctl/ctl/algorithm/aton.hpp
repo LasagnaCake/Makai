@@ -471,6 +471,9 @@ constexpr ssize ftoda(F val, ref<T> buf, usize bufSize, R const& round = Roundin
 	auto const whole = (frac - zcount);
 	MX::excopy(buf + whole + 1, buf + whole, bufSize - whole - 1);
 	if (!fractoid) buf[whole] = '.';
+	for (usize i = 0; i < (full+zcount+1); ++i)
+		if (buf[i+1] == '\0')
+			buf[i+1] = buf[i];
 	return full+zcount+3;
 }
 
