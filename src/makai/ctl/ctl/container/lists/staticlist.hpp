@@ -18,7 +18,7 @@ CTL_NAMESPACE_BEGIN
 template<
 	class TData,
 	Type::Integer TIndex = usize,
-	template <class> class TAlloc = HeapAllocator,
+	template <class> class TAlloc = GSPAllocator,
 	template <class> class TConstAlloc = ConstantAllocator
 >
 struct StaticList;
@@ -36,13 +36,13 @@ namespace Type::Container {
 
 	/// Type must be `StaticList`.
 	template<class T>
-	concept StaticList = Impl::IsStaticList<T>::value; 
+	concept StaticList = Impl::IsStaticList<T>::value;
 }
 
 /// @brief Static-sized, heap-allocated array of objects.
 /// @tparam TData Element type.
 /// @tparam TIndex Index type.
-/// @tparam TAlloc<class> Runtime allocator type. By default, it is `HeapAllocator`.
+/// @tparam TAlloc<class> Runtime allocator type. By default, it is `GSPAllocator`.
 /// @tparam TConstAlloc<class> Compile-time allocator type. By default, it is `ConstantAllocator`.
 /// @note
 ///		This list's capacity cannot automatically grow.
@@ -117,7 +117,7 @@ public:
 			MX::construct(&contents[i], args...);
 		count = size;
 	}
-	
+
 	/// @brief Constructs the `StaticList` with a parameter pack.
 	/// @tparam ...Args Parameter pack.
 	/// @param ...args Pack elements.
@@ -140,7 +140,7 @@ public:
 	/// Destructor.
 	constexpr ~StaticList() {dump();}
 
-	/// @brief Constructs and adds new element to the end of the `StaticList`. 
+	/// @brief Constructs and adds new element to the end of the `StaticList`.
 	/// @tparam ...Args Argument types.
 	/// @param ...args Values to pass to constructor.
 	/// @return Reference to self.
@@ -175,7 +175,7 @@ public:
 		count = 0;
 		return *this;
 	}
-	
+
 	/// @brief Resizes the `StaticList`, so the capacity is of a given size, then sets current size to it.
 	/// @tparam ...Args Argument types.
 	/// @param newSize New `StaticList` size.
@@ -247,7 +247,7 @@ public:
 	/// @return Reference to self.
 	/// @note
 	///		Does not free the underlying array held by the `StaticList`.
-	///		To actually free the underlying array, call `dispose`. 
+	///		To actually free the underlying array, call `dispose`.
 	constexpr SelfType& clear() {
 		memdestruct(contents, count);
 		count = 0;
@@ -256,7 +256,7 @@ public:
 
 	/// @brief Frees the underlying array held by the `StaticList`.
 	/// @return Reference to self.
-	/// @note To not free the underlying array, call `clear`. 
+	/// @note To not free the underlying array, call `clear`.
 	constexpr SelfType& dispose() {
 		dump();
 		return *this;
@@ -340,7 +340,7 @@ public:
 	/// @brief Returns a pointer to the end of the `StaticList`.
 	/// @return Pointer to the end of the `StaticList`.
 	constexpr ConstPointerType	cend() const	{return contents+count;	}
-	
+
 	/// @brief Returns the value of the first element.
 	/// @return Reference to the first element.
 	/// @throw OutOfBoundsException when `StaticList` is empty.

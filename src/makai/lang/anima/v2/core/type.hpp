@@ -3,6 +3,7 @@
 
 #include "forward.hpp"
 #include "entry.hpp"
+#include "allocator.hpp"
 
 namespace Makai::Anima::V2::Core {
 	/// @brief Operator.
@@ -183,7 +184,7 @@ namespace Makai::Anima::V2::Core {
 	static_assert(sizeof(TypeFlags) == sizeof(uint64), "Uh oh :/");
 
 	struct Definition: Entry, Flagged<TypeFlags> {
-		using Source = MemorySlice<byte>;
+		using Source = MemorySlice<byte, Allocator>;
 
 		bool canBecome(AtomicCell<Definition> const& type) const {
 			if (type == base) return true;

@@ -250,8 +250,12 @@ constexpr usize const ONE_KIBIBYTE = usize(1) << 10;
 constexpr usize const ONE_MIBIBYTE = usize(1) << 20;
 constexpr usize const ONE_GIBIBYTE = usize(1) << 40;
 
-template<Type::NonVoid T>
+/// @brief Paged allocator.
+/// @tparam TData Type to handle memory for.
+template<Type::NonVoid TData>
 struct PagedAllocator {
+	using DataType = TData;
+
 	struct Page {
 		owner<Page> next;
 
@@ -264,11 +268,11 @@ struct PagedAllocator {
 			if (!next) next = tail;
 		}
 
-		owner<T>	memory;
-		usize		free;
-		usize		used;
+		owner<DataType>	memory;
+		usize			free;
+		usize			used;
 
-		bool contains(owner<T> const addr) const {
+		bool contains(owner<DataType> const addr) const {
 			return memory <= addr && addr <= (memory + free + used);
 		}
 	};
@@ -281,21 +285,20 @@ struct PagedAllocator {
 			return prev->back();
 		}
 
-		inline void attach(ref<Section> const tail) {
-			if (!next) next = tail;
+		inline void attach(ref<Section> const head) {
+			if (!prev) prev = head;
 		}
 
-		ref<Page>	page;
-		ref<T>		start;
-		usize		size;
+		ref<Page>		page;
+		ref<DataType>	start;
+		usize			size;
 	};
 
 	PagedAllocator(usize const minPageSize = ONE_MIBIBYTE): minPageSize(minPageSize) {
-		pages = new Page{
-			.memory = MX::malloc<T>(minPageSize),
-			.free = minPageSize,
-			.used = 0
-		};
+		pages = MX::malloc<Page>();
+		pages->memory = MX::malloc<DataType>(minPageSize);
+		pages->free = minPageSize;
+		pages->used = 0;
 	}
 
 	~PagedAllocator() {
@@ -304,19 +307,20 @@ struct PagedAllocator {
 			auto prev = page;
 			page = page->next;
 			MX::free(prev->memory);
-			delete prev;
+			MX::free(prev);
 		}
-		if (page) delete page;
+		if (page) MX::free(page);
 		auto section = free;
 		while (section) {
 			auto next = section;
 			section = section->prev;
-			delete next;
+			MX::free(next);
 		}
-		if (section) delete section;
+		if (section) MX::free(section);
 	}
 
-	owner<T> allocate(usize const sz) {
+	[[nodiscard, gnu::malloc, gnu::noinline, gnu::nonnull(1)]]
+	owner<DataType> allocate(usize const sz) {
 		if (!sz) return nullptr;
 		auto pageSize = minPageSize;
 		auto prevSection	= free;
@@ -324,7 +328,7 @@ struct PagedAllocator {
 		while (section && section->size < sz) {
 			if (!section->size) {
 				prevSection->prev = section->prev;
-				delete section;
+				MX::free(section);
 				section = prevSection->prev;
 				continue;
 			}
@@ -333,24 +337,14 @@ struct PagedAllocator {
 		}
 		if (section) {
 			auto const mem = section->start;
-			section->start += (ref<T>)sz;
+			section->start = section->start + sz;
 			section->size -= sz;
 			return mem;
 		}
 		auto const top = pages->top();
 		auto page = pages;
-		auto nextPage = page;
-		while (page && page->free < sz) {
+		while (page && page->free < sz)
 			page = page->next;
-			if (!page->used) {
-				nextPage->next = page->next;
-				delete page;
-				page = nextPage->next;
-				continue;
-			}
-			nextPage = page;
-			page = nextPage->prev;
-		}
 		if (page) {
 			auto const mem = page->memory + page->used;
 			page->used += sz;
@@ -359,30 +353,36 @@ struct PagedAllocator {
 		}
 		if (sz > pageSize)
 			while (pageSize < sz) pageSize <<= 2;
-		top->attach(
-			new Page{
-				MX::malloc(pageSize),
-				pageSize,
-				0
-			}
-		);
+		auto newPage = MX::malloc<Page>();
+		newPage->memory = MX::malloc<DataType>(pageSize);
+		newPage->free = pageSize;
+		newPage->used = 0;
+		top->attach(newPage);
 		auto const mem = top->memory + page->used;
 		top->used += sz;
 		top->free -= sz;
 		return mem;
 	}
 
-	void deallocate(owner<T> const mem, usize const sz) {
-		if (!(mem && sz)) return;
+	[[gnu::noinline, gnu::nonnull(2)]]
+	void deallocate(owner<DataType> const mem, usize const sz) {
 		auto page = pages;
-		while (page && !page->contains(mem))
-			page = page->next;
+		auto nextPage = page;
+		while (page && !page->contains(mem)) {
+			if (!page->used) {
+				nextPage->next = page->next;
+				MX::free(page);
+				page = nextPage->next;
+				continue;
+			}
+			nextPage = page;
+			page = nextPage->next;
+		}
 		if (!page) return;
-		auto const newSection = new Section{
-			.page = page,
-			.start = mem,
-			.size = sz
-		};
+		auto const newSection = MX::malloc<Section>();
+		newSection->page = page;
+		newSection->start = mem;
+		newSection->size = sz;
 		if (free)
 			newSection->prev = free;
 		free = newSection;
@@ -391,6 +391,26 @@ struct PagedAllocator {
 	owner<Page>		pages;
 	owner<Section>	free;
 	usize const		minPageSize;
+};
+
+/// @brief "Globally-Shared Pages" allocator.
+/// @tparam TData Type to handle memory for.
+/// @tparam TStorage Storage group. By default, it is `void`.
+/// @tparam PS Page Size. By default, it is `ONE_MIBIBYTE` (2^20 bytes).
+template <class TData, class TStorage = void, usize PS = ONE_MIBIBYTE>
+struct GSPAllocator {
+	using DataType = TData;
+
+	owner<DataType> allocate(usize const sz) {
+		return (owner<DataType>)memory.allocate(sz);
+	}
+
+	void deallocate(owner<DataType> const mem, usize const sz) {
+		memory.deallocate((owner<byte>)mem, sz);
+	}
+
+private:
+	inline static PagedAllocator<byte> memory{PS};
 };
 
 CTL_NAMESPACE_END

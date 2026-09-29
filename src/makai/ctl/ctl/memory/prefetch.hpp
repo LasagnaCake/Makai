@@ -18,7 +18,7 @@ namespace Prefetch {
 	enum class Lifetime: uint8 {
 		PL_SINGLE_USE	= 0,
 		PL_LOW			= 1,
-		PL_HIGH			= 1,
+		PL_HIGH			= 2,
 		PL_PERSISTANT	= 3,
 	};
 

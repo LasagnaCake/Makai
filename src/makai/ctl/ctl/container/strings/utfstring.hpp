@@ -232,12 +232,12 @@ namespace UTF {
 	/// @brief Dynamic unicode strings.
 	/// @tparam UTF encoding. MUST be `8` or `32`.
 	/// @tparam TIndex Index type.
-	/// @tparam TAlloc<class> Runtime allocator type. By default, it is `HeapAllocator`.
+	/// @tparam TAlloc<class> Runtime allocator type. By default, it is `GSPAllocator`.
 	/// @tparam TConstAlloc<class> Compile-time allocator type. By default, it is `ConstantAllocator`.
 	template<
 		usize UTF,
 		Type::Integer TIndex = usize,
-		template <class> class TAlloc		= HeapAllocator,
+		template <class> class TAlloc		= GSPAllocator,
 		template <class> class TConstAlloc	= ConstantAllocator
 	>
 	struct UTFString:

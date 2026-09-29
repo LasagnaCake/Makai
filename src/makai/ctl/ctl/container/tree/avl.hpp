@@ -20,12 +20,12 @@ namespace Tree {
 	/// @tparam TKey Node key type.
 	/// @tparam TValue Node value type.
 	/// @tparam TCompare<class> Comparator type.
-	/// @tparam TAlloc<class> Allocator type. By default, it is `HeapAllocator`.
+	/// @tparam TAlloc<class> Allocator type. By default, it is `GSPAllocator`.
 	template<
 		class TKey,
 		class TValue,
 		template <class> class TCompare,
-		template <class> class TAlloc = HeapAllocator
+		template <class> class TAlloc = GSPAllocator
 	>
 	struct AVL:
 		BaseTree<TKey, TValue, TCompare, TAlloc, Base::AVLNode>,
@@ -77,28 +77,28 @@ namespace Tree {
 
 		/// @brief Destructor.
 		constexpr ~AVL() {clear();}
-		
+
 		/// @brief Returns an iterator to the "begginning" of the tree.
 		/// @return Iterator to begginning of tree.
 		constexpr IteratorType begin()						{return {leftmostEdge()};	}
 		/// @brief Returns an iterator to the "end" of the tree.
 		/// @return Iterator to begginning of tree.
 		constexpr IteratorType end()						{return {};					}
-		
+
 		/// @brief Returns an iterator to the "begginning" of the tree.
 		/// @return Iterator to begginning of tree.
 		constexpr ConstIteratorType begin() const			{return {leftmostEdge()};	}
 		/// @brief Returns an iterator to the "end" of the tree.
 		/// @return Iterator to begginning of tree.
 		constexpr ConstIteratorType end() const				{return {};					}
-		
+
 		/// @brief Returns a reverse iterator to the "begginning" of the tree.
 		/// @return Reverse iterator to begginning of tree.
 		constexpr ReverseIteratorType rbegin()				{return {rightmostEdge()};	}
 		/// @brief Returns a reverse iterator to the "end" of the tree.
 		/// @return Reverse iterator to begginning of tree.
 		constexpr ReverseIteratorType rend()				{return {};					}
-		
+
 		/// @brief Returns a reverse iterator to the "begginning" of the tree.
 		/// @return Reverse iterator to begginning of tree.
 		constexpr ConstReverseIteratorType rbegin() const	{return {rightmostEdge()};	}
@@ -109,7 +109,7 @@ namespace Tree {
 		/// @brief Returns whether the tree is empty.
 		/// @return Whether tree is empty.
 		constexpr bool empty() const {return root;}
-		
+
 		/// @brief Returns the key-value pair at the "begginning" of the tree.
 		/// @return Value at begginning of tree.
 		/// @throw NonexistentValueException if tree is empty.
@@ -118,7 +118,7 @@ namespace Tree {
 			auto const edge = leftmostEdge();
 			return {edge->key, edge->value};
 		}
-		
+
 		/// @brief Returns the key-value pair at the "begginning" of the tree.
 		/// @return Value at begginning of tree.
 		/// @throw NonexistentValueException if tree is empty.
@@ -127,7 +127,7 @@ namespace Tree {
 			auto const edge = leftmostEdge();
 			return {edge->key, edge->value};
 		}
-		
+
 		/// @brief Returns the key-value pair at the "end" of the tree.
 		/// @return Value at end of tree.
 		/// @throw NonexistentValueException if tree is empty.
@@ -136,7 +136,7 @@ namespace Tree {
 			auto const edge = rightmostEdge();
 			return {edge->key, edge->value};
 		}
-		
+
 		/// @brief Returns the key-value pair at the "end" of the tree.
 		/// @return Value at end of tree.
 		/// @throw NonexistentValueException if tree is empty.
@@ -145,18 +145,18 @@ namespace Tree {
 			auto const edge = rightmostEdge();
 			return {edge->key, edge->value};
 		}
-		
+
 		/// @brief Inserts a node into a parent.
 		/// @param node Node to insert.
 		/// @param parent Parent to insert to.
-		/// @param right Whether to insert as the right child. 
+		/// @param right Whether to insert as the right child.
 		constexpr static void insertNode(ref<Node> node, ref<Node> parent, bool right) {
 			if (!(node || parent)) return;
 			node->parent			= parent;
 			parent->children[right]	= node;
 			rebalance(parent);
 		}
-		
+
 		/// @brief Removes a node from the tree.
 		/// @param node Node to remove.
 		constexpr void removeNode(ref<Node> node) {
@@ -190,7 +190,7 @@ namespace Tree {
 			if (!node) return false;
 			return node->parent && node == node->parent->children[1];
 		}
-		
+
 		/// @brief Finds the appropriate parent node for a key.
 		/// @param key Key to find parent for.
 		/// @return Appropriate parent, or `nullptr` if tree is empty.
@@ -198,7 +198,7 @@ namespace Tree {
 			if (!root) return nullptr;
 			return searchBranch(root, key);
 		}
-		
+
 		/// @brief Finds the appropriate parent node for a key.
 		/// @param val Key to find parent for.
 		/// @return Appropriate parent, or `nullptr` if tree is empty.
@@ -206,7 +206,7 @@ namespace Tree {
 			if (!root) return nullptr;
 			return searchBranch(root, key);
 		}
-		
+
 		/// @brief Inserts a key in the tree.
 		/// @param key Key to insert.
 		/// @return Node containing the key.
@@ -220,7 +220,7 @@ namespace Tree {
 			insertNode(node, parent, !ComparatorType::lesser(key, parent->key));
 			return node;
 		}
-		
+
 		/// @brief Finds a node containing a key in the tree.
 		/// @param key Key to match.
 		/// @return Node containing the key, or `nullptr`.
@@ -230,7 +230,7 @@ namespace Tree {
 				return result;
 			return nullptr;
 		}
-		
+
 		/// @brief Finds a node containing a key in the tree.
 		/// @param val Key to match.
 		/// @return Node containing the key, or `nullptr`.
@@ -240,7 +240,7 @@ namespace Tree {
 				return result;
 			return nullptr;
 		}
-		
+
 		/// @brief Erases a node with a given key from the tree.
 		/// @param key Key to erase.
 		/// @return Whether operation was successful.
@@ -269,7 +269,7 @@ namespace Tree {
 				else throw FailedActionException("Failed to insert key-value pair!");
 			return *this;
 		}
-		
+
 	private:
 		/// @brief Tree root.
 		owner<Node>		root = nullptr;
@@ -310,7 +310,7 @@ namespace Tree {
 			node->weight = cachedWeight(node);
 			rebalance(node);
 		}
-		
+
 		constexpr static usize depth(ref<Node> const node) {
 			if (!node) return 0;
 			if (!(node->left() || node->right())) return node->depth;
@@ -387,7 +387,7 @@ namespace Tree {
 			while (edge && edge->left()) edge = edge->left();
 			return edge;
 		}
-		
+
 		/// @brief Returns the rightmost node in the linked list.
 		/// @return Rightmost node.
 		constexpr ref<Node> rightmostEdge() const {
@@ -396,7 +396,7 @@ namespace Tree {
 			while (edge && edge->right()) edge = edge->right();
 			return edge;
 		}
-	
+
 		constexpr static ref<Node> searchBranch(ref<Node> node, KeyType const& key) {
 			if (!node) return nullptr;
 			if (!(node->left() || node->right())) return node;

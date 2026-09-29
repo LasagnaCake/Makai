@@ -11,7 +11,7 @@ CTL_NAMESPACE_BEGIN
 /// @tparam TAlloc Runtime allocator to use.
 template<
 	typename TData						= void,
-	template <class> class TAlloc		= HeapAllocator,
+	template <class> class TAlloc		= GSPAllocator,
 	template <class> class TConstAlloc	= ConstantAllocator
 >
 struct MemorySlice:
