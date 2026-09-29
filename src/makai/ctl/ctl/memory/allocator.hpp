@@ -402,15 +402,18 @@ struct GSPAllocator {
 	using DataType = TData;
 
 	owner<DataType> allocate(usize const sz) {
-		return (owner<DataType>)memory.allocate(sz);
+		return (owner<DataType>)memory().allocate(sz);
 	}
 
 	void deallocate(owner<DataType> const mem, usize const sz) {
-		memory.deallocate((owner<byte>)mem, sz);
+		memory().deallocate((owner<byte>)mem, sz);
 	}
 
 private:
-	inline static PagedAllocator<byte> memory{PS};
+	static PagedAllocator<byte> memory() {
+		static PagedAllocator<byte> alloc{PS};
+		return alloc;
+	}
 };
 
 CTL_NAMESPACE_END
