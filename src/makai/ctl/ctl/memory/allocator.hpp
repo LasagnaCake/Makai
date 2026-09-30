@@ -452,9 +452,8 @@ CTL_DIAGBLOCK_END;
 /// @tparam TData Type to handle memory for.
 template<
 	Type::NonVoid TData,
-	usize PAGE_SIZE		= ONE_MIBIBYTE/*,
-	usize PAGE_COUNT	= 1024,
-	usize SECTION_COUNT	= 1024 */
+	usize PAGE_SIZE		= ONE_MIBIBYTE,
+	bool AUTOCOLLECT	= true
 >
 struct PagedAllocator {
 	using DataType = TData;
@@ -470,7 +469,7 @@ struct PagedAllocator {
 	}
 
 private:
-	Impl::Memory::PagedAllocator<PAGE_SIZE> alloc;
+	Impl::Memory::PagedAllocator<PAGE_SIZE, AUTOCOLLECT> alloc;
 };
 
 namespace Impl {
