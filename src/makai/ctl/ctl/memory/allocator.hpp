@@ -257,7 +257,6 @@ struct PagedAllocator {
 	using DataType = TData;
 
 	struct Page {
-		owner<Page> next;
 
 		inline ref<Page> top() {
 			if (!next) return this;
@@ -268,18 +267,17 @@ struct PagedAllocator {
 			if (!next) next = tail;
 		}
 
-		owner<DataType>	memory;
-		usize			free;
-		usize			used;
-
 		bool contains(owner<DataType> const addr) const {
 			return memory <= addr && addr <= (memory + free + used);
 		}
+
+		owner<Page>		next;
+		owner<DataType>	memory;
+		usize			free;
+		usize			used;
 	};
 
 	struct Section {
-		owner<Section> prev;
-
 		inline ref<Section> back() {
 			if (!prev) return this;
 			return prev->back();
@@ -289,6 +287,7 @@ struct PagedAllocator {
 			if (!prev) prev = head;
 		}
 
+		owner<Section>	prev;
 		ref<Page>		page;
 		ref<DataType>	start;
 		usize			size;
@@ -296,9 +295,17 @@ struct PagedAllocator {
 
 	PagedAllocator(usize const minPageSize = ONE_MIBIBYTE): minPageSize(minPageSize) {
 		pages = MX::malloc<Page>();
+		MX::memzero(pages);
 		pages->memory = MX::malloc<DataType>(minPageSize);
 		pages->free = minPageSize;
 		pages->used = 0;
+		pages->next = nullptr;
+		free = MX::malloc<Section>();
+		MX::memzero(free);
+		free->prev = nullptr;
+		free->start = pages->memory;
+		free->size = minPageSize;
+		free->page = pages;
 	}
 
 	~PagedAllocator() {
@@ -354,6 +361,7 @@ struct PagedAllocator {
 		if (sz > pageSize)
 			while (pageSize < sz) pageSize <<= 2;
 		auto newPage = MX::malloc<Page>();
+		MX::memzero(newPage);
 		newPage->memory = MX::malloc<DataType>(pageSize);
 		newPage->free = pageSize;
 		newPage->used = 0;
@@ -380,6 +388,7 @@ struct PagedAllocator {
 		}
 		if (!page) return;
 		auto const newSection = MX::malloc<Section>();
+		MX::memzero(newSection);
 		newSection->page = page;
 		newSection->start = mem;
 		newSection->size = sz;
@@ -388,8 +397,8 @@ struct PagedAllocator {
 		free = newSection;
 	}
 
-	owner<Page>		pages;
-	owner<Section>	free;
+	owner<Page>		pages		= nullptr;
+	owner<Section>	free		= nullptr;
 	usize const		minPageSize;
 };
 
