@@ -5,6 +5,7 @@
 #include "../ctypes.hpp"
 #include "../typetraits/traits.hpp"
 #include "../templates.hpp"
+#include "../async/mutex.hpp"
 #include "core.hpp"
 
 #include <memory>
@@ -250,6 +251,8 @@ constexpr usize const ONE_KIBIBYTE = usize(1) << 10;
 constexpr usize const ONE_MIBIBYTE = usize(1) << 20;
 constexpr usize const ONE_GIBIBYTE = usize(1) << 40;
 
+CTL_DIAGBLOCK_BEGIN;
+_Pragma("GCC diagnostic ignored \"-Wpointer-arith\"");
 namespace Impl::Memory {
 	struct Page {
 		inline ref<Page> top() {
@@ -262,10 +265,7 @@ namespace Impl::Memory {
 		}
 
 		bool contains(pointer const addr) const {
-			CTL_DIAGBLOCK_BEGIN;
-			_Pragma("GCC diagnostic ignored \"-Wpointer-arith\"");
 			return memory <= addr && addr <= (memory + free + used);
-			CTL_DIAGBLOCK_END;
 		}
 
 		owner<Page>	next;
@@ -315,9 +315,8 @@ namespace Impl::Memory {
 	};
 
 	template<
-		usize PAGE_SIZE		= ONE_MIBIBYTE/*,
-		usize PAGE_COUNT	= 1024,
-		usize SECTION_COUNT	= 1024 */
+		usize PAGE_SIZE		= ONE_MIBIBYTE,
+		bool AUTOCOLLECT	= true
 	>
 	struct PagedAllocator {
 		using Page		= Impl::Memory::Page;
@@ -332,6 +331,7 @@ namespace Impl::Memory {
 		}
 
 		~PagedAllocator() {
+			mutex.lock();
 			auto page = pages;
 			while (page) {
 				auto prev = page;
@@ -346,10 +346,12 @@ namespace Impl::Memory {
 				Section::destroy(next);
 			}
 			if (section) Section::destroy(section);
+			mutex.unlock();
 		}
 
 		[[nodiscard, gnu::malloc, gnu::noinline, gnu::nonnull(1)]]
 		pointer allocate(usize const sz) {
+			mutex.lock();
 			if (!sz) return nullptr;
 			auto pageSize = PAGE_SIZE;
 			auto prevSection	= free;
@@ -390,16 +392,24 @@ namespace Impl::Memory {
 			top->used += sz;
 			top->free -= sz;
 			return mem;
+			mutex.unlock();
 		}
 
 		[[gnu::noinline, gnu::nonnull(2)]]
 		void deallocate(pointer const mem, usize const sz) {
+			mutex.lock();
 			auto page = pages;
 			auto nextPage = page;
 			while (page && !page->contains(mem)) {
 				if (!page->used && page != pages) {
 					nextPage->next = page->next;
-					Page::destroy(page);
+					if constexpr (AUTOCOLLECT)
+						Page::destroy(page);
+					else {
+						if (garbage)
+							garbage->top()->attach(page);
+						else garbage = page;
+					}
 					page = nextPage->next;
 					continue;
 				}
@@ -414,12 +424,29 @@ namespace Impl::Memory {
 			if (free)
 				newSection->prev = free;
 			free = newSection;
+			mutex.unlock();
 		}
 
+		void collect() requires (!AUTOCOLLECT) {
+			mutex.lock();
+			while (garbage) {
+				auto const next = garbage->next;
+				Page::destroy(garbage);
+				garbage = next;
+			}
+			if (garbage) Page::destroy(garbage);
+			garbage = nullptr;
+			mutex.unlock();
+		}
+
+	private:
 		owner<Page>		pages	= nullptr;
 		owner<Section>	free	= nullptr;
+		owner<Page>		garbage	= nullptr;
+		Mutex			mutex;
 	};
 }
+CTL_DIAGBLOCK_END;
 
 /// @brief Paged allocator.
 /// @tparam TData Type to handle memory for.
