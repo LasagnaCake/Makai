@@ -19,14 +19,14 @@ namespace Tree {
 	/// @tparam TKey Node key type.
 	/// @tparam TValue Node value type.
 	/// @tparam TCompare<class> Comparator type.
-	/// @tparam TAlloc<class> Runtime allocator type. By default, it is `GSPAllocator`.
+	/// @tparam TAlloc<class> Runtime allocator type. By default, it is `DefaultAllocator`.
 	/// @tparam TConstAlloc<class> Compile-time allocator type. By default, it is `ConstantAllocator`.
 	/// @tparam TNodeExtension Node extension type. By default, it is `Empty`.
 	template<
 		class TKey,
 		class TValue,
 		template <class> class TCompare,
-		template <class> class TAlloc = GSPAllocator,
+		template <class> class TAlloc = DefaultAllocator,
 		class TNodeExtension = Empty
 	>
 	struct BaseTree: Paired<TKey const, TValue> {

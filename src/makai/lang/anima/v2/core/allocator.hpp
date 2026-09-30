@@ -5,7 +5,7 @@
 
 namespace Makai::Anima::V2::Core {
 	template <class T>
-	using Allocator = GSPAllocator<T>;
+	using Allocator = HeapAllocator<T>;
 }
 
 #endif

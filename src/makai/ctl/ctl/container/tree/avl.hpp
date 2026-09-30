@@ -20,12 +20,12 @@ namespace Tree {
 	/// @tparam TKey Node key type.
 	/// @tparam TValue Node value type.
 	/// @tparam TCompare<class> Comparator type.
-	/// @tparam TAlloc<class> Allocator type. By default, it is `GSPAllocator`.
+	/// @tparam TAlloc<class> Allocator type. By default, it is `DefaultAllocator`.
 	template<
 		class TKey,
 		class TValue,
 		template <class> class TCompare,
-		template <class> class TAlloc = GSPAllocator
+		template <class> class TAlloc = DefaultAllocator
 	>
 	struct AVL:
 		BaseTree<TKey, TValue, TCompare, TAlloc, Base::AVLNode>,

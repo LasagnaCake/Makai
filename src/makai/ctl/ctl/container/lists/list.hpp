@@ -22,7 +22,7 @@ CTL_NAMESPACE_BEGIN
 template<
 	class TData,
 	Type::Integer TIndex = usize,
-	template <class> class TAlloc		= GSPAllocator,
+	template <class> class TAlloc		= DefaultAllocator,
 	template <class> class TConstAlloc	= ConstantAllocator
 >
 struct List;
@@ -57,7 +57,7 @@ namespace Type::Container {
 /// @brief Dynamic array of objects.
 /// @tparam TData Element type.
 /// @tparam TIndex Index type.
-/// @tparam TAlloc<class> Runtime allocator type. By default, it is `GSPAllocator`.
+/// @tparam TAlloc<class> Runtime allocator type. By default, it is `DefaultAllocator`.
 /// @tparam TConstAlloc<class> Compile-time allocator type. By default, it is `ConstantAllocator`.
 template<
 	class TData,
@@ -1526,28 +1526,28 @@ private:
 /// @tparam TIndex Index type.
 /// @tparam TAlloc<class> Allocator type.
 /// @tparam TConstAlloc<class> Constant allocator type.
-template <Type::Integer TIndex = usize, template <class> class TAlloc = GSPAllocator, template <class> class TConstAlloc = ConstantAllocator>
+template <Type::Integer TIndex = usize, template <class> class TAlloc = DefaultAllocator, template <class> class TConstAlloc = ConstantAllocator>
 using BinaryData = List<byte, TIndex, TAlloc, TConstAlloc>;
 
 /// @brief `List` analog for dynamic array of bytes.
 /// @tparam TIndex Index type.
 /// @tparam TAlloc<class> Allocator type.
 /// @tparam TConstAlloc<class> Constant allocator type.
-template <Type::Integer TIndex = usize, template <class> class TAlloc = GSPAllocator, template <class> class TConstAlloc = ConstantAllocator>
+template <Type::Integer TIndex = usize, template <class> class TAlloc = DefaultAllocator, template <class> class TConstAlloc = ConstantAllocator>
 using ByteList = BinaryData<TIndex, TAlloc, TConstAlloc>;
 
 /// @brief `List` analog for dynamic array of bytes.
 /// @tparam TIndex Index type.
 /// @tparam TAlloc<class> Allocator type.
 /// @tparam TConstAlloc<class> Constant allocator type.
-template <Type::Integer TIndex = usize, template <class> class TAlloc = GSPAllocator, template <class> class TConstAlloc = ConstantAllocator>
+template <Type::Integer TIndex = usize, template <class> class TAlloc = DefaultAllocator, template <class> class TConstAlloc = ConstantAllocator>
 using Binary = BinaryData<TIndex, TAlloc, TConstAlloc>;
 
 /// @brief `List` analog for dynamic array of bytes.
 /// @tparam TIndex Index type.
 /// @tparam TAlloc<class> Allocator type.
 /// @tparam TConstAlloc<class> Constant allocator type.
-template <Type::Integer TIndex = usize, template <class> class TAlloc = GSPAllocator, template <class> class TConstAlloc = ConstantAllocator>
+template <Type::Integer TIndex = usize, template <class> class TAlloc = DefaultAllocator, template <class> class TConstAlloc = ConstantAllocator>
 using Bytes = BinaryData<TIndex, TAlloc, TConstAlloc>;
 
 static_assert(Type::Container::List<List<int>>);

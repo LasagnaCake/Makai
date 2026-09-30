@@ -21,12 +21,12 @@ CTL_NAMESPACE_BEGIN
 /// @brief Dynamic string of characters.
 /// @tparam TChar Character type.
 /// @tparam TIndex Index type.
-/// @tparam TAlloc<class> Runtime allocator type. By default, it is `GSPAllocator`.
+/// @tparam TAlloc<class> Runtime allocator type. By default, it is `DefaultAllocator`.
 /// @tparam TConstAlloc<class> Compile-time allocator type. By default, it is `ConstantAllocator`.
 template<
 	Type::ASCII TChar,
 	Type::Integer TIndex = usize,
-	template <class> class TAlloc		= GSPAllocator,
+	template <class> class TAlloc		= DefaultAllocator,
 	template <class> class TConstAlloc	= ConstantAllocator
 >
 struct BaseString:
