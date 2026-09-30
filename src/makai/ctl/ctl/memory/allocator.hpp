@@ -252,7 +252,12 @@ constexpr usize const ONE_GIBIBYTE = usize(1) << 40;
 
 /// @brief Paged allocator.
 /// @tparam TData Type to handle memory for.
-template<Type::NonVoid TData>
+template<
+	Type::NonVoid TData,
+	usize PAGE_SIZE		= ONE_MIBIBYTE/*,
+	usize PAGE_COUNT	= 1024,
+	usize SECTION_COUNT	= 1024 */
+>
 struct PagedAllocator {
 	using DataType = TData;
 
@@ -293,18 +298,18 @@ struct PagedAllocator {
 		usize			size;
 	};
 
-	PagedAllocator(usize const minPageSize = ONE_MIBIBYTE): minPageSize(minPageSize) {
+	PagedAllocator() {
 		pages = MX::malloc<Page>();
 		MX::memzero(pages);
-		pages->memory = MX::malloc<DataType>(minPageSize);
-		pages->free = minPageSize;
+		pages->memory = MX::malloc<DataType>(PAGE_SIZE);
+		pages->free = PAGE_SIZE;
 		pages->used = 0;
 		pages->next = nullptr;
 		free = MX::malloc<Section>();
 		MX::memzero(free);
 		free->prev = nullptr;
 		free->start = pages->memory;
-		free->size = minPageSize;
+		free->size = PAGE_SIZE;
 		free->page = pages;
 	}
 
@@ -329,7 +334,7 @@ struct PagedAllocator {
 	[[nodiscard, gnu::malloc, gnu::noinline, gnu::nonnull(1)]]
 	owner<DataType> allocate(usize const sz) {
 		if (!sz) return nullptr;
-		auto pageSize = minPageSize;
+		auto pageSize = PAGE_SIZE;
 		auto prevSection	= free;
 		auto section		= free;
 		while (section && section->size < sz) {
@@ -397,16 +402,15 @@ struct PagedAllocator {
 		free = newSection;
 	}
 
-	owner<Page>		pages		= nullptr;
-	owner<Section>	free		= nullptr;
-	usize const		minPageSize;
+	owner<Page>		pages	= nullptr;
+	owner<Section>	free	= nullptr;
 };
 
 /// @brief "Globally-Shared Pages" allocator.
 /// @tparam TData Type to handle memory for.
 /// @tparam TStorage Storage group. By default, it is `void`.
-/// @tparam PS Page Size. By default, it is `ONE_MIBIBYTE` (2^20 bytes).
-template <class TData, class TStorage = void, usize PS = ONE_MIBIBYTE>
+/// @tparam PAGE_SIZE Page Size. By default, it is `ONE_MIBIBYTE` (2^20 bytes).
+template <class TData, class TStorage = void, usize PAGE_SIZE = ONE_MIBIBYTE>
 struct GSPAllocator {
 	using DataType = TData;
 
@@ -420,7 +424,7 @@ struct GSPAllocator {
 
 private:
 	static PagedAllocator<byte>& memory() {
-		static PagedAllocator<byte> alloc{PS};
+		static PagedAllocator<byte, PAGE_SIZE> alloc;
 		return alloc;
 	}
 };
