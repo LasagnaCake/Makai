@@ -410,7 +410,7 @@ struct GSPAllocator {
 	}
 
 private:
-	static PagedAllocator<byte> memory() {
+	static PagedAllocator<byte>& memory() {
 		static PagedAllocator<byte> alloc{PS};
 		return alloc;
 	}
