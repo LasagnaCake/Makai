@@ -2056,6 +2056,7 @@ void Engine::v2Select() {
 }
 
 void Engine::v2Spread() {
+	Instruction::Spreading const spread = Makai::Cast::bit<Instruction::Spreading>(current.type);
 	advance(true);
 	auto const offset = Makai::Cast::bit<uint64>(current);
 	advance(true);
@@ -2063,10 +2064,13 @@ void Engine::v2Spread() {
 	auto const arr = context.pop();
 	if (!(arr && arr->getType() && (arr->getType()->flags.isArray or arr->getType()->flags.isStructure)))
 		crash(invalidSourceError("Value is not of a spreadable type!"));
+	if (!spread.local)
+		context.globalValueStack.expand(count);
+	else context.locals().expand(count);
 	for (usize i = 0; i < count; ++i) {
 		if (
 			!arr->getAtIndex(i + offset)
-			.then([&] (auto const& v) {context.push(v);})
+			.then([&] (auto const& v) {if (!spread.local) context.push(v); else context.locals().pushBack(v);})
 			.onError([&] (auto const& err) {
 				switch (err) {
 					using enum Object::GetError;

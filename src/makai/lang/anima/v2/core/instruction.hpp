@@ -273,6 +273,7 @@ namespace Makai::Anima::V2::Core {
 		};
 
 		struct [[gnu::aligned(4)]] Spreading {
+			uint8 local: 1;
 		};
 
 		/// @brief Instruction name.
@@ -418,7 +419,7 @@ namespace Makai::Anima::V2::Core {
 			/// @param type Discarded.
 			/// @details `break`
 			AV2_IN_BREAKPOINT,
-			/// @brief Pops the top value of the stack, and pushes its contents into the stack.
+			/// @brief Pops the top value of the stack, and pushes its contents into the top of one of the stacks.
 			/// @param type `Spreading` = how to spread the value.
 			/// @details `spread <offset> <count>`
 			AV2_IN_SPREAD,
