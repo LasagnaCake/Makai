@@ -164,7 +164,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("module", prefixes, new NamedBlockDeclResolver(true, false));
 	add("struct", prefixes, new NamedBlockDeclResolver(false, true));
 	add("enum", prefixes, new EnumResolver());
-	add("with", prefixes, new TemplateDeclResolver());
 	add("prop", prefixes, new PropertyDeclResolver());
 	add("prefix", prefixes, new DynamicOperatorDeclResolver());
 	add("postfix", prefixes, new DynamicOperatorDeclResolver());
