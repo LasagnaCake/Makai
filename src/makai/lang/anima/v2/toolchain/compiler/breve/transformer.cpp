@@ -215,7 +215,7 @@ static Makai::UTF8String bopName(ATransformer::Context& context, Node::Instance 
 		case LTS_TT_LOGIC_XOR:				return "lxor";
 		case LTS_TT_BIT_AND:				return "band";
 		case LTS_TT_BIT_OR:					return "bor";
-		case LTS_TT_BIT_XOR:				return "bxor";
+		case LTS_TT_BIT_XOR:				return "pow";
 		default: context.error("Invalid/Unsupported operator!", node);
 	}
 	context.error("Invalid/Unsupported operator!", node);
