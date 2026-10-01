@@ -332,6 +332,7 @@ namespace Impl::Memory {
 
 		~PagedAllocator() {
 			mutex.lock();
+			collect();
 			auto page = pages;
 			while (page) {
 				auto prev = page;
@@ -406,9 +407,11 @@ namespace Impl::Memory {
 					if constexpr (AUTOCOLLECT)
 						Page::destroy(page);
 					else {
+						gmutex.lock();
 						if (garbage)
 							garbage->top()->attach(page);
 						else garbage = page;
+						gmutex.unlock();
 					}
 					page = nextPage->next;
 					continue;
@@ -428,7 +431,7 @@ namespace Impl::Memory {
 		}
 
 		void collect() requires (!AUTOCOLLECT) {
-			mutex.lock();
+			gmutex.lock();
 			while (garbage) {
 				auto const next = garbage->next;
 				Page::destroy(garbage);
@@ -436,7 +439,7 @@ namespace Impl::Memory {
 			}
 			if (garbage) Page::destroy(garbage);
 			garbage = nullptr;
-			mutex.unlock();
+			gmutex.unlock();
 		}
 
 	private:
@@ -444,6 +447,7 @@ namespace Impl::Memory {
 		owner<Section>	free	= nullptr;
 		owner<Page>		garbage	= nullptr;
 		Mutex			mutex;
+		Mutex			gmutex;
 	};
 }
 CTL_DIAGBLOCK_END;
