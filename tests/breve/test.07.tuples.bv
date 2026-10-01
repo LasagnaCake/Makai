@@ -1,7 +1,25 @@
 using import core
 
-using Person = Tuple[string, string]
+using Person = with (string, string)
 
 extend Person {
+	fullName :: (@ByRef self: Person) => '"' + self._0 + " " + self._1 + '"'
 
+	@Static
+	create :: (firstName: string, lastName: string = "Someone") => new Person {firstName, lastName}
+}
+
+@Main
+main :: () {
+	@ByRef foo := new Person {
+		_0	= "John",
+		_1	= "Doe"
+	}
+	IO.writeLine("Hello, " + foo.fullName! + "!")
+	foo._1 = "Lastname"
+	IO.writeLine("Hello, " + foo.fullName! + "!")
+	foo._0 = "Firstname"
+	IO.writeLine("Hello, " + foo.fullName! + "!")
+	foo = Person.create("Iam")
+	IO.writeLine("Hello, " + foo.fullName! + "!")
 }

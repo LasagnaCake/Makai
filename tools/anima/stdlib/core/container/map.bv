@@ -1,0 +1,48 @@
+using import core.types
+using import core.container.list
+
+struct Map[Key, Value] {
+	struct Entry {
+		@[ByCopy, ReadOnly] key: Key
+		@ByRef value: Value
+	}
+
+	type Entries = List[Entry]
+
+	@New
+	create :: (self: Self) {
+		self.entries = new Entries {}
+	}
+
+	@Operator(infix="[")
+	at :: (self: Self, @ByRef key: Key) -> Value =>
+		self.search(key)?.value ?? {
+			@ByRef val := new Value{}
+			self.entries.insert(self.placeOf(key), new Entry {key, val})
+			value
+		}
+
+	@Operator(infix="in")
+	has :: (self: Self, key: Key) -> bool {
+		return match self.search(key) {
+			is Key => true
+			else => false 
+		}
+	}
+
+	@Private
+	search :: (self: Self, key: Key) -> ?Entry =>
+		self.search(key, (countof self.entries) / 2, 0, (countof self.entries) - 1)
+
+	@Private
+	search :: (@ByRef self: Self, @ByRef key: Key, @ByCopy index: u64, @ByCopy start: u64, @ByCopy stop: u64) -> ?Entry =>
+		if stop <= start
+			null
+		else match (key <=> self.entries[index].key) {
+			< 0 => self.search(key, start + (stop - start) / 2, start, index-1)
+			> 0 => self.search(key, start + (stop - start) / 2, index+1, stop)
+			else => self.entries[index]
+		}
+
+	@[Private, ByRef] entries: Entries
+}

@@ -17,6 +17,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Instance<Node> node;
 	};
 
+	struct Expandable {
+		Instance<Node> expandAfter;
+	};
+
 	enum class ExecutionContext: byte {
 		AV2_TCB_EC_NONE,
 		AV2_TCB_EC_RUNTIME,
@@ -128,7 +132,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Makai::Data::Value			value;
 	};
 
-	struct Namespace: Labeled, Positioned, IComposable, Visible, ISerializable {
+	struct Namespace: Labeled, Positioned, IComposable, Visible, ISerializable, Expandable {
 		using TypeRef		= Instance<TypeDecl>;
 		using FunctionRef	= Instance<Function>;
 		using VariableRef	= Instance<Variable>;
@@ -169,7 +173,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Makai::Data::Value serialize() const override;
 	};
 
-	struct TypeDecl: Labeled, Positioned, Scoped, ISerializable {
+	struct TypeDecl: Labeled, Positioned, Scoped, ISerializable, Expandable {
 		enum class Definition {
 			AV2_TCTD_BASIC,
 			AV2_TCTD_ARRAY,
@@ -217,7 +221,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		virtual ~TypeDecl();
 	};
 
-	struct Function: Labeled, Positioned, ISerializable {
+	struct Function: Labeled, Positioned, ISerializable, Expandable {
 		struct Overload: Scoped, ISerializable {
 			struct Variant {
 				enum class External {
@@ -303,7 +307,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		virtual ~Function();
 	};
 
-	struct Variable: Labeled, Positioned, Scoped, ISerializable {
+	struct Variable: Labeled, Positioned, Scoped, ISerializable, Expandable {
 		Handle<TypeDecl>	type;
 		Namespace::Instance	initializer;
 		UTF8String			source;
@@ -396,7 +400,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		virtual ~Variable();
 	};
 
-	struct Attribute: Labeled, Positioned, ISerializable {
+	struct Attribute: Labeled, Positioned, ISerializable, Expandable {
 		enum class Target: uint64 {
 			AV2_TAAT_EMPTY		= 0,
 			AV2_TAAT_TYPE		= 1 << 0,
@@ -436,7 +440,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		virtual ~Attribute();
 	};
 
-	struct Property:  Labeled, Positioned, Scoped, ISerializable {
+	struct Property:  Labeled, Positioned, Scoped, ISerializable, Expandable {
 		Namespace::TypeRef		type;
 		Namespace::FunctionRef	getter;
 		Namespace::FunctionRef	setter;
@@ -460,7 +464,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		return Makai::Cast::as<Attribute::Target>(~enumcast(a));
 	}
 
-	struct Trait: Labeled, Positioned, Scoped, ISerializable {
+	struct Trait: Labeled, Positioned, Scoped, ISerializable, Expandable {
 		Makai::Data::Value serialize() const override;
 
 		Trait(UTF8String const& name = "");

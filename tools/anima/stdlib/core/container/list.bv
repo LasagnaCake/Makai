@@ -1,0 +1,49 @@
+using import core.types
+
+struct List[Element] {
+	type Elements = [Element]
+	
+	@New
+	create :: (self: Self) {
+		self.elements = new Elements {}
+	}
+
+	@Operator(infix="[")
+	at :: (@ByRef self: Self, @ByCopy index: u64) -> ?Element =>
+		if index < (countof self.elements)
+			self.elements[index]
+		else null
+
+	find :: (@ByRef self: Self, @ByCopy value: Element) -> ?u64 {
+		index := 0
+		for element => self.elements
+			if element == value
+				return index
+			else ++index
+		return null
+	}
+
+	rfind :: (@ByRef self: Self, @ByCopy value: Element) -> ?u64 {
+		repeat @ByCopy index: u64 => countof self.elements
+			if self.elements[index-1] == value
+				return index
+		return null
+	}
+
+	bsearch :: (self: Self, key: Element) -> ?u64 =>
+		self.search(key, (countof self.elements) / 2, 0, (countof self.elements) - 1)
+
+	@Private
+	bsearch :: (@ByRef self: Self, @ByRef key: Element, @ByCopy index: u64, @ByCopy start: u64, @ByCopy stop: u64) -> ?u64 =>
+		if stop <= start
+			null
+		else match (key <=> self.elements[index]) {
+			< 0 => self.search(key, start + (stop - start) / 2, start, index-1)
+			> 0 => self.search(key, start + (stop - start) / 2, index+1, stop)
+			else => index
+		}
+
+	insert :: (@ByRef self: Self, @ByCopy index: u64, @ByRef value: Element)
+
+	@[Private, ByRef] elements: Elements
+}
