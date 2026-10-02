@@ -5,7 +5,7 @@ struct Map[Key, Value] where {
 	assert (
 		#[Basic[Key]]
 	or	#[Comparable.Equals[Key, Key]]
-	or	error "Key must be of a comparable type!"
+	or	"Key must be of a comparable type!"
 	)
 
 	struct Entry {
@@ -20,7 +20,7 @@ struct Map[Key, Value] where {
 		self.entries = new Entries {}
 	}
 
-	@Operator(infix="[")
+	@Operator(infix="[", setter=false)
 	at :: (self: Self, @ByRef key: Key) -> Value =>
 		self.search(key)?.value ?? {
 			@ByRef val := new Value{}
@@ -28,7 +28,7 @@ struct Map[Key, Value] where {
 			value
 		}
 
-	@Operator(infix="[")
+	@Operator(infix="[", setter=true)
 	at :: (self: Self, @ByRef key: Key, @ByRef value: value) -> void =>
 		self.entries.insert(self.placeOf(key), new Entry {key, val})
 
