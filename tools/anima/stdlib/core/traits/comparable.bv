@@ -2,4 +2,4 @@ using import core.types
 
 using import core.traits.assertable
 
-trait Comparable[A, B]: Assertable[#['operator:infix:<=>'[A, B]]] {}
+trait Comparable[A, B]: Assertable[#[(new A{}) <=> (new B{})]] {}

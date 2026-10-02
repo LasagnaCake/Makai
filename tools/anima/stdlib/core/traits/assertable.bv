@@ -1,10 +1,10 @@
 using import core.types
 
-@ValueTrait
-trait Assertable[V: bool] {
-	@Direct value := V
-}
+@FlagTrait(flag=true)
+trait True	{}
+@FlagTrait(flag=false)
+trait False	{}
 
-trait True:		Assertable[true] {}
-trait False:	Assertable[true] {}
+@ValueTrait
+trait Assertable[V: bool]: with True when V else False {}
 
