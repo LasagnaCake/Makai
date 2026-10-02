@@ -17,7 +17,7 @@ struct List[Element] {
 			self.elements[index]
 		else null
 
-	if assert Comparable[Element, Element] {
+	if Comparable[Element, Element] {
 		find :: (@ByRef self: Self, @ByCopy value: Element) -> ?u64 {
 			index := 0
 			for element => self.elements
