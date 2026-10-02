@@ -1,0 +1,5 @@
+using import core.types
+
+using import core.traits.assertable
+
+trait Same[A, B]: Assertable#[(new A {}) as B]] {}
