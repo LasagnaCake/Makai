@@ -6,5 +6,5 @@ trait True	{}
 trait False	{}
 
 @ValueTrait
-trait Assertable[V: bool]: with True when V else False {}
+trait Assertable[V: bool]: True when V else False {}
 

@@ -3,13 +3,13 @@ using import core.types
 using import core.traits.assertable
 
 trait Basic[T]: Assertable[
-	match T {
-		is [bool]							=> true
-		is [int8, int16, int32, int64]		=> true
-		is [uint8, uint16, uint32, uint64]	=> true
-		is [float32, float64, float128]		=> true
-		is [string, bytes]					=> true
-		is [void]							=> true
-		else								=> false
+	match #T {
+		is [#bool]					=> true
+		is [#i8, #i16, #i32, #i64]	=> true
+		is [#u8, #u16, #u32, #u64]	=> true
+		is [#f32, #f64, #f28]		=> true
+		is [#string, #bytes]		=> true
+		is [#void]					=> true
+		else						=> false
 	}
 ] {}
