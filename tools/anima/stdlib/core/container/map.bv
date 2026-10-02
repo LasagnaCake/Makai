@@ -1,7 +1,13 @@
 using import core.types
 using import core.container.list
 
-struct Map[Key, Value] {
+struct Map[Key, Value] where {
+	assert (
+		#[Basic[Key]]
+	or	#[Comparable.Equals[Key, Key]]
+	or	error "Key must be of a comparable type!"
+	)
+
 	struct Entry {
 		@[ByCopy, ReadOnly] key: Key
 		@ByRef value: Value
@@ -21,6 +27,10 @@ struct Map[Key, Value] {
 			self.entries.insert(self.placeOf(key), new Entry {key, val})
 			value
 		}
+
+	@Operator(infix="[")
+	at :: (self: Self, @ByRef key: Key, @ByRef value: value) -> void =>
+		self.entries.insert(self.placeOf(key), new Entry {key, val})
 
 	@Operator(infix="in")
 	has :: (self: Self, key: Key) -> bool {
@@ -44,5 +54,9 @@ struct Map[Key, Value] {
 			else => self.entries[index]
 		}
 
+	placeOf :: (@ByRef self: Self, @ByCopy key: Key)
+
 	@[Private, ByRef] entries: Entries
 }
+
+type Dictionary[T] = Map[string, T]

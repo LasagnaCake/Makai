@@ -946,6 +946,13 @@ Node::Instance MatchResolver::resolve(Parser& parser, Node::Instance const& left
 	return result;
 }
 
+Node::Instance AssertionResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_ASSERT;
+	return result;
+}
+
 AResolver::AResolver(Parser::Precedence const precedence, bool const rightToLeft):
 	precedence(Cast::as<Parser::Precedence>(enumcast(precedence) - !rightToLeft)),
 	rightToLeft(rightToLeft) {
