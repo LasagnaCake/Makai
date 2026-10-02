@@ -1,5 +1,8 @@
 using import core.types
 
+using import core.traits.comparable
+using import core.traits.basic
+
 struct List[Element] {
 	type Elements = [Element]
 	
@@ -14,7 +17,7 @@ struct List[Element] {
 			self.elements[index]
 		else null
 
-	if assert #[Comparable.Equals[Element, Element]] or #[Basic[Element]] {
+	if assert Comparable[Element, Element] {
 		find :: (@ByRef self: Self, @ByCopy value: Element) -> ?u64 {
 			index := 0
 			for element => self.elements

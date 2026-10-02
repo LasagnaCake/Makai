@@ -1,13 +1,10 @@
 using import core.types
 using import core.container.list
 
-struct Map[Key, Value] where {
-	assert (
-		#[Basic[Key]]
-	or	#[Comparable.Equals[Key, Key]]
-	or	"Key must be of a comparable type!"
-	)
+using import core.traits.comparable
+using import core.traits.basic
 
+struct Map[Key, Value] if assert Comparable[Key] {
 	struct Entry {
 		@[ByCopy, ReadOnly] key: Key
 		@ByRef value: Value
@@ -58,5 +55,6 @@ struct Map[Key, Value] where {
 
 	@[Private, ByRef] entries: Entries
 }
+else "Key must be of a comparable type!"
 
 type Dictionary[T] = Map[string, T]

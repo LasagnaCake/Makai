@@ -1,0 +1,15 @@
+using import core.types
+
+using import core.traits.assertable
+
+trait Basic[T]: Assertable[
+	match T {
+		is [bool]							=> true
+		is [int8, int16, int32, int64]		=> true
+		is [uint8, uint16, uint32, uint64]	=> true
+		is [float32, float64, float128]		=> true
+		is [string, bytes]					=> true
+		is [void]							=> true
+		else								=> false
+	}
+] {}

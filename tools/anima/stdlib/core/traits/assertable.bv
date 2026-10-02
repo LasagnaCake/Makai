@@ -1,0 +1,10 @@
+using import core.types
+
+@ValueTrait
+trait Assertable[V: bool] {
+	@Direct value := V
+}
+
+trait True:		Assertable[true] {}
+trait False:	Assertable[true] {}
+
