@@ -372,6 +372,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	struct TypeReification: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
+
+	struct AssertionExpression: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
 }
 
 #endif

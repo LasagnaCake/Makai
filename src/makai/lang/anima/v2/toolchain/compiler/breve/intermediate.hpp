@@ -17,10 +17,6 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Instance<Node> node;
 	};
 
-	struct Expandable {
-		Instance<Node> expandAfter;
-	};
-
 	enum class ExecutionContext: byte {
 		AV2_TCB_EC_NONE,
 		AV2_TCB_EC_RUNTIME,
@@ -132,7 +128,14 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Makai::Data::Value			value;
 	};
 
-	struct Namespace: Labeled, Positioned, IComposable, Visible, ISerializable, Expandable {
+	struct Reifiable {
+		using TemplateArgument = Union<Instance<Namespace>, Data::Value>;
+
+		Instance<Node>								declaration;
+		Map<TemplateArgument, Namespace::TypeRef>	reifications;
+	};
+
+	struct Namespace: Labeled, Positioned, IComposable, Visible, ISerializable, Reifiable {
 		using TypeRef		= Instance<TypeDecl>;
 		using FunctionRef	= Instance<Function>;
 		using VariableRef	= Instance<Variable>;
@@ -173,7 +176,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Makai::Data::Value serialize() const override;
 	};
 
-	struct TypeDecl: Labeled, Positioned, Scoped, ISerializable, Expandable {
+	struct TypeDecl: Labeled, Positioned, Scoped, ISerializable, Reifiable {
 		enum class Definition {
 			AV2_TCTD_BASIC,
 			AV2_TCTD_ARRAY,
@@ -182,14 +185,14 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TCTD_TEMPLATE,
 		};
 
-		Core::TypeFlags							flags = {};
-		Definition								def;
-		Nullable<Core::BasicType>				basic;
-		Namespace::TypeRef						base;
-		Nullable<UTF8String>					artEquivalent;
-		UTF8Dictionary<Namespace::VariableRef>	fields;
-		UTF8Dictionary<Namespace::FunctionRef>	methods;
-		List<Namespace::TypeRef>				args;
+		Core::TypeFlags								flags = {};
+		Definition									def;
+		Nullable<Core::BasicType>					basic;
+		Namespace::TypeRef							base;
+		Nullable<UTF8String>						artEquivalent;
+		UTF8Dictionary<Namespace::VariableRef>		fields;
+		UTF8Dictionary<Namespace::FunctionRef>		methods;
+		List<Namespace::TypeRef>					args;
 
 		usize uses = 0;
 
@@ -221,7 +224,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		virtual ~TypeDecl();
 	};
 
-	struct Function: Labeled, Positioned, ISerializable, Expandable {
+	struct Function: Labeled, Positioned, ISerializable, Reifiable {
 		struct Overload: Scoped, ISerializable {
 			struct Variant {
 				enum class External {
@@ -307,7 +310,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		virtual ~Function();
 	};
 
-	struct Variable: Labeled, Positioned, Scoped, ISerializable, Expandable {
+	struct Variable: Labeled, Positioned, Scoped, ISerializable, Reifiable {
 		Handle<TypeDecl>	type;
 		Namespace::Instance	initializer;
 		UTF8String			source;
@@ -400,7 +403,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		virtual ~Variable();
 	};
 
-	struct Attribute: Labeled, Positioned, ISerializable, Expandable {
+	struct Attribute: Labeled, Positioned, ISerializable, Reifiable {
 		enum class Target: uint64 {
 			AV2_TAAT_EMPTY		= 0,
 			AV2_TAAT_TYPE		= 1 << 0,
@@ -440,7 +443,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		virtual ~Attribute();
 	};
 
-	struct Property:  Labeled, Positioned, Scoped, ISerializable, Expandable {
+	struct Property:  Labeled, Positioned, Scoped, ISerializable, Reifiable {
 		Namespace::TypeRef		type;
 		Namespace::FunctionRef	getter;
 		Namespace::FunctionRef	setter;
@@ -464,7 +467,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		return Makai::Cast::as<Attribute::Target>(~enumcast(a));
 	}
 
-	struct Trait: Labeled, Positioned, Scoped, ISerializable, Expandable {
+	struct Trait: Labeled, Positioned, Scoped, ISerializable, Reifiable {
 		Makai::Data::Value serialize() const override;
 
 		Trait(UTF8String const& name = "");

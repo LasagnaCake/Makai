@@ -428,10 +428,16 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 
 ATransformer::Result Aliasing::transform(Context& context, Node::Instance const& node) {
 	auto const name = context.pathOf(node->leftSide);
+	if (node->templateDecl) {
+		auto const scope = context.declare(name);
+		scope->declaration = node->templateDecl;
+		context.pop(name.size());
+		return {.scope = scope};
+	}
 	auto scope = context.getExpression(node->rightSide).scope;
 	if (!scope)
 		context.error("Requested symbol scope does not exist!", node->rightSide);
-	if (node->leftSide) {
+	if (node->rightSide) {
 		auto const alias = context.pathOf(node->leftSide);
 		if (context.parent()->resolve(alias))
 			context.error("Symbol with this name already exists in the current scope!", node->leftSide);
@@ -471,23 +477,11 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		context.error("Symbol with this name already exists in the current scope!", node->leftSide);
 	auto const scope = context.declare(name);
 	auto& type = *(scope->type = scope->type.create());
+	auto const rett = Result{.scope = scope, .type = scope->type, .mayBeEmpty = false};
 	if (node->templateDecl) {
-		context.error("Templates are not supported yet!");
 		type.flags.isGeneric = true;
-		for (auto& arg: node->templateDecl->children) {
-			if (arg->content == Node::Content::AV2_TANC_NAME) {
-				auto const baseArgName = context.pathOf(arg);
-				auto const typeScope = context.declare(baseArgName);
-				auto& templateType = *(typeScope->type = typeScope->type.create());
-				templateType.flags.isDummyType = true;
-				context.pop(baseArgName.size());
-				context.registerType(typeScope);
-			} else if (arg->content == Node::Content::AV2_TANC_EXPANSION) {
-
-			} else if (arg->content == Node::Content::AV2_TANC_DECLARATION) {
-
-			} else context.error("Invalid template declaration!");
-		}
+		type.declaration = node->templateDecl;
+		return rett;
 	}
 	if (node->middle) {
 		auto const base = context.getType(node->middle).type;
@@ -623,7 +617,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	for (auto& var: protecteds)
 		var->scope->makeProtected();
 	context.pop(1);
-	return {.scope = scope, .type = scope->type, .mayBeEmpty = false};
+	return rett;
 }
 
 ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const& node) {

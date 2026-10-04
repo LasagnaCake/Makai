@@ -950,6 +950,7 @@ Node::Instance AssertionResolver::resolve(Parser& parser, Node::Instance const& 
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_ASSERT;
+	result->leftSide = parser.nextExpression();
 	return result;
 }
 
