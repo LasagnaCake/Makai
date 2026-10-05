@@ -430,7 +430,7 @@ ATransformer::Result Aliasing::transform(Context& context, Node::Instance const&
 	auto const name = context.pathOf(node->leftSide);
 	if (node->templateDecl) {
 		auto const scope = context.declare(name);
-		scope->declaration = node->templateDecl;
+		scope->declaration = node;
 		context.pop(name.size());
 		return {.scope = scope};
 	}
@@ -480,7 +480,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	auto const rett = Result{.scope = scope, .type = scope->type, .mayBeEmpty = false};
 	if (node->templateDecl) {
 		type.flags.isGeneric = true;
-		type.declaration = node->templateDecl;
+		type.declaration = node;
 		return rett;
 	}
 	if (node->middle) {
