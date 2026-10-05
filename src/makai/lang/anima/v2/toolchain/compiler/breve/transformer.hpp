@@ -98,6 +98,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			}
 
 			Result transform(ATransformer& transformer, Node::Instance const& node);
+
+			Result hydrate(Node::Instance const& node, List<Result> const& targs);
+			Result registerTemplate(Node::Instance const& node);
 		};
 
 		virtual ~ATransformer();
