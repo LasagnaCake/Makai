@@ -3221,6 +3221,31 @@ Node::Instance ATransformer::Context::evaluate(Makai::UTF8String const& eval) {
 	return parse;
 }
 
+Node::Instance ATransformer::Context::hydrate(Node::Instance const& node, Makai::List<ATransformer::Result> const& targs) {
+	auto const tdecl = node->templateDecl;
+	node->templateDecl = nullptr;
+	// TODO: Template reification
+	usize index = 0;
+	usize const count = tdecl->children.size();
+
+	for (auto& arg: tdecl->children) {
+
+	}
+	node->templateDecl = tdecl;
+}
+
+Node::Instance ATransformer::Context::registerTemplate(Node::Instance const& node) {
+	auto const tdecl = node->templateDecl;
+	node->templateDecl = nullptr;
+	// TODO: Template reification
+	usize index = 0;
+	usize const count = tdecl->children.size();
+	for (auto& arg: tdecl->children) {
+
+	}
+	node->templateDecl = tdecl;
+}
+
 Makai::Function<File(Makai::UTF8String const&)> Import::importer = [] (auto const&) -> File {
 	throw Error::InvalidAction("Missing importer!");
 };
