@@ -1586,6 +1586,12 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		scope->function->name = path.join("_");
 		scope->function->pureName = path.back();
 	}
+	if (node->templateDecl) {
+		auto& fn = *scope->function;
+		fn.flags.isGeneric = true;
+		fn.declaration = node;
+		return {.scope = scope};
+	}
 	auto const proto = node->middle;
 	auto const fn = scope->function;
 	fn->current.clear();
