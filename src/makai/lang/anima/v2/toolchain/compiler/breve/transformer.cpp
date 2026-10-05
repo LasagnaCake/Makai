@@ -3225,25 +3225,48 @@ Node::Instance ATransformer::Context::hydrate(Node::Instance const& node, Makai:
 	auto const tdecl = node->templateDecl;
 	node->templateDecl = nullptr;
 	// TODO: Template reification
-	usize index = 0;
-	usize const count = tdecl->children.size();
-
-	for (auto& arg: tdecl->children) {
-
-	}
+	auto const generic = registerTemplate(node);
 	node->templateDecl = tdecl;
 }
 
-Node::Instance ATransformer::Context::registerTemplate(Node::Instance const& node) {
+ATransformer::Template ATransformer::Context::registerTemplate(Node::Instance const& node) {
 	auto const tdecl = node->templateDecl;
 	node->templateDecl = nullptr;
-	// TODO: Template reification
 	usize index = 0;
 	usize const count = tdecl->children.size();
+	Template generic {pathOf(node->leftSide).join("/") + node->name()};
+	generic.decl = node;
 	for (auto& arg: tdecl->children) {
-
+		if (arg->content == Node::Content::AV2_TANC_NAME) {
+			Template::Parameter param = {
+				arg->base.text,
+				context.basicType("type")
+			};
+			if (params.contains(param.name))
+				error("Redeclaration of template parameter!", arg);
+			generic.params[param.name] = param;
+		} else if (arg->leftSide->content == Node::Content::AV2_TANC_NAME) {
+			Template::Parameter param = {arg->leftSide->base.text};
+			if (params.contains(param.name))
+				error("Redeclaration of parameter!", arg);
+			if (arg->content == Node::Content::AV2_TANC_DECLARATION) {
+				if (!(
+					arg->base.text == ":"
+				||	arg->base.text == ":="
+				)) error("Only variable-like declarations are allowed within template arguments!", arg);
+				if (arg->middle)
+					param.type = getType(arg->middle);
+				if (arg->rightSide) {
+					param.defaultValue = arg->rightSide;
+					if (arg->rightSide->content == Node::Content::AV2_TANC_VALUE && !arg->middle)
+						param.type = getExpression(arg->rightSide).type;
+				}
+			}
+			generic.params[param.name] = param;
+		}
 	}
 	node->templateDecl = tdecl;
+	return generic;
 }
 
 Makai::Function<File(Makai::UTF8String const&)> Import::importer = [] (auto const&) -> File {

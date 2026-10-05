@@ -8,6 +8,20 @@
 
 namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	struct ATransformer {
+		struct Template {
+			struct Parameter {
+				UTF8String			name;
+				Namespace::TypeRef	type;
+				Node::Instance		defaultValue;
+			};
+
+			using ParameterMap = Dictionary<Parameter>;
+
+			UTF8String		name;
+			Node::Instance	decl;
+			ParameterMap	params;
+		};
+
 		struct Result {
 			Nullable<UTF8String>	source;
 			Namespace::Instance		scope;
@@ -99,8 +113,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 
 			Result transform(ATransformer& transformer, Node::Instance const& node);
 
-			Result hydrate(Node::Instance const& node, List<Result> const& targs);
-			Result registerTemplate(Node::Instance const& node);
+			Namespace::Instance hydrate(Node::Instance const& node, List<Result> const& targs);
+			Template registerTemplate(Node::Instance const& node);
 		};
 
 		virtual ~ATransformer();
