@@ -3221,20 +3221,56 @@ Node::Instance ATransformer::Context::evaluate(Makai::UTF8String const& eval) {
 	return parse;
 }
 
-Node::Instance ATransformer::Context::hydrate(Node::Instance const& node, Makai::List<ATransformer::Result> const& targs) {
+Node::Instance ATransformer::Context::hydrate(Node::Instance const& node, Makai::List<Node::Instance> const& targs) {
 	auto const tdecl = node->templateDecl;
 	node->templateDecl = nullptr;
 	// TODO: Template reification
-	auto const generic = registerTemplate(node);
+	auto const generic = templateFor(node);
+	usize index = 0;
+	usize const count = targs.size();
+	Makai::UTF8Dictionary<Node::Instance> set;
+	declare("<reify>::", node->name());
+	for (auto const& arg: targs) {
+		if (index >= generic->names.size())
+			continue;
+		Template::Parameter param;
+		if (arg->content == Node::Content::AV2_TANC_ASSIGNMENT) {
+			if (!generic->args.contains(arg->leftSide->base.text))
+				error("Template parameter does not exist!", arg);
+			param = generic->args[arg->leftSide->base.text];
+			set[param.name] = arg->rightSide;
+		} else {
+			while (set.contains(generic->names[index]) && index < generic->names.size())
+				++index;
+			if (index >= generic->names.size())
+				continue;
+			param = generic->args[generic->names[index]];
+			set[param.name] = arg->rightSide;
+		}
+		if (set.contains(param.name))
+			error("Template parameter has already been set!", arg);
+	}
+	for (auto const& name: generic->names) {
+		if (set.contains(name))
+			continue;
+		else if (generic->args[name].defaultValue)
+			set[name] = generic->args[name].defaultValue;
+		else error("Missing argument [" + name + "] for template parameter!", node);
+	}
+	for (auto const& [name, decl]: set) {
+		// TODO: This mess
+	}
+	auto const reified = getExpression(node);
+	pop(1);
 	node->templateDecl = tdecl;
 }
 
-ATransformer::Template ATransformer::Context::registerTemplate(Node::Instance const& node) {
+ATransformer::Template::Instance ATransformer::Context::templateFor(Node::Instance const& node) {
+	if (templates.contains(node))
+		return templates[node];
 	auto const tdecl = node->templateDecl;
 	node->templateDecl = nullptr;
-	usize index = 0;
-	usize const count = tdecl->children.size();
-	Template generic {pathOf(node->leftSide).join("/") + node->name()};
+	Template::Instance generic =  generic.create(pathOf(node->leftSide).join("/") + node->name());
 	generic.decl = node;
 	for (auto& arg: tdecl->children) {
 		if (arg->content == Node::Content::AV2_TANC_NAME) {
@@ -3249,6 +3285,7 @@ ATransformer::Template ATransformer::Context::registerTemplate(Node::Instance co
 			Template::Parameter param = {arg->leftSide->base.text};
 			if (params.contains(param.name))
 				error("Redeclaration of parameter!", arg);
+			generic->names.pushBack(param.name);
 			if (arg->content == Node::Content::AV2_TANC_DECLARATION) {
 				if (!(
 					arg->base.text == ":"
@@ -3262,10 +3299,11 @@ ATransformer::Template ATransformer::Context::registerTemplate(Node::Instance co
 						param.type = getExpression(arg->rightSide).type;
 				}
 			}
-			generic.params[param.name] = param;
+			generic->params[param.name] = param;
 		}
 	}
 	node->templateDecl = tdecl;
+	templates[node] = generic;
 	return generic;
 }
 

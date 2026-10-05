@@ -9,17 +9,21 @@
 namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	struct ATransformer {
 		struct Template {
+			using Instance = Instance<Template>;
+
 			struct Parameter {
 				UTF8String			name;
 				Namespace::TypeRef	type;
 				Node::Instance		defaultValue;
 			};
 
-			using ParameterMap = Dictionary<Parameter>;
+			using ParameterNames	= UTF8StringList;
+			using ParameterMap		= Dictionary<Parameter>;
 
 			UTF8String		name;
 			Node::Instance	decl;
 			ParameterMap	params;
+			ParameterNames	names;
 		};
 
 		struct Result {
@@ -99,6 +103,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			Map<Handle<TypeDecl>, Namespace::TypeRef>			nullables;
 			Map<List<Namespace::TypeRef>, Namespace::TypeRef>	tuples;
 			Map<List<Namespace::TypeRef>, Namespace::TypeRef>	unions;
+			Map<Node::Instance, Template::Instance>				templates;
 
 			Node::Instance evaluate(UTF8String const& eval);
 
@@ -114,7 +119,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			Result transform(ATransformer& transformer, Node::Instance const& node);
 
 			Namespace::Instance hydrate(Node::Instance const& node, List<Result> const& targs);
-			Template registerTemplate(Node::Instance const& node);
+			Template templateFor(Node::Instance const& node);
 		};
 
 		virtual ~ATransformer();
