@@ -12,9 +12,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			using Instance = Instance<Template>;
 
 			struct Parameter {
-				UTF8String			name;
-				Namespace::TypeRef	type;
-				Node::Instance		defaultValue;
+				UTF8String					name;
+				Namespace::TypeRef			type;
+				List<Namespace::TraitRef>	constraints;
+				Node::Instance				defaultValue;
 			};
 
 			using ParameterNames	= UTF8StringList;
@@ -93,6 +94,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			void registerImport(Namespace::Instance const& ns);
 			void registerType(Namespace::Instance const& ns);
 			void registerFunction(Namespace::Instance const& ns);
+			void registerReification(Namespace::Instance const& ns);
 
 			Namespace::Instance nearestVarScope() const;
 
@@ -104,6 +106,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			Map<List<Namespace::TypeRef>, Namespace::TypeRef>	tuples;
 			Map<List<Namespace::TypeRef>, Namespace::TypeRef>	unions;
 			Map<Node::Instance, Template::Instance>				templates;
+			UTF8Dictionary<Namespace::Instance>					reifications;
 
 			Node::Instance evaluate(UTF8String const& eval);
 
@@ -118,8 +121,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 
 			Result transform(ATransformer& transformer, Node::Instance const& node);
 
-			Namespace::Instance hydrate(Node::Instance const& node, List<Result> const& targs);
-			Template templateFor(Node::Instance const& node);
+			Namespace::Instance reify(Node::Instance const& node, List<Node::Instance> const& targs);
+			Template::Instance templateFor(Node::Instance const& node);
 		};
 
 		virtual ~ATransformer();
@@ -132,6 +135,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 		KeyValuePair<UTF8StringList, Namespace::Instance> traverse(Context& context, Node::Instance const& node) const;
 
 		virtual Result transform(Context& context, Node::Instance const& node) = 0;
+
+		static Namespace::TypeRef infoType();
 	};
 
 	struct StructureDecl: ATransformer {
@@ -386,8 +391,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
-	struct TemplateTypeReification: ATransformer {
-		bool pathed = true;
+	struct TemplateReification: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 

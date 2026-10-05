@@ -131,8 +131,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Reifiable {
 		using TemplateArgument = Union<Instance<Namespace>, Data::Value>;
 
-		Instance<Node>								declaration;
-		Map<TemplateArgument, Namespace::TypeRef>	reifications;
+		Instance<Node> declaration;
 	};
 
 	struct Namespace: Labeled, Positioned, IComposable, Visible, ISerializable, Reifiable {
@@ -285,6 +284,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		List<OverloadRef> current;
 
 		OverloadRef sigCall;
+
+		bool generic = false;
 
 		using ArgTypes = List<Namespace::TypeRef>;
 

@@ -1419,15 +1419,15 @@ ATransformer::Result TypeRequest::transform(Context& context, Node::Instance con
 	Namespace::TypeRef t;
 	switch (node->content) {
 		using enum Node::Content;
-		case (AV2_TANC_REIFICATION):	t = context.transform<TypeReification>(node).type;			break;
-		case (AV2_TANC_SUBSCRIPT):		t = context.transform<TemplateTypeReification>(node).type;	break;
-		case (AV2_TANC_ARRAY):			t = context.transform<ArrayTypeDecl>(node).type;			break;
-		case (AV2_TANC_NULLABLE_DECL):	t = context.transform<NullableTypeDecl>(node).type;			break;
-		case (AV2_TANC_DECLARATION):	t = context.transform<StructureDecl>(node).type;			break;
-		case (AV2_TANC_FN_PROTOTYPE):	t = context.transform<FunctionTypeDecl>(node).type;			break;
-		case (AV2_TANC_BLOCK):			t = context.transform<TupleTypeDecl>(node).type;			break;
-		case (AV2_TANC_UNION_DECL):		t = context.transform<UnionTypeDecl>(node).type;			break;
-		default:						if (auto const nx = context.fetch(node)) t = nx->type;		break;
+		case (AV2_TANC_REIFICATION):	t = context.transform<TypeReification>(node).type;		break;
+		case (AV2_TANC_SUBSCRIPT):		t = context.transform<TemplateReification>(node).type;	break;
+		case (AV2_TANC_ARRAY):			t = context.transform<ArrayTypeDecl>(node).type;		break;
+		case (AV2_TANC_NULLABLE_DECL):	t = context.transform<NullableTypeDecl>(node).type;		break;
+		case (AV2_TANC_DECLARATION):	t = context.transform<StructureDecl>(node).type;		break;
+		case (AV2_TANC_FN_PROTOTYPE):	t = context.transform<FunctionTypeDecl>(node).type;		break;
+		case (AV2_TANC_BLOCK):			t = context.transform<TupleTypeDecl>(node).type;		break;
+		case (AV2_TANC_UNION_DECL):		t = context.transform<UnionTypeDecl>(node).type;		break;
+		default:						if (auto const nx = context.fetch(node)) t = nx->type;	break;
 	}
 	if (!t) context.error("Type does not exist!", node);
 	++t->uses;
@@ -1588,7 +1588,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	}
 	if (node->templateDecl) {
 		auto& fn = *scope->function;
-		fn.flags.isGeneric = true;
+		fn.generic = true;
 		fn.declaration = node;
 		return {.scope = scope};
 	}
@@ -2680,7 +2680,6 @@ ATransformer::Result AwaitOne::transform(Context& context, Node::Instance const&
 	return expr;
 }
 
-
 ATransformer::Result AwaitBlock::transform(Context& context, Node::Instance const& node) {
 	auto const scope = UTF8StringList::from("__await_" + node->name());
 	auto const awaitScope = context.declare(scope);
@@ -2749,6 +2748,19 @@ ATransformer::Result Evaluation::transform(Context& context, Node::Instance cons
 	if (lhs.isCompilable() && lhs.direct.isString())
 		return context.getExpression(context.evaluate(lhs.direct.getString()));
 	context.error("Invalid evaluation!", node->leftSide);
+}
+
+ATransformer::Result AssertionExpression::transform(Context& context, Node::Instance const& node) {
+	bool success = false;
+	context.declare(UTF8StringList::from("<assert>::" + node->name()));
+	try {
+		context.getExpression(node);
+		success = true;
+	} catch (Makai::Error::Generic const& e) {
+		success = false;
+	}
+	context.pop(1);
+	return {.source = {Makai::toString(success)}, .type = context.basicType("bool"), .direct = success};
 }
 
 ATransformer::Result Switch::transform(Context& context, Node::Instance const& node) {
@@ -3052,7 +3064,7 @@ ATransformer::Result SwitchMatch::transform(Context& context, Node::Instance con
 	else return context.transform<Match>(node);
 }
 
-ATransformer::Result TemplateTypeReification::transform(Context& context, Node::Instance const& node) {
+ATransformer::Result TemplateReification::transform(Context& context, Node::Instance const& node) {
 	return {};
 }
 
@@ -3201,12 +3213,19 @@ void ATransformer::Context::registerImport(Namespace::Instance const& ns) {
 	root->subspaces["0__@Tx0_IMPORTS"]->subspaces[Makai::toString("#", idName(++id), "::") + ns->name] = ns;
 }
 
+void ATransformer::Context::registerReification(Namespace::Instance const& ns) {
+	static usize id = 0;
+	if (!ns) return;
+	root->subspaces["0__@Tx4_REIFICATIONS"]->subspaces[Makai::toString("#", idName(++id), "::") + ns->name] = ns;
+}
+
 ATransformer::Context::Context(): Intermediate() {
 	using enum Core::BasicType;
 	root->subspaces["0__@Tx0_IMPORTS"]		= Namespace::Instance::create("0__@Tx0_IMPORTS");
 	root->subspaces["0__@Tx1_USER_TYPES"]	= Namespace::Instance::create("0__@Tx1_USER_TYPES");
 	root->subspaces["0__@Tx2_FUNCTIONS"]	= Namespace::Instance::create("0__@Tx2_FUNCTIONS");
 	root->subspaces["0__@Tx3_TRAITS"]		= Namespace::Instance::create("0__@Tx3_TRAITS");
+	root->subspaces["0__@Tx4_REIFICATIONS"]	= Namespace::Instance::create("0__@Tx4_REIFICATIONS");
 }
 
 Node::Instance ATransformer::Context::evaluate(Makai::UTF8String const& eval) {
@@ -3221,48 +3240,110 @@ Node::Instance ATransformer::Context::evaluate(Makai::UTF8String const& eval) {
 	return parse;
 }
 
-Node::Instance ATransformer::Context::hydrate(Node::Instance const& node, Makai::List<Node::Instance> const& targs) {
+Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Makai::List<Node::Instance> const& targs) {
+	static usize rid = 0;
 	auto const tdecl = node->templateDecl;
 	node->templateDecl = nullptr;
 	// TODO: Template reification
 	auto const generic = templateFor(node);
 	usize index = 0;
 	usize const count = targs.size();
-	Makai::UTF8Dictionary<Node::Instance> set;
-	declare("<reify>::", node->name());
+	Makai::UTF8Dictionary<bool> visited;
+	List<KeyValuePair<UTF8String, Node::Instance>> set;
+	declare(UTF8StringList::from("<reify>::" + node->name() + Makai::toString("_rid", rid)));
 	for (auto const& arg: targs) {
 		if (index >= generic->names.size())
 			continue;
 		Template::Parameter param;
 		if (arg->content == Node::Content::AV2_TANC_ASSIGNMENT) {
-			if (!generic->args.contains(arg->leftSide->base.text))
+			if (!generic->params.contains(arg->leftSide->base.text))
 				error("Template parameter does not exist!", arg);
-			param = generic->args[arg->leftSide->base.text];
-			set[param.name] = arg->rightSide;
+			param = generic->params[arg->leftSide->base.text];
+			if (visited.contains(param.name))
+				error("Template parameter has already been set!", arg);
+			visited[param.name] = true;
+			set.pushBack({param.name, arg->rightSide});
 		} else {
-			while (set.contains(generic->names[index]) && index < generic->names.size())
+			while (visited.contains(generic->names[index]) && index < generic->names.size())
 				++index;
 			if (index >= generic->names.size())
 				continue;
-			param = generic->args[generic->names[index]];
-			set[param.name] = arg->rightSide;
+			param = generic->params[generic->names[index]];
+			set.pushBack({param.name, arg});
 		}
-		if (set.contains(param.name))
-			error("Template parameter has already been set!", arg);
 	}
+	UTF8StringList missing;
 	for (auto const& name: generic->names) {
-		if (set.contains(name))
+		if (visited.contains(name))
 			continue;
-		else if (generic->args[name].defaultValue)
-			set[name] = generic->args[name].defaultValue;
-		else error("Missing argument [" + name + "] for template parameter!", node);
+		else if (generic->params[name].defaultValue)
+			set.pushBack({name, generic->params[name].defaultValue});
+		else missing.pushBack(name);
 	}
+	if (missing.size())
+		error("Missing arguments [" + missing.join(", ") + "] for template declaration!", node);
+	UTF8String reifyName = node->name();
 	for (auto const& [name, decl]: set) {
-		// TODO: This mess
+		auto const& arg = generic->params[name];
+		auto const scope = declare(UTF8StringList::from(name));
+		if (arg.type->basic && arg.type->basic < Core::BasicType::AV2_BT_TYPEID) {
+			auto const expr = getExpression(decl);
+			if (expr.direct.isUndefined())
+				error("Template parameters may only accept direct expressions!", decl);
+			auto const value = expr.direct;
+			auto const type = *arg.type->basic;
+			auto& var = *(scope->variable = scope->variable.create());
+			var.context = ExecutionContext::AV2_TCB_EC_COMPILE;
+			var.isConstant = true;
+			var.passBy = "copy";
+			var.parent->varc--;
+			var.type = arg.type;
+			var.value = value;
+			bool mismatched = false;
+			switch (type) {
+				using enum Core::BasicType;
+				case AV2_BT_ANY: break;
+				case AV2_BT_STRING: mismatched = !value.isString(); break;
+				case AV2_BT_INT8:
+				case AV2_BT_INT16:
+				case AV2_BT_INT32:
+				case AV2_BT_INT64:
+				case AV2_BT_CHAR:		if (!(mismatched = !value.isNumber())) var.value = value.getSigned(); break;
+				case AV2_BT_UINT8:
+				case AV2_BT_UINT16:
+				case AV2_BT_UINT32:
+				case AV2_BT_UINT64:		if (!(mismatched = !value.isNumber())) var.value = value.getUnsigned(); break;
+				case AV2_BT_REAL32:
+				case AV2_BT_REAL64:
+				case AV2_BT_REAL128:	if (!(mismatched = !value.isNumber())) var.value = value.getReal(); break;
+				case AV2_BT_BOOL: var.value = value.getBoolean(); break;
+				default: mismatched = true;
+			}
+			if (mismatched)
+				error("Type mismatch (Expected: [" + var.type->name + "], got [" + expr.type->name + "])!", decl);
+			reifyName += ";" + name + "=value:" + value.toString();
+		} else {
+			auto const type = getType(decl);
+			if (arg.type->basic != Core::BasicType::AV2_BT_TYPEID) {
+				if (!type.type.derivedFrom(arg.type))
+					error("Type does not derive from required type!", decl);
+			}
+			// TODO: Constraint checking
+			scope->type = type.type;
+			reifyName += ";" + name + "=type:" + type->name;
+		}
+		pop(1);
+	}
+	if (reifications.contains(reifyName)) {
+		pop(1);
+		return reifications[reifyName];
 	}
 	auto const reified = getExpression(node);
+	reifications[reifyName] = reified.scope;
+	registerReification(reified.scope);
 	pop(1);
 	node->templateDecl = tdecl;
+	return reified.scope;
 }
 
 ATransformer::Template::Instance ATransformer::Context::templateFor(Node::Instance const& node) {
@@ -3271,16 +3352,17 @@ ATransformer::Template::Instance ATransformer::Context::templateFor(Node::Instan
 	auto const tdecl = node->templateDecl;
 	node->templateDecl = nullptr;
 	Template::Instance generic =  generic.create(pathOf(node->leftSide).join("/") + node->name());
-	generic.decl = node;
+	generic->decl = node;
 	for (auto& arg: tdecl->children) {
 		if (arg->content == Node::Content::AV2_TANC_NAME) {
 			Template::Parameter param = {
 				arg->base.text,
-				context.basicType("type")
+				basicType("type")
 			};
-			if (params.contains(param.name))
+			if (generic.params.contains(param.name))
 				error("Redeclaration of template parameter!", arg);
-			generic.params[param.name] = param;
+			generic->params[param.name] = param;
+			generic->names.pushBack(param.name);
 		} else if (arg->leftSide->content == Node::Content::AV2_TANC_NAME) {
 			Template::Parameter param = {arg->leftSide->base.text};
 			if (params.contains(param.name))
@@ -3300,6 +3382,7 @@ ATransformer::Template::Instance ATransformer::Context::templateFor(Node::Instan
 				}
 			}
 			generic->params[param.name] = param;
+			generic->names.pushBack(param.name);
 		}
 	}
 	node->templateDecl = tdecl;

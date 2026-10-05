@@ -942,9 +942,12 @@ static Namespace::AttributeRef createDirectAttribute() {
 		} else if (ns->variable) {
 			if (ns->variable->value.isUndefined())
 				Transformer::ATransformer::Context::error("Variable does not possess a direct value!", ns->node);
-			ns->variable->context = ExecutionContext::AV2_TCB_EC_COMPILE;
-			ns->variable->isConstant = true;
-			ns->variable->passBy = "copy";
+			if (ns->variable->context == ExecutionContext::AV2_TCB_EC_NONE) {
+				ns->variable->context = ExecutionContext::AV2_TCB_EC_COMPILE;
+				ns->variable->isConstant = true;
+				ns->variable->passBy = "copy";
+				ns->variable->parentScope->varc--;
+			}
 		}
 	};
 	return attrib;

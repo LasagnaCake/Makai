@@ -1,0 +1,3 @@
+using import core.types
+
+@Direct Same[A, B] := (#A == #B)

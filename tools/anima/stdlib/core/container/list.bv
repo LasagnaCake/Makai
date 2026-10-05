@@ -1,10 +1,28 @@
 using import core.types
 
-using import core.traits.comparable
-using import core.traits.basic
+using import core.constraints.comparable
 
 struct List[Element] {
 	type Elements = [Element]
+	
+	struct Iterator {
+		@Private index: u64
+		@Private elements: Elements
+
+		prop get done (@ByRef self: Self) -> bool => self.index >= countof self.elements
+
+		prop get next (@ByRef self: Self) -> Element {
+			current := self.elements[self.index]
+			++self.index
+			return current
+		}
+
+		@New
+		create :: (self: Self, elements: Elements) {
+			self.elements = elements
+			self.index = 0
+		}
+	}
 	
 	@New
 	create :: (self: Self) {
@@ -49,6 +67,8 @@ struct List[Element] {
 	}
 
 	insert :: (@ByRef self: Self, @ByCopy index: u64, @ByRef value: Element)
+
+	prop get iterator (@ByRef self: Self) => Iterator.create(self.elements)
 
 	@[Private, ByRef] elements: Elements
 }

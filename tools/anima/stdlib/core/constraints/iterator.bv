@@ -1,0 +1,9 @@
+using import core.types
+
+@Direct Iterator[T] := assert {
+	t := new T
+	unless t.done
+		_ := t.next
+}
+
+@Direct Iteratable[T] := assert (for elem => (new T) {})

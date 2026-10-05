@@ -6,6 +6,7 @@ CompileFlags:
     - -Wpedantic
     - -fms-extensions
     - -fcoroutines
+    - -fconcepts
     - -m64
     - -I../../output/include
     - -frelaxed-template-template-args

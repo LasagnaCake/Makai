@@ -949,7 +949,7 @@ Node::Instance MatchResolver::resolve(Parser& parser, Node::Instance const& left
 Node::Instance AssertionResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
-	result->content = Node::Content::AV2_TANC_ASSERT;
+	result->content = Node::Content::AV2_TANC_ASSERTION;
 	result->leftSide = parser.nextExpression();
 	return result;
 }

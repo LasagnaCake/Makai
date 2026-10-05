@@ -1,8 +1,7 @@
 using import core.types
 using import core.container.list
 
-using import core.traits.comparable
-using import core.traits.basic
+using import core.constraints.comparable
 
 struct Map[Key, Value] if Comparable[Key] {
 	struct Entry {

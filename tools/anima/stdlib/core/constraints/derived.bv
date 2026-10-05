@@ -1,0 +1,3 @@
+using import core.types
+
+@Direct Derived[A, B] := assert ((new A) as B)

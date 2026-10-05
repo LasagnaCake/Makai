@@ -1,0 +1,3 @@
+using import core.types
+
+@Direct Comparable[A, B] := assert ((new A) <=> (new B))
