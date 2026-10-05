@@ -429,15 +429,6 @@ Node::Instance VariableDeclResolver::resolve(Parser& parser, Node::Instance cons
 	Node::Instance result = Node::Instance::create();
 	result->content = Node::Content::AV2_TANC_DECLARATION;
 	result->base = token;
-	if (leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
-		Node::Instance tdecl = Node::Instance::create();
-		result->templateDecl = tdecl;
-		tdecl->templateDecl	= leftSide->rightSide;
-		tdecl->leftSide		= leftSide->leftSide;
-		tdecl->middle		= resolver.resolve(parser, null, {});
-		tdecl->rightSide	= FunctionContentResolver().resolve(parser, null, {});
-		return result;
-	}
 	result->leftSide = leftSide;
 	if (token.type == LTS_TT_ASSIGN)
 		result->rightSide = parser.nextExpression();
@@ -489,13 +480,9 @@ Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance co
 		MAKAILIB_DEBUGLN_FULL("+++++++++++++++ DECL::MHS is ", Node::asString(name->middle->content));
 		MAKAILIB_DEBUGLN_FULL("+++++++++++++++ DECL::MHS = ", name->middle->base.text);
 		if (name->leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
-			Node::Instance tdecl = Node::Instance::create();
-			result->templateDecl = tdecl;
-			tdecl->templateDecl	= name->leftSide->rightSide;
-			tdecl->leftSide		= name->leftSide->leftSide;
-			tdecl->middle		= name->middle;
-			tdecl->rightSide	= parser.nextExpression();
-			return result;
+			result->templateDecl	= name->leftSide;
+			result->leftSide		= name->leftSide->leftSide;
+			result->middle			= name->middle;
 		} else if (!name->leftSide->isPathOrName())
 			parser.context.error("Expected name or path here!");
 		else {
@@ -503,13 +490,8 @@ Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance co
 			result->leftSide	= name->leftSide;
 		}
 	} else if (name->content == Node::Content::AV2_TANC_SUBSCRIPT) {
-		Node::Instance tdecl = Node::Instance::create();
-		result->templateDecl = tdecl;
-		tdecl->templateDecl	= name->rightSide;
-		tdecl->leftSide		= name->rightSide;
-		tdecl->middle		= name->middle;
-		tdecl->rightSide	= parser.nextExpression();
-		return result;
+		result->templateDecl	= name;
+		result->leftSide		= name->leftSide;
 	} else if (!name->isPathOrName())
 		parser.context.error("Expected path or name here!");
 	else result->leftSide = name;
@@ -527,13 +509,8 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 	result->base = token;
 	FunctionPrototypeResolver resolver;
 	if (leftSide->content == Node::Content::AV2_TANC_SUBSCRIPT) {
-		Node::Instance tdecl = Node::Instance::create();
-		result->templateDecl = tdecl;
-		tdecl->templateDecl	= leftSide->rightSide;
-		tdecl->leftSide		= leftSide->leftSide;
-		tdecl->middle		= resolver.resolve(parser, null, {});
-		tdecl->rightSide	= FunctionContentResolver().resolve(parser, null, {});
-		return result;
+		result->templateDecl	= leftSide;
+		result->leftSide		= leftSide->leftSide;
 	} else result->leftSide = leftSide;
 	result->middle = resolver.resolve(parser, null, {});
 	result->rightSide = FunctionContentResolver().resolve(parser, null, {});
