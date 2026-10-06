@@ -13,6 +13,6 @@ module Catchable {
 
 	@Direct Result[T] := prove {
 		t := new T {}
-		try t {} else e {}
+		try v := t {} else e {}
 	}
 }
