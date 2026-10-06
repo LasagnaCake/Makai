@@ -1,5 +1,7 @@
 using import core.types
 
+with module Is
+
 module Catchable {
 	@Direct Value[T] := prove {
 		t := new T {}

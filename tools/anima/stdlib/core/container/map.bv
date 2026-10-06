@@ -5,14 +5,14 @@ using import core.constraints.comparable
 
 @ExplicitNew
 struct Map[Key, Value] {
-	assert Comparable[Key, Key] else "Key must be of a comparable type!"
+	assert Is.Comparable[Key, Key] else "Key must be of a comparable type!"
 
 	struct Entry {
 		@[ByCopy, ReadOnly] key: Key
 		@ByRef value: Value
 	}
 
-	type Entries = List[Entry]
+	using Entries = with List[Entry]
 
 	@[Static, New]
 	create :: () => new Self{
@@ -31,7 +31,7 @@ struct Map[Key, Value] {
 	insert :: (self: Self, @ByRef key: Key, @ByRef value: value) -> void =>
 		self.entries.insert(self.placeOf(key), new Entry {key, val})
 			except self.has(key)
-			else self.entries[self.placeOf(key)] = new Entry {key, val}
+			else self.entries[self.placeOf(key)].value = value
 
 	@Operator(infix="in")
 	has :: (self: Self, key: Key) -> bool {

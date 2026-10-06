@@ -1,24 +1,24 @@
 using import core.types
 
-module Iterator {
-	@Direct Forward[T] := prove {
-		@ByRef t := new T
-		try elem => t.next {}
-	}
+with module Is.Iterator
 
-	@Direct Reverse[T] := prove {
-		@ByRef t := new T
-		try elem => t.previous {}
-	}
+@Direct Forward[T] := prove {
+	@ByRef t := new T
+	try elem => t.next {}
+}
 
-	@Direct Bidirectional[T] := ForwardIterator[T] and ReverseIterator[T]
+@Direct Reverse[T] := prove {
+	@ByRef t := new T
+	try elem => t.previous {}
+}
 
-	@Direct Foreach[T] := ForwardIterator[T] or ReverseIterator[T] or prove {
-		@ByRef t := new T
-		try elem => t() {}
-	}
+@Direct Bidirectional[T] := Forward[T] and Reverse[T]
 
-	@Direct Iteratable[T] := prove {
-		for elem => (new T) {}
-	}
+@Direct Foreach[T] := Forward[T] or Reverse[T] or prove {
+	@ByRef t := new T
+	try elem => t() {}
+}
+
+@Direct Iteratable[T] := prove {
+	for elem => (new T) {}
 }

@@ -184,14 +184,16 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TCTD_TEMPLATE,
 		};
 
-		Core::TypeFlags								flags = {};
-		Definition									def;
-		Nullable<Core::BasicType>					basic;
-		Namespace::TypeRef							base;
-		Nullable<UTF8String>						artEquivalent;
-		UTF8Dictionary<Namespace::VariableRef>		fields;
-		UTF8Dictionary<Namespace::FunctionRef>		methods;
-		List<Namespace::TypeRef>					args;
+		Core::TypeFlags									flags = {};
+		Definition										def;
+		Nullable<Core::BasicType>						basic;
+		Namespace::TypeRef								base;
+		Nullable<UTF8String>							artEquivalent;
+		UTF8Dictionary<Namespace::VariableRef>			fields;
+		UTF8Dictionary<Namespace::FunctionRef>			methods;
+		List<Namespace::FunctionRef>					constructors;
+		UTF8Dictionary<List<Namespace::FunctionRef>>	operators;
+		List<Namespace::TypeRef>						args;
 
 		usize uses = 0;
 
@@ -265,6 +267,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			bool							hasImplementation = false;
 			bool							staticEntity = false;
 			bool							variadic = false;
+			bool							constructor = false;
+			UTF8String						operatorFor = "";
 			Handle<Overload>				fullImpl;
 			Node::Instance					decl = nullptr;
 

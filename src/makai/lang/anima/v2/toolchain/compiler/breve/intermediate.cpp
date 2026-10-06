@@ -1013,6 +1013,19 @@ static Namespace::AttributeRef createExplicitNewAttribute() {
 	return attrib;
 }
 
+static Namespace::AttributeRef createConstructorAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "Constructor";
+	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		for (auto& ov: ns->function->current)
+			ov->constructor = true;
+	};
+	return attrib;
+}
+
 bool Attribute::matchesTarget(Namespace const& ns, Target const target) {
 	using enum Lexer::CStyle::TokenStream::Token::Type;
 	if (target == Target::AV2_TAAT_EMPTY)

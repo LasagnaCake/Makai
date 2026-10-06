@@ -6,7 +6,7 @@ using import core.constraints.comparable
 
 @ExplicitNew
 struct List[Element] {
-	type Elements = [Element]
+	using Elements = with [Element]
 	
 	@ExplicitNew
 	struct Iterator {
@@ -21,11 +21,11 @@ struct List[Element] {
 			return current
 		}
 
-		@[Static, Constructor]
+		@Constructor
 		create :: (elements: Elements) => new Self {0, elements}
 	}
 	
-	@[Static, Constructor]
+	@Constructor
 	create :: () => new Self {new Elements{}}
 
 	@Operator(infix="[")
@@ -34,7 +34,7 @@ struct List[Element] {
 			self.elements[index]
 		else null
 
-	if Comparable[Element, Element] {
+	if Is.Comparable[Element, Element] {
 		find :: (@ByRef self: Self, @ByCopy value: Element) -> ?u64 {
 			index := 0
 			for element => self.elements

@@ -1,5 +1,7 @@
 using import core.types
 
+with module Is
+
 @Direct Basic[T] := match #T {
 	#bool					=> true
 	#i8, #i16, #i32, #i64	=> true
