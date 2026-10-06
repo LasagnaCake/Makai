@@ -96,7 +96,7 @@ contexts:
     - match: '\b(if|unless|when|except|else|switch|match)\b'
       scope: keyword.control.conditional.breve
 
-    - match: '\b(assert)\b'
+    - match: '\b(prove|assert)\b'
       scope: keyword.control.assertion.breve
 
     - match: '\b(await|sync|yield|defer)\b'

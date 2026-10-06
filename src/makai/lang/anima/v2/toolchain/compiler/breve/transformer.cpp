@@ -1410,6 +1410,8 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_PATH:
 		case Node::Content::AV2_TANC_FAILABLE_PATH:		return context.transform<PathExpression>(node);
 		case Node::Content::AV2_TANC_EXPANSION:			return context.transform<Spread>(node);
+		case Node::Content::AV2_TANC_PROOF:				return context.transform<Proof>(node);
+		case Node::Content::AV2_TANC_ASSERTION:			return context.transform<Assertion>(node);
 		default: context.error("Unsupported expression!", node);
 	}
 }
@@ -2750,9 +2752,9 @@ ATransformer::Result Evaluation::transform(Context& context, Node::Instance cons
 	context.error("Invalid evaluation!", node->leftSide);
 }
 
-ATransformer::Result AssertionExpression::transform(Context& context, Node::Instance const& node) {
+ATransformer::Result Proof::transform(Context& context, Node::Instance const& node) {
 	bool success = false;
-	context.declare(UTF8StringList::from("<assert>::" + node->name()));
+	context.declare(UTF8StringList::from("<proof>::" + node->name()));
 	try {
 		context.getExpression(node);
 		success = true;
@@ -2761,6 +2763,10 @@ ATransformer::Result AssertionExpression::transform(Context& context, Node::Inst
 	}
 	context.pop(1);
 	return {.source = {Makai::toString(success)}, .type = context.basicType("bool"), .direct = success};
+}
+
+ATransformer::Result Assertion::transform(Context& context, Node::Instance const& node) {
+	return {};
 }
 
 ATransformer::Result Switch::transform(Context& context, Node::Instance const& node) {
@@ -3296,7 +3302,7 @@ Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Mak
 			var.context = ExecutionContext::AV2_TCB_EC_COMPILE;
 			var.isConstant = true;
 			var.passBy = "copy";
-			var.parent->varc--;
+			var.parentScope->varc--;
 			var.type = arg.type;
 			var.value = value;
 			bool mismatched = false;
@@ -3325,12 +3331,12 @@ Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Mak
 		} else {
 			auto const type = getType(decl);
 			if (arg.type->basic != Core::BasicType::AV2_BT_TYPEID) {
-				if (!type.type.derivedFrom(arg.type))
+				if (!type.type->derivedFrom(arg.type))
 					error("Type does not derive from required type!", decl);
 			}
 			// TODO: Constraint checking
 			scope->type = type.type;
-			reifyName += ";" + name + "=type:" + type->name;
+			reifyName += ";" + name + "=type:" + type.type->name;
 		}
 		pop(1);
 	}
@@ -3359,13 +3365,13 @@ ATransformer::Template::Instance ATransformer::Context::templateFor(Node::Instan
 				arg->base.text,
 				basicType("type")
 			};
-			if (generic.params.contains(param.name))
+			if (generic->params.contains(param.name))
 				error("Redeclaration of template parameter!", arg);
 			generic->params[param.name] = param;
 			generic->names.pushBack(param.name);
 		} else if (arg->leftSide->content == Node::Content::AV2_TANC_NAME) {
 			Template::Parameter param = {arg->leftSide->base.text};
-			if (params.contains(param.name))
+			if (generic->params.contains(param.name))
 				error("Redeclaration of parameter!", arg);
 			generic->names.pushBack(param.name);
 			if (arg->content == Node::Content::AV2_TANC_DECLARATION) {

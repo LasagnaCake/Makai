@@ -1,0 +1,11 @@
+using import core.types
+
+@Direct Callable[T, Args...] := prove {
+	(new T)((new Args)...)
+}
+
+@Direct Function[T, Return, Args...] := prove {
+	if (#T == #void)
+		must Callable[T, Args...]
+	else ((new T)((new Args)...)) as Return
+}

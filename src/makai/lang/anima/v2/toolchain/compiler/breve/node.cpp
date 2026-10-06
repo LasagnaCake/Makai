@@ -88,6 +88,8 @@ Makai::String Node::asString(Content const content) {
 		case Content::AV2_TANC_UNSAFE_CAST:			return "fatal_cast";
 		case Content::AV2_TANC_REIFICATION:			return "reify";
 		case Content::AV2_TANC_UNION_DECL:			return "union";
+		case Content::AV2_TANC_ASSERTION:			return "assert";
+		case Content::AV2_TANC_PROOF:				return "proof";
 	}
 	return "???";
 }

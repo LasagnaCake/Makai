@@ -9,9 +9,10 @@ struct List[Element] {
 		@Private index: u64
 		@Private elements: Elements
 
-		prop get done (@ByRef self: Self) -> bool => self.index >= countof self.elements
-
-		prop get next (@ByRef self: Self) -> Element {
+		@Call
+		next :: (@ByRef self: Self) -> ?Element {
+			if (self.index >= countof self.elements)
+				return null
 			current := self.elements[self.index]
 			++self.index
 			return current

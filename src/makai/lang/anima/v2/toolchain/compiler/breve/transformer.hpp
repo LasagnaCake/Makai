@@ -399,7 +399,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 
-	struct AssertionExpression: ATransformer {
+	struct Proof: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Assertion: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 }

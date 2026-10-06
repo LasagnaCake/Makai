@@ -1,3 +1,3 @@
 using import core.types
 
-@Direct Derived[A, B] := assert ((new A) as B)
+@Direct Derived[A, B] := prove ((new A) as B)

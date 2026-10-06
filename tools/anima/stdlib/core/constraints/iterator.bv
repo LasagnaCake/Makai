@@ -1,9 +1,10 @@
 using import core.types
 
-@Direct Iterator[T] := assert {
-	t := new T
-	unless t.done
-		_ := t.next
+@Direct Iterator[T] := prove {
+	@ByRef t := new T
+	unless elem := t() {}
 }
 
-@Direct Iteratable[T] := assert (for elem => (new T) {})
+@Direct Iteratable[T] := prove {
+	for elem => (new T) {}
+}

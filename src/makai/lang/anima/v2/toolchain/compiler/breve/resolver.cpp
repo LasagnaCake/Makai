@@ -946,6 +946,14 @@ Node::Instance MatchResolver::resolve(Parser& parser, Node::Instance const& left
 	return result;
 }
 
+Node::Instance ProofResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_PROOF;
+	result->leftSide = parser.nextExpression();
+	return result;
+}
+
 Node::Instance AssertionResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
