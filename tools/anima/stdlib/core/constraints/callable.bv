@@ -1,13 +1,15 @@
 using import core.types
 
+using import core.meta.spoof
+
 with module Is
 
 @Direct Callable[T, Args...] := prove {
-	(new T)((new Args)...)
+	Meta.spoof[T]!(Meta.spoof[Args]!...)
 }
 
 @Direct Function[T, Return, Args...] := prove {
 	if #Return == #void
 		assert Callable[T, Args...]
-	else ((new T)((new Args)...)) as Return
+	else (Meta.spoof[T]!(Meta.spoof[Args]!...)) as Return
 }

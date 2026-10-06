@@ -1,0 +1,5 @@
+using import core.types
+
+with module Meta
+
+spoof[T] :: () -> T

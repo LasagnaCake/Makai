@@ -1,5 +1,7 @@
 using import core.types
 
+using import core.meta.spoof
+
 with module Is
 
-@Direct Comparable[A, B] := prove ((new A) <=> (new B))
+@Direct Comparable[A, B] := prove (Meta.spoof[T]! <=> Meta.spoof[T]!)

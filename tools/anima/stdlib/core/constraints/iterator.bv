@@ -1,24 +1,22 @@
 using import core.types
 
+using import core.meta.spoof
+
 with module Is.Iterator
 
 @Direct Forward[T] := prove {
-	@ByRef t := new T
-	try elem => t.next {}
+	try elem => Meta.spoof[T]!.next {}
 }
 
 @Direct Reverse[T] := prove {
-	@ByRef t := new T
-	try elem => t.previous {}
+	@ByRef t := Meta.spoof[T]!
+	try elem => Meta.spoof[T]!.previous {}
 }
 
 @Direct Bidirectional[T] := Forward[T] and Reverse[T]
 
 @Direct Foreach[T] := Forward[T] or Reverse[T] or prove {
-	@ByRef t := new T
-	try elem => t() {}
+	try elem => Meta.spoof[T]!() {}
 }
 
-@Direct Iteratable[T] := prove {
-	for elem => (new T) {}
-}
+@Direct Iteratable[T] := prove {Meta.spoof[T]!.iterator}

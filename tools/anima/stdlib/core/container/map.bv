@@ -68,8 +68,7 @@ struct Map[Key, Value] {
 	placeOf :: (@ByRef self: Self, @ByCopy key: Key) -> u64 =>
 		self.placeOf(key, (countof self.entries) / 2, 0, (countof self.entries) - 1)
 
-	@Iterator
-	iterator :: (@ByRef self: Self) => entries.iterator!
+	prop iterator get (@ByRef self: Self) => entries.iterator
 
 	@[Private, ByRef] entries: Entries
 }

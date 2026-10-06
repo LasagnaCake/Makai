@@ -1,5 +1,7 @@
 using import core.types
 
+using import core.meta.spoof
+
 with module Is
 
-@Direct Derived[A, B] := prove ((new A) as B)
+@Direct Derived[A, B] := prove (Meta.spoof[T]! as B)

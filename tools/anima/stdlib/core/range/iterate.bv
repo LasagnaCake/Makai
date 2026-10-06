@@ -1,0 +1,9 @@
+using import core.types
+
+using import core.constraints
+
+with module Range
+
+iterate[T: assert Is.Iterator.Foreach] :: (it: T) => t
+
+iterate[T: assert Is.Iterator.Iteratable] :: (it: T) => it.iterator

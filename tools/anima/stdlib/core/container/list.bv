@@ -107,8 +107,7 @@ struct List[Element] {
 
 	prop top get (@ByRef self: Self) => self.elements[countof self.elements - 1]
 
-	@Iterator
-	iterator :: (@ByRef self: Self) => new Iterator {self.elements}
+	prop iterator get (@ByRef self: Self) => new Iterator {self.elements}
 
 	@[Private, ByRef] elements: Elements
 }
