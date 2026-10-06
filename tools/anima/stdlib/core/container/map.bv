@@ -3,7 +3,9 @@ using import core.container.list
 
 using import core.constraints.comparable
 
-struct Map[Key, Value] if Comparable[Key] {
+struct Map[Key, Value] {
+	assert Comparable[Key, Key] else "Key must be of a comparable type!"
+
 	struct Entry {
 		@[ByCopy, ReadOnly] key: Key
 		@ByRef value: Value
@@ -53,6 +55,6 @@ struct Map[Key, Value] if Comparable[Key] {
 	placeOf :: (@ByRef self: Self, @ByCopy key: Key)
 
 	@[Private, ByRef] entries: Entries
-} else "Key must be of a comparable type!"
+}
 
 type Dictionary[T] = Map[string, T]
