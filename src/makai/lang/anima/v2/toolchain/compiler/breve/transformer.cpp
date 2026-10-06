@@ -427,6 +427,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 }
 
 ATransformer::Result Aliasing::transform(Context& context, Node::Instance const& node) {
+	// Dear past me: What the fuck is this?
 	auto const name = context.pathOf(node->leftSide);
 	if (node->templateDecl) {
 		auto const scope = context.declare(name);
@@ -438,12 +439,11 @@ ATransformer::Result Aliasing::transform(Context& context, Node::Instance const&
 	if (!scope)
 		context.error("Requested symbol scope does not exist!", node->rightSide);
 	if (node->rightSide) {
-		auto const alias = context.pathOf(node->leftSide);
-		if (context.parent()->resolve(alias))
+		if (context.parent()->resolve(name))
 			context.error("Symbol with this name already exists in the current scope!", node->leftSide);
-		auto const tmp = context.declare(alias);
-		context.parent()->subspaces[alias.back()] = scope;
-		context.pop(alias.size());
+		auto const tmp = context.declare(name);
+		context.parent()->subspaces[name.back()] = scope;
+		context.pop(name.size());
 	} else {
 		if (context.parent()->resolve(UTF8StringList::from(scope->name)))
 			context.error("Symbol with this name already exists in the current scope!", node->leftSide);
@@ -481,6 +481,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	if (node->templateDecl) {
 		type.flags.isGeneric = true;
 		type.declaration = node;
+		scope->declaration = node;
 		return rett;
 	}
 	if (node->middle) {
@@ -1592,6 +1593,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		auto& fn = *scope->function;
 		fn.generic = true;
 		fn.declaration = node;
+		scope->declaration = node;
 		return {.scope = scope};
 	}
 	auto const proto = node->middle;
@@ -2062,6 +2064,8 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 
 ATransformer::Result Subscript::transform(Context& context, Node::Instance const& node) {
 	auto const src = context.getExpression(node->leftSide);
+	if (src.scope && src.scope->declaration)
+		return context.transform<TemplateReification>(node);
 	if (!src.source)
 		context.error("Expected value here!", node->leftSide);
 	if (!(src.type->flags.isArray || src.type->basic == Core::BasicType::AV2_BT_VECTOR))
@@ -3071,7 +3075,13 @@ ATransformer::Result SwitchMatch::transform(Context& context, Node::Instance con
 }
 
 ATransformer::Result TemplateReification::transform(Context& context, Node::Instance const& node) {
-	return {};
+	auto const decl = context.fetch(node->leftSide);
+	if (!decl)
+		context.error("Symbol does not exist!", node->leftSide);
+	if (!decl->declaration)
+		context.error("Symbol is not a template!", node->leftSide);
+	auto const reified = context.reify(decl->declaration, node->children);
+	return {.scope = reified, .type = reified->type};
 }
 
 ATransformer::Result TypeReification::transform(Context& context, Node::Instance const& node) {
@@ -3250,7 +3260,6 @@ Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Mak
 	static usize rid = 0;
 	auto const tdecl = node->templateDecl;
 	node->templateDecl = nullptr;
-	// TODO: Template reification
 	auto const generic = templateFor(node);
 	usize index = 0;
 	usize const count = targs.size();
@@ -3380,7 +3389,7 @@ ATransformer::Template::Instance ATransformer::Context::templateFor(Node::Instan
 				||	arg->base.text == ":="
 				)) error("Only variable-like declarations are allowed within template arguments!", arg);
 				if (arg->middle)
-					param.type = getType(arg->middle);
+					param.type = getType(arg->middle).type;
 				if (arg->rightSide) {
 					param.defaultValue = arg->rightSide;
 					if (arg->rightSide->content == Node::Content::AV2_TANC_VALUE && !arg->middle)

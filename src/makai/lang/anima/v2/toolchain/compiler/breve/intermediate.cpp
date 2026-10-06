@@ -1023,6 +1023,18 @@ static Namespace::AttributeRef createTransformerAttribute() {
 	return attrib;
 }
 
+static Namespace::AttributeRef createExplicitNewAttribute() {
+	using enum Makai::Data::Value::Kind;
+	using enum Core::BasicType;
+	Namespace::AttributeRef attrib = attrib.create();
+	attrib->name = "ExplicitNew";
+	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
+	attrib->transform = ATTRIBUTE_TRANSFORMER() {
+		ns->type->explicitNew = true;
+	};
+	return attrib;
+}
+
 bool Attribute::matchesTarget(Namespace const& ns, Target const target) {
 	using enum Lexer::CStyle::TokenStream::Token::Type;
 	if (target == Target::AV2_TAAT_EMPTY)

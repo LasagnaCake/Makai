@@ -2,9 +2,11 @@ using import core.types
 
 using import core.constraints.comparable
 
+@ExplicitNew
 struct List[Element] {
 	type Elements = [Element]
 	
+	@ExplicitNew
 	struct Iterator {
 		@Private index: u64
 		@Private elements: Elements
@@ -67,9 +69,47 @@ struct List[Element] {
 			}
 	}
 
-	insert :: (@ByRef self: Self, @ByCopy index: u64, @ByRef value: Element)
+	@Variadic
+	insert :: (@ByRef self: Self, @ByCopy index: u64, @ByRef value: [Element]) {
+		swaps := (countof self.elements) - index
+		self.elements <| value
+		repeat i => swaps
+			self.elements[i-1] :=: self.elements[i]
+		return self
+	}
 
-	prop get iterator (@ByRef self: Self) => Iterator.create(self.elements)
+	sliced :: (@ByRef self: Self, @ByCopy start: i64, @ByCopy stop: i64) {
+		@ByCopy count := countof self.elements
+		while start < 0
+			start += count
+		while stop < 0
+			stop += count
+		if (
+			stop <= start
+		or	start >= count
+		or	stop >= count
+		) return new Self {}
+		count = stop - start
+		result = create!
+		repeat i => count
+			result <| self.elements[i + start]
+		return result
+	}
+
+	@Operator(infix="<|")
+	push :: (@ByRef self: Self, value: Element) {
+		self.elements <| value
+		return self
+	}
+
+	@Operator(prefix="|>")
+	pop :: (@ByRef self: Self) => |> self.elements
+
+	@Operator(prefix="|>")
+	prop top get (@ByRef self: Self) => self.elements[countof self.elements - 1]
+
+	@Iterator
+	iterator :: (@ByRef self: Self) => new Iterator {self.elements}
 
 	@[Private, ByRef] elements: Elements
 }

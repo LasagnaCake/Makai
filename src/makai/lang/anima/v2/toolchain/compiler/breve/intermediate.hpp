@@ -195,6 +195,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 		usize uses = 0;
 
+		bool explicitNew = false;
+
 		static Namespace::TypeRef stronger(Namespace::TypeRef const& a, Namespace::TypeRef const& b);
 
 		bool derivedFrom(Namespace::TypeRef const& otherType) const;
