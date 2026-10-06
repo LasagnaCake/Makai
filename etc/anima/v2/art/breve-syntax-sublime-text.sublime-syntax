@@ -19,7 +19,7 @@ contexts:
     - include: comments
     - include: keywords
     - include: operators
-    - include: template
+    - include: reflection
     - include: numbers
     - include: attributes
     - include: blocks
@@ -68,13 +68,13 @@ contexts:
     - match: '\b0y[0-9A-Za-z]+\b'
       scope: constant.numeric.base-32.breve
 
-  templates:
-    - match: '\#{{id}}'
+  reflection:
+    - match: '\#'
       scope: punctuation.definition.generic.breve
 
-    - match: '\#({{id}})*\['
+    - match: '\#\{'
       scope: punctuation.definition.generic.begin.breve
-      push: template_decl
+      push: reflect_splice
 
   comments:
     - match: '\#\!'
@@ -266,10 +266,10 @@ contexts:
     - match: $
       pop: true
 
-  template_decl:
+  reflect_splice:
     - meta_scope: meta.generic.breve
     - include: breve
-    - match: '\]'
+    - match: '\}'
       scope: punctuation.definition.generic.end.breve
       pop: true
 
