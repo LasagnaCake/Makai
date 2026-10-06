@@ -40,10 +40,6 @@ struct Map[Key, Value] {
 	}
 
 	@Private
-	search :: (self: Self, key: Key) -> ?Entry =>
-		self.search(key, (countof self.entries) / 2, 0, (countof self.entries) - 1)
-
-	@Private
 	search :: (@ByRef self: Self, @ByRef key: Key, @ByCopy index: u64, @ByCopy start: u64, @ByCopy stop: u64) -> ?Entry =>
 		if stop <= start
 			null
@@ -53,7 +49,25 @@ struct Map[Key, Value] {
 			else => self.entries[index]
 		}
 
-	placeOf :: (@ByRef self: Self, @ByCopy key: Key)
+	@Private
+	search :: (self: Self, key: Key) -> ?Entry =>
+		self.search(key, (countof self.entries) / 2, 0, (countof self.entries) - 1)
+	
+	@Private
+	placeOf :: (@ByRef self: Self, @ByRef key: Key, @ByCopy index: u64, @ByCopy start: u64, @ByCopy stop: u64) -> u64 =>
+		if stop <= start
+			index
+		else match (key <=> self.entries[index].key) {
+			< 0 => self.search(key, start + (stop - start) / 2, start, index-1)
+			> 0 => self.search(key, start + (stop - start) / 2, index+1, stop)
+			else => self.entries[index]
+		}
+
+	placeOf :: (@ByRef self: Self, @ByCopy key: Key) -> u64 =>
+		self.placeOf(key, (countof self.entries) / 2, 0, (countof self.entries) - 1)
+
+	@Iterator
+	iterator :: (@ByRef self: Self) => entries.iterator!
 
 	@[Private, ByRef] entries: Entries
 }
