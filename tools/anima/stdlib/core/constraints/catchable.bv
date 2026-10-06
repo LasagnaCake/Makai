@@ -2,23 +2,21 @@ using import core.types
 
 using import core.meta.spoof
 
-with module Is
+with module Is.Try
 
-module Catchable {
-	@Direct Value[T] := prove {
-		try Meta.spoof[T]!.value {}
-	}
+@Direct Value[T] := prove {
+	try v := Meta.spoof[T]!.value {}
+}
 
-	@Direct Error[T] := prove {
-		try Meta.spoof[T]!.fail {}
-	}
+@Direct Error[T] := prove {
+	try v := Meta.spoof[T]!.fail {}
+}
 
-	@Direct Attempt[T] := prove {
-		try v := Meta.spoof[T]! {}
-	}
+@Direct Attempt[T] := prove {
+	try v := Meta.spoof[T]! {}
+}
 
-	@Direct Result[T] := prove {
-		t := new T {}
-		try v := Meta.spoof[T]! {} else e {}
-	}
+@Direct Result[T] := prove {
+	t := new T {}
+	try v := Meta.spoof[T]! {} else e {}
 }

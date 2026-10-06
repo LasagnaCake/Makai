@@ -734,7 +734,11 @@ Node::Instance ReificationResolver::resolve(Parser& parser, Node::Instance const
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_REIFICATION;
-	result->leftSide = parser.nextExpression();
+	if (parser.context.peek().text == "module") {
+		parser.context.next();
+		result->leftSide = parser.nextExpression();
+		result->content = Node::Content::AV2_TANC_FILE_MODULE_DECL;
+	} else result->leftSide = parser.nextExpression();
 	return result;
 }
 

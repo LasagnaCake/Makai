@@ -4,6 +4,6 @@ using import core.constraints
 
 with module Range
 
-iterate[T: assert Is.Iterator.Foreach] :: (it: T) => t
+using IteratorOf[T] = with T when Is.Iterator[T] else with typeof Meta.spoof[T]!.iterator
 
-iterate[T: assert Is.Iterator.Iteratable] :: (it: T) => it.iterator
+iterate[T] :: (it: T) -> IteratorOf[T] => it when Is.Iterator[T] else it.iterator
