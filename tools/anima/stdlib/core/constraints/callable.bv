@@ -5,7 +5,7 @@ using import core.types
 }
 
 @Direct Function[T, Return, Args...] := prove {
-	if (#T == #void)
-		must Callable[T, Args...]
+	if #Return == #void
+		assert Callable[T, Args...]
 	else ((new T)((new Args)...)) as Return
 }
