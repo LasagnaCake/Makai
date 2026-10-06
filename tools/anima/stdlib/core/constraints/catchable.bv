@@ -11,6 +11,11 @@ module Catchable {
 		try t.fail {}
 	}
 
+	@Direct Attempt[T] := prove {
+		t := new T {}
+		try v := t {}
+	}
+
 	@Direct Result[T] := prove {
 		t := new T {}
 		try v := t {} else e {}

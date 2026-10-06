@@ -1,5 +1,7 @@
 using import core.types
 
+using import core.attributes
+
 using import core.constraints.comparable
 
 @ExplicitNew
@@ -19,17 +21,12 @@ struct List[Element] {
 			return current
 		}
 
-		@New
-		create :: (self: Self, elements: Elements) {
-			self.elements = elements
-			self.index = 0
-		}
+		@[Static, Constructor]
+		create :: (elements: Elements) => new Self {0, elements}
 	}
 	
-	@New
-	create :: (self: Self) {
-		self.elements = new Elements {}
-	}
+	@[Static, Constructor]
+	create :: () => new Self {new Elements{}}
 
 	@Operator(infix="[")
 	at :: (@ByRef self: Self, @ByCopy index: u64) -> ?Element =>
@@ -93,7 +90,7 @@ struct List[Element] {
 			stop <= start
 		or	start >= count
 		or	stop >= count
-		) return new Self {}
+		) return create!
 		count = stop - start
 		result = create!
 		repeat i => count

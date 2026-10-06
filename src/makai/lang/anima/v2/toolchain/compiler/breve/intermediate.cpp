@@ -350,28 +350,6 @@ static Namespace::AttributeRef createConverterAttribute() {
 	return attrib;
 }
 
-static Namespace::AttributeRef createGetterAttribute() {
-	using enum Makai::Data::Value::Kind;
-	using enum Core::BasicType;
-	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "Getter";
-	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-	};
-	return attrib;
-}
-
-static Namespace::AttributeRef createSetterAttribute() {
-	using enum Makai::Data::Value::Kind;
-	using enum Core::BasicType;
-	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "Setter";
-	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
-	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-	};
-	return attrib;
-}
-
 static Namespace::AttributeRef createGlobalAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;

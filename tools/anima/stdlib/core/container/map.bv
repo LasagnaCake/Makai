@@ -14,9 +14,9 @@ struct Map[Key, Value] {
 
 	type Entries = List[Entry]
 
-	@New
-	create :: (self: Self) {
-		self.entries = new Entries {}
+	@[Static, New]
+	create :: () => new Self{
+		new Entries {}
 	}
 
 	@Operator(infix="[", setter=false)
