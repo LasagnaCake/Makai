@@ -123,6 +123,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 
 			Namespace::Instance reify(Node::Instance const& node, List<Node::Instance> const& targs);
 			Template::Instance templateFor(Node::Instance const& node);
+
+			static Namespace::TypeRef infoType();
+
+			static Result info(Namespace::Instance const& ns);
 		};
 
 		virtual ~ATransformer();
@@ -135,8 +139,6 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 		KeyValuePair<UTF8StringList, Namespace::Instance> traverse(Context& context, Node::Instance const& node) const;
 
 		virtual Result transform(Context& context, Node::Instance const& node) = 0;
-
-		static Namespace::TypeRef infoType();
 	};
 
 	struct StructureDecl: ATransformer {
