@@ -3,7 +3,6 @@ using import core.container.list
 
 using import core.constraints.comparable
 
-@ExplicitNew
 struct Map[Key, Value] {
 	assert Is.Comparable[Key, Key] else "Key must be of a comparable type!"
 

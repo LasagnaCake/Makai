@@ -2,11 +2,9 @@ using import core.types
 
 using import core.constraints.comparable
 
-@ExplicitNew
 struct List[Element] {
 	using Elements = with [Element]
 	
-	@ExplicitNew
 	struct Iterator {
 		@Private index: u64
 		@Private elements: Elements

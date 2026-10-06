@@ -557,6 +557,8 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		var.scope->makePublic();
 		if (var.staticEntity)
 			statics.pushBack(decl.scope->variable);
+		if (var.scope->isPrivate())
+			type.explicitNew = true;
 	}
 	context.pop(name.size());
 	context.registerType(scope);
