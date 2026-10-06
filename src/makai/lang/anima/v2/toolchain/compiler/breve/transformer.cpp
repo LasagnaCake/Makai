@@ -423,6 +423,8 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!", node);
 	else if (var.type->flags.hasNoResult)
 		context.error("Variables cannot have discardable types!", node);
+	else if (t->name == "::meta")
+		context.error("This type is only usable in compilation!", node);
 	return {{"ref " + var.getSource()}, scope, var.type.asStrong(), direct};
 }
 
@@ -3403,6 +3405,28 @@ ATransformer::Template::Instance ATransformer::Context::templateFor(Node::Instan
 	node->templateDecl = tdecl;
 	templates[node] = generic;
 	return generic;
+}
+
+Namespace::TypeRef ATransformer::Context::infoType() {
+	static Namespace::TypeRef const type = [] {
+		auto const t = type.create();
+		t->name = "::meta";
+		t->flags.hasNoResult = true;
+		return t;
+	} ();
+	return type;
+}
+
+ATransformer::Result ATransformer::Context::info(Namespace::Instance const& ns) {
+	usize id = 0;
+	if (ns->property)		id = uint64(ns->property.raw());
+	else if (ns->type)		id = uint64(ns->type.raw());
+	else if (ns->function)	id = uint64(ns->function.raw());
+	else if (ns->trait)		id = uint64(ns->trait.raw());
+	else if (ns->variable)	id = uint64(ns->variable.raw());
+	else if (ns->attribute)	id = uint64(ns->attribute.raw());
+	else					id = uint64(ns.raw());
+	return {.scope = ns, .type = infoType(), .direct = id};
 }
 
 Makai::Function<File(Makai::UTF8String const&)> Import::importer = [] (auto const&) -> File {
