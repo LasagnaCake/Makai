@@ -1,7 +1,5 @@
 using import core.types
 
-using import core.attributes
-
 using import core.constraints.comparable
 
 @ExplicitNew
