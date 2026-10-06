@@ -1,6 +1,6 @@
 using import core.types
 
-module Catch {
+module Catchable {
 	@Direct Value[T] := prove {
 		t := new T {}
 		try t.value {}
