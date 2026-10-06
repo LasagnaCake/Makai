@@ -130,6 +130,9 @@ contexts:
     - match: '\b(and|x?or|not|as|is)\b'
       scope: keyword.operator.logic.breve
 
+    - match: '\b(swap|swiz)\b'
+      scope: keyword.operator.dance.breve
+
     - match: '\b([gs]et)\b'
       scope: keyword.operator.property.breve
 
@@ -217,7 +220,7 @@ contexts:
       scope: storage.type.interface
 
   basic_types:
-    - match: '\b(void|u?int(8|16|32|64)?|float(32|64|128)?|real|char|string|vector|matrix|type|any|bool|bytes)\b'
+    - match: '\b(void|u?int(8|16|32|64)?|[ui](8|16|32|64)|f(loat)?(32|64|128)?|real|char|string|vector|matrix|type|any|bool|bytes)\b'
       scope: storage.type.breve
 
   escape_char:

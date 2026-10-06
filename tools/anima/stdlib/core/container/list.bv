@@ -74,7 +74,7 @@ struct List[Element] {
 		swaps := (countof self.elements) - index
 		self.elements <| value
 		repeat i => swaps
-			self.elements[i-1] :=: self.elements[i]
+			self.elements[i-1] swap self.elements[i]
 		return self
 	}
 
