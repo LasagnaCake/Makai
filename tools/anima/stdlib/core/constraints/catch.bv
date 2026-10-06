@@ -1,0 +1,18 @@
+using import core.types
+
+module Catch {
+	@Direct Value[T] := prove {
+		t := new T {}
+		try t.value {}
+	}
+
+	@Direct Error[T] := prove {
+		t := new T {}
+		try t.fail {}
+	}
+
+	@Direct Result[T] := prove {
+		t := new T {}
+		try t {} else e {}
+	}
+}

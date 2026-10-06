@@ -93,7 +93,7 @@ contexts:
     - match: '\b(return|error|halt|exit|break|continue)\b'
       scope: keyword.control.flow.breve
 
-    - match: '\b(if|unless|when|except|else|switch|match)\b'
+    - match: '\b(if|unless|when|except|else|switch|match|try)\b'
       scope: keyword.control.conditional.breve
 
     - match: '\b(prove|assert)\b'

@@ -28,7 +28,7 @@ struct Map[Key, Value] {
 		}
 
 	@Operator(infix="[", setter=true)
-	at :: (self: Self, @ByRef key: Key, @ByRef value: value) -> void =>
+	insert :: (self: Self, @ByRef key: Key, @ByRef value: value) -> void =>
 		self.entries.insert(self.placeOf(key), new Entry {key, val})
 			except self.has(key)
 			else self.entries[self.placeOf(key)] = new Entry {key, val}

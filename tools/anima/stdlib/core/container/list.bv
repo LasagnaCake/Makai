@@ -11,8 +11,7 @@ struct List[Element] {
 		@Private index: u64
 		@Private elements: Elements
 
-		@Call
-		next :: (@ByRef self: Self) -> ?Element {
+		prop next get (@ByRef self: Self) -> ?Element {
 			if (self.index >= countof self.elements)
 				return null
 			current := self.elements[self.index]
@@ -55,11 +54,14 @@ struct List[Element] {
 			return null
 		}
 
-		bsearch :: (self: Self, key: Element) -> ?u64 =>
-			self.search(key, (countof self.elements) / 2, 0, (countof self.elements) - 1)
-
 		@Private
-		bsearch :: (@ByRef self: Self, @ByRef key: Element, @ByCopy index: u64, @ByCopy start: u64, @ByCopy stop: u64) -> ?u64 =>
+		bsearch :: (
+			@ByRef self: Self,
+			@ByRef key: Element,
+			@ByCopy index: u64,
+			@ByCopy start: u64,
+			@ByCopy stop: u64
+		) -> ?u64 =>
 			if stop <= start
 				null
 			else match (key <=> self.elements[index]) {
@@ -67,6 +69,9 @@ struct List[Element] {
 				> 0 => self.search(key, start + (stop - start) / 2, index+1, stop)
 				else => index
 			}
+
+		bsearch :: (self: Self, key: Element) -> ?u64 =>
+			self.search(key, (countof self.elements) / 2, 0, (countof self.elements) - 1)
 	}
 
 	@Variadic
@@ -105,7 +110,6 @@ struct List[Element] {
 	@Operator(prefix="|>")
 	pop :: (@ByRef self: Self) => |> self.elements
 
-	@Operator(prefix="|>")
 	prop top get (@ByRef self: Self) => self.elements[countof self.elements - 1]
 
 	@Iterator
