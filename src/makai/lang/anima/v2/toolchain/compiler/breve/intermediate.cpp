@@ -1013,15 +1013,17 @@ static Namespace::AttributeRef createExplicitNewAttribute() {
 	return attrib;
 }
 
-static Namespace::AttributeRef createConstructorAttribute() {
+static Namespace::AttributeRef createConstructorNewAttribute() {
 	using enum Makai::Data::Value::Kind;
 	using enum Core::BasicType;
 	Namespace::AttributeRef attrib = attrib.create();
-	attrib->name = "Constructor";
+	attrib->name = "New";
 	attrib->target = Attribute::Target::AV2_TAAT_FUNCTION;
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
-		for (auto& ov: ns->function->current)
+		for (auto& ov: ns->function->current) {
 			ov->constructor = true;
+			ov->staticEntity = true;
+		}
 	};
 	return attrib;
 }
@@ -1093,6 +1095,7 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createDirectAttribute());
 	addGlobalAttribute(createTransformerAttribute());
 	addGlobalAttribute(createVariadicAttribute());
+	addGlobalAttribute(createConstructorNewAttribute());
 }
 
 Makai::Data::Value Implementation::serialize() const {

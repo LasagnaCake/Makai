@@ -14,7 +14,7 @@ struct Map[Key, Value] {
 
 	using Entries = with List[Entry]
 
-	@[Static, New]
+	@New
 	create :: () => new Self{
 		new Entries {}
 	}

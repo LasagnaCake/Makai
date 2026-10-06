@@ -608,6 +608,8 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 				context.error("Missing appropriate [this] parameter!", method);
 			if (!ov->staticEntity)
 				ov->methodOf = scope->type.asWeak();
+			if (ov->constructor)
+				type.constructors.pushBack(ov);
 		}
 		if (scope->subspaces.contains(fn.name))
 			context.error("Symbol with this name already exists!", method);

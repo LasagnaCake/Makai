@@ -19,11 +19,11 @@ struct List[Element] {
 			return current
 		}
 
-		@Constructor
+		@New
 		create :: (elements: Elements) => new Self {0, elements}
 	}
 	
-	@Constructor
+	@New
 	create :: () => new Self {new Elements{}}
 
 	@Operator(infix="[")
