@@ -49,6 +49,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Attribute;
 	struct Trait;
 	struct Property;
+	struct Overload;
 
 	struct Implementation;
 
@@ -141,6 +142,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		using AttributeRef	= Instance<Attribute>;
 		using TraitRef		= Instance<Trait>;
 		using PropertyRef	= Instance<Property>;
+		using OverloadRef	= Instance<Overload>;
 
 		using Instance		= Instance<Namespace>;
 
@@ -184,16 +186,16 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TCTD_TEMPLATE,
 		};
 
-		Core::TypeFlags									flags = {};
-		Definition										def;
-		Nullable<Core::BasicType>						basic;
-		Namespace::TypeRef								base;
-		Nullable<UTF8String>							artEquivalent;
-		UTF8Dictionary<Namespace::VariableRef>			fields;
-		UTF8Dictionary<Namespace::FunctionRef>			methods;
-		List<Namespace::FunctionRef>					constructors;
-		UTF8Dictionary<List<Namespace::FunctionRef>>	operators;
-		List<Namespace::TypeRef>						args;
+		Core::TypeFlags							flags = {};
+		Definition								def;
+		Nullable<Core::BasicType>				basic;
+		Namespace::TypeRef						base;
+		Nullable<UTF8String>					artEquivalent;
+		UTF8Dictionary<Namespace::VariableRef>	fields;
+		UTF8Dictionary<Namespace::FunctionRef>	methods;
+		List<Namespace::OverloadRef>			constructors;
+		UTF8Dictionary<Namespace::OverloadRef>	operators;
+		List<Namespace::TypeRef>				args;
 
 		usize uses = 0;
 
@@ -227,64 +229,66 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		virtual ~TypeDecl();
 	};
 
-	struct Function: Labeled, Positioned, ISerializable, Reifiable {
-		struct Overload: Scoped, ISerializable {
-			struct Variant {
-				enum class External {
-					AV2_TCB_FO_VE_NONE,
-					AV2_TCB_FO_VE_ART_CALL,
-					AV2_TCB_FO_VE_DYNLIB,
-					AV2_TCB_FO_VE_FFI,
-				};
-				enum class Object {
-					AV2_TCB_FO_VO_NONE,
-					AV2_TCB_FO_VO_GLOBAL,
-					AV2_TCB_FO_VO_CLASS,
-					AV2_TCB_FO_VO_INSTANCE,
-				};
-
-				External			external	= External::AV2_TCB_FO_VE_NONE;
-				Object				object		= Object::AV2_TCB_FO_VO_NONE;
-				ExecutionContext	context		= ExecutionContext::AV2_TCB_EC_NONE;
-
-				constexpr bool operator==(External const variant) const			{return variant == external;	}
-				constexpr bool operator==(Object const variant) const			{return variant == object;		}
-				constexpr bool operator==(ExecutionContext const variant) const	{return variant == context;		}
-
-				constexpr Variant& operator=(External const variant)		{return (external = variant, *this);	}
-				constexpr Variant operator=(Object const variant)			{return (object = variant, *this);		}
-				constexpr Variant operator=(ExecutionContext const variant)	{return (context = variant, *this);		}
+	struct Overload: Scoped, ISerializable {
+		struct Variant {
+			enum class External {
+				AV2_TCB_FO_VE_NONE,
+				AV2_TCB_FO_VE_ART_CALL,
+				AV2_TCB_FO_VE_DYNLIB,
+				AV2_TCB_FO_VE_FFI,
 			};
-			Namespace::TypeRef				result;
-			List<Namespace::VariableRef>	arguments;
-			UTF8String						entry;
-			UTF8String						outEntry;
-			UTF8String						sigEntry;
-			UTF8String						dynlib;
-			Handle<TypeDecl>				methodOf;
-			Variant							variant;
-			bool							optional = false;
-			bool							hasImplementation = false;
-			bool							staticEntity = false;
-			bool							variadic = false;
-			bool							constructor = false;
-			UTF8String						operatorFor = "";
-			Handle<Overload>				fullImpl;
-			Node::Instance					decl = nullptr;
+			enum class Object {
+				AV2_TCB_FO_VO_NONE,
+				AV2_TCB_FO_VO_GLOBAL,
+				AV2_TCB_FO_VO_CLASS,
+				AV2_TCB_FO_VO_INSTANCE,
+			};
 
-			usize uses = 0;
+			External			external	= External::AV2_TCB_FO_VE_NONE;
+			Object				object		= Object::AV2_TCB_FO_VO_NONE;
+			ExecutionContext	context		= ExecutionContext::AV2_TCB_EC_NONE;
 
-			UTF8Dictionary<Metadata::Instance> meta;
+			constexpr bool operator==(External const variant) const			{return variant == external;	}
+			constexpr bool operator==(Object const variant) const			{return variant == object;		}
+			constexpr bool operator==(ExecutionContext const variant) const	{return variant == context;		}
 
-			UTF8String prototype() const;
-
-			Makai::Data::Value serialize() const override;
-
-			Overload();
-			virtual ~Overload();
+			constexpr Variant& operator=(External const variant)		{return (external = variant, *this);	}
+			constexpr Variant operator=(Object const variant)			{return (object = variant, *this);		}
+			constexpr Variant operator=(ExecutionContext const variant)	{return (context = variant, *this);		}
 		};
+		Namespace::TypeRef				result;
+		List<Namespace::VariableRef>	arguments;
+		UTF8String						entry;
+		UTF8String						outEntry;
+		UTF8String						sigEntry;
+		UTF8String						dynlib;
+		Handle<TypeDecl>				methodOf;
+		Variant							variant;
+		bool							optional = false;
+		bool							hasImplementation = false;
+		bool							staticEntity = false;
+		bool							variadic = false;
+		bool							constructor = false;
+		UTF8String						operatorFor = "";
+		Handle<Overload>				fullImpl;
+		Node::Instance					decl = nullptr;
 
-		using OverloadRef = Instance<Overload>;
+		usize uses = 0;
+
+		UTF8Dictionary<Metadata::Instance> meta;
+
+		UTF8String prototype() const;
+
+		Makai::Data::Value serialize() const override;
+
+		Overload();
+		virtual ~Overload();
+	};
+
+	struct Function: Labeled, Positioned, ISerializable, Reifiable {
+		using Overload = Overload;
+
+		using OverloadRef = Namespace::OverloadRef;
 
 		List<OverloadRef> overloads;
 		List<OverloadRef> current;

@@ -18,7 +18,7 @@ struct Map[Key, Value] {
 		new Entries {}
 	}
 
-	@Operator(infix="[", setter=false)
+	@Operator(infix="[]")
 	at :: (self: Self, @ByRef key: Key) -> Value =>
 		self.search(key)?.value ?? {
 			@ByRef val := new Value{}
@@ -26,7 +26,7 @@ struct Map[Key, Value] {
 			value
 		}
 
-	@Operator(infix="[", setter=true)
+	@Operator(infix="[]=")
 	insert :: (self: Self, @ByRef key: Key, @ByRef value: value) -> void =>
 		self.entries.insert(self.placeOf(key), new Entry {key, val})
 			except self.has(key)

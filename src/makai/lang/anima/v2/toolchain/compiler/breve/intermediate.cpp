@@ -1072,8 +1072,6 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createBeforeAttribute());
 	addGlobalAttribute(createMainAttribute());
 	addGlobalAttribute(createAfterAttribute());
-	addGlobalAttribute(createGetterAttribute());
-	addGlobalAttribute(createSetterAttribute());
 	addGlobalAttribute(createConverterAttribute());
 	addGlobalAttribute(createMemberAttribute());
 	addGlobalAttribute(createSharedAttribute());
@@ -1096,6 +1094,7 @@ Intermediate::Intermediate() {
 	addGlobalAttribute(createTransformerAttribute());
 	addGlobalAttribute(createVariadicAttribute());
 	addGlobalAttribute(createConstructorNewAttribute());
+	addGlobalAttribute(createExplicitNewAttribute());
 }
 
 Makai::Data::Value Implementation::serialize() const {

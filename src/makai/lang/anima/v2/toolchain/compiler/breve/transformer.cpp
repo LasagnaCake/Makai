@@ -423,7 +423,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!", node);
 	else if (var.type->flags.hasNoResult)
 		context.error("Variables cannot have discardable types!", node);
-	else if (t->name == "::meta")
+	else if (var.type->name == "::meta")
 		context.error("This type is only usable in compilation!", node);
 	return {{"ref " + var.getSource()}, scope, var.type.asStrong(), direct};
 }

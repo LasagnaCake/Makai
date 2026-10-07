@@ -6,8 +6,8 @@ struct List[Element] {
 	using Elements = with [Element]
 	
 	struct Iterator {
-		@Private index: u64
-		@Private elements: Elements
+		@[Private, ByCopy] index: u64
+		@[Private, ByRef] elements: Elements
 
 		prop next get (@ByRef self: Self) -> ?Element {
 			if (self.index >= countof self.elements)
@@ -24,11 +24,18 @@ struct List[Element] {
 	@New
 	create :: () => new Self {new Elements{}}
 
-	@Operator(infix="[")
+	@Operator(infix="[]")
 	at :: (@ByRef self: Self, @ByCopy index: u64) -> ?Element =>
 		if index < (countof self.elements)
 			self.elements[index]
 		else null
+
+	@Operator(infix="[]=")
+	store :: (@ByRef self: Self, @ByCopy index: u64, value: Element) -> Self {
+		if index < (countof self.elements)
+			self.elements[index] = value
+		return self
+	}
 
 	if Is.Comparable[Element, Element] {
 		find :: (@ByRef self: Self, @ByCopy value: Element) -> ?u64 {
@@ -90,7 +97,7 @@ struct List[Element] {
 		count = stop - start
 		result = create!
 		repeat i => count
-			result <| self.elements[i + start]
+			result <| self.elements[(i-count) + start]
 		return result
 	}
 
@@ -101,11 +108,11 @@ struct List[Element] {
 	}
 
 	@Operator(prefix="|>")
-	pop :: (@ByRef self: Self) => |> self.elements
+	pop :: (self: Self) => |> self.elements
 
 	prop top get (@ByRef self: Self) => self.elements[countof self.elements - 1]
 
-	prop iterator get (@ByRef self: Self) => new Iterator {self.elements}
+	prop iterator get (@ByRef self: Self) => Iterator.create(self.elements)
 
 	@[Private, ByRef] elements: Elements
 }
