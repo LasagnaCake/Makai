@@ -3155,7 +3155,7 @@ Namespace::TypeRef ATransformer::Context::tupleFor(List<Namespace::TypeRef> cons
 		auto const tup = Namespace::TypeRef::create();
 		tup->scope = scope.asWeak();
 		for (auto const& [type, index]: Range::expand(types)) {
-			auto const vscope = declare(Makai::toString(type->scope->name, index));
+			auto const vscope = declare(Makai::toString("_", index));
 			tup->name += type->name;
 			auto& varg = *(vscope->variable = vscope->variable.create());
 			varg.type = type.asWeak();
@@ -3181,7 +3181,7 @@ Namespace::TypeRef ATransformer::Context::unionFor(List<Namespace::TypeRef> cons
 		auto const tup = Namespace::TypeRef::create();
 		tup->scope = scope.asWeak();
 		for (auto const& [type, index]: Range::expand(types)) {
-			auto const vscope = declare(Makai::toString(type->scope->name, index));
+			auto const vscope = declare(Makai::toString("as_", type->scope->name));
 			tup->name += type->name;
 			auto& varg = *(vscope->variable = vscope->variable.create());
 			varg.type = type.asWeak();
@@ -3192,6 +3192,15 @@ Namespace::TypeRef ATransformer::Context::unionFor(List<Namespace::TypeRef> cons
 			varg.fieldOf = tup;
 			pop(1);
 		}
+		auto const vscope = declare(Makai::toString("_value"));
+		auto& varg = *(vscope->variable = vscope->variable.create());
+		varg.type = basicType("any").asWeak();
+		varg.name = vscope->name;
+		varg.id = 0;
+		tup->fields[varg.name] = vscope->variable;
+		varg.parentScope = scope.asWeak();
+		varg.fieldOf = tup;
+		pop(1);
 		tup->name += "_Union";
 		scopeStack.popBack();
 		registerType(scope);

@@ -2,19 +2,27 @@ using import core.types
 
 @ExplicitNew
 struct Result[Ok, Error]: join (Ok, Error) {
-	@New create(value: Ok) => new Self {value}
+	@New
+	init(self: Self, value: Ok) -> Self {
+		baseinit(self, value)
+		return self
+	}
 
-	@New create(fail: Error) => new Self {fail}
+	@New
+	init(self: Self, fail: Error) -> Self {
+		baseinit(self, fail)
+		return self
+	}
 
 	prop value get (@ByRef self: Self) -> ?Ok => match self {
-		is Ok => self.result as Ok
+		is Ok => self as Ok
 		is Error => null
 	}
 
 	prop fail get (@ByRef self: Self) -> ?Error => match self {
 		is Error => null
-		is Ok => self.result as Error
+		is Ok => self as Error
 	}
 
-	prop ok get (self: Self) => self.result is Ok
+	prop ok get (self: Self) => self is Ok
 }

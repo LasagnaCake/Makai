@@ -18,11 +18,18 @@ struct List[Element] {
 		}
 
 		@New
-		create :: (elements: Elements) => new Self {0, elements}
+		init :: (@ByRef self: Self, elements: Elements) -> Self {
+			self.index = 0
+			self.elements = elements
+			return self
+		}
 	}
 	
 	@New
-	create :: () => new Self {new Elements{}}
+	init :: (self: Self) -> Self {
+		self.elements = new Elements {}
+		return self
+	}
 
 	@Operator(infix="[]")
 	at :: (@ByRef self: Self, @ByCopy index: u64) -> ?Element =>
@@ -112,7 +119,7 @@ struct List[Element] {
 
 	prop top get (@ByRef self: Self) => self.elements[countof self.elements - 1]
 
-	prop iterator get (@ByRef self: Self) => Iterator.create(self.elements)
+	prop iterator get (@ByRef self: Self) => new Iterator {self.elements}
 
 	@[Private, ByRef] elements: Elements
 }

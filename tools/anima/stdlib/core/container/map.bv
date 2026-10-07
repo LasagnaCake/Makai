@@ -14,8 +14,8 @@ struct Map[Key, Value] {
 	using Entries = with List[Entry]
 
 	@New
-	create :: () => new Self{
-		new Entries {}
+	init :: (self: Self) -> Self {
+		self.entries = new Entries {}
 	}
 
 	@Operator(infix="[]")
