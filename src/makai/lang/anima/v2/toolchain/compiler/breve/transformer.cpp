@@ -564,9 +564,12 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	context.registerType(scope);
 	auto implName = name;
 	implName.back() = "::IMPL__" + implName.back();
-	context.declare(implName);
+	auto const implScope = context.declare(implName);
 	MAKAILIB_DEBUGLN_FULL("Parsing properties...");
 	MAKAILIB_DEBUGLN_FULL("Property count: ", properties.size());
+	implScope->subspaces["Self"] = scope;
+	if (type->base)
+		implScope->subspaces["Base"] = type->base->scope.asStrong();
 	for (auto& property: properties) {
 		auto const decl = context.getExpression(property);
 		auto& prop = *decl.scope->property;
@@ -3181,7 +3184,7 @@ Namespace::TypeRef ATransformer::Context::unionFor(List<Namespace::TypeRef> cons
 		auto const tup = Namespace::TypeRef::create();
 		tup->scope = scope.asWeak();
 		for (auto const& [type, index]: Range::expand(types)) {
-			auto const vscope = declare(Makai::toString("as_", type->scope->name));
+			auto const vscope = declare(type->scope->name);
 			tup->name += type->name;
 			auto& varg = *(vscope->variable = vscope->variable.create());
 			varg.type = type.asWeak();
@@ -3192,7 +3195,7 @@ Namespace::TypeRef ATransformer::Context::unionFor(List<Namespace::TypeRef> cons
 			varg.fieldOf = tup;
 			pop(1);
 		}
-		auto const vscope = declare(Makai::toString("_value"));
+		auto const vscope = declare(Makai::toString("any"));
 		auto& varg = *(vscope->variable = vscope->variable.create());
 		varg.type = basicType("any").asWeak();
 		varg.name = vscope->name;
