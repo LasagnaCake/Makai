@@ -17,6 +17,5 @@ with module Is.Try
 }
 
 @Direct Result[T] := prove {
-	t := new T {}
 	try v := Meta.spoof[T]! {} else e {}
 }
