@@ -2,23 +2,33 @@ using import core.types
 
 struct Result[Ok, Error] {
 	@New
-	init(self: Self, value: Ok) -> Self {
+	init :: (self: Self, value: Ok) -> Self {
+		self.result.Ok = value
 		return self
 	}
 
 	@New
-	init(self: Self, fail: Error) -> Self {
+	init :: (self: Self, fail: Error) -> Self {
+		self.result.Error = fail
 		return self
 	}
 
-	prop value get (@ByRef self: Self) -> ?Ok => match typeof self.result.any {
-		is Ok => self.result.Ok
-		is Error => null
+	prop value {
+		get (@ByRef self: Self) -> ?Ok => match typeof self.result.any {
+			is Ok => self.result.Ok
+			is Error => null
+		}
+
+		set (@ByRef self: Self, v: Ok) => self.result.Ok = v
 	}
 
-	prop fail get (@ByRef self: Self) -> ?Error => match typeof self.result.any {
-		is Error => null
-		is Ok => self.result.Error
+	prop fail {
+		get (@ByRef self: Self) -> ?Error => match typeof self.result.any {
+			is Error => null
+			is Ok => self.result.Error
+		}
+
+		set (@ByRef self: Self, v: Error) => self.result.Error = v
 	}
 
 	prop ok get (self: Self) => self.any is Ok
