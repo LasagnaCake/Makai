@@ -1,6 +1,5 @@
 using import core.types
 
-@ExplicitNew
 struct Result[Ok, Error] {
 	@New
 	init(self: Self, value: Ok) -> Self {
