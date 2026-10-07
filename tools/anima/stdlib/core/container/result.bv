@@ -1,30 +1,28 @@
 using import core.types
 
 @ExplicitNew
-struct Result[Ok, Error]: join (Ok, Error) {
+struct Result[Ok, Error] {
 	@New
 	init(self: Self, value: Ok) -> Self {
-		// TODO: Figure out constructor jank
-		baseinit(self, value)
 		return self
 	}
 
 	@New
 	init(self: Self, fail: Error) -> Self {
-		// TODO: Figure out constructor jank
-		baseinit(self, fail)
 		return self
 	}
 
-	prop value get (@ByRef self: Self) -> ?Ok => match self {
-		is Ok => self as Ok
+	prop value get (@ByRef self: Self) -> ?Ok => match typeof self.result.any {
+		is Ok => self.result.Ok
 		is Error => null
 	}
 
-	prop fail get (@ByRef self: Self) -> ?Error => match self {
+	prop fail get (@ByRef self: Self) -> ?Error => match typeof self.result.any {
 		is Error => null
-		is Ok => self as Error
+		is Ok => self.result.Error
 	}
 
-	prop ok get (self: Self) => self is Ok
+	prop ok get (self: Self) => self.any is Ok
+
+	@Private result: join (Ok, Error)
 }
