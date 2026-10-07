@@ -565,11 +565,29 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	auto implName = name;
 	implName.back() = "::IMPL__" + implName.back();
 	auto const implScope = context.declare(implName);
-	MAKAILIB_DEBUGLN_FULL("Parsing properties...");
-	MAKAILIB_DEBUGLN_FULL("Property count: ", properties.size());
 	implScope->subspaces["Self"] = scope;
 	if (type->base)
 		implScope->subspaces["Base"] = type->base->scope.asStrong();
+	MAKAILIB_DEBUGLN_FULL("Parsing methods...");
+	MAKAILIB_DEBUGLN_FULL("Method count: ", methods.size());
+	for (auto& method: methods) {
+		auto const decl = context.getExpression(method);
+		auto& fn = *decl.scope->function;
+		for (auto& ov: fn.current) {
+			if (!ov->staticEntity && (ov->arguments.empty() or ov->arguments[0]->type != scope->type))
+				context.error("Missing appropriate [this] parameter!", method);
+			if (!ov->staticEntity)
+				ov->methodOf = scope->type.asWeak();
+			if (ov->constructor)
+				type.constructors.pushBack(ov);
+		}
+		if (scope->subspaces.contains(fn.name))
+			context.error("Symbol with this name already exists!", method);
+		type.methods[fn.name] = decl.scope->function;
+		scope->subspaces[fn.name] = decl.scope;
+	}
+	MAKAILIB_DEBUGLN_FULL("Parsing properties...");
+	MAKAILIB_DEBUGLN_FULL("Property count: ", properties.size());
 	for (auto& property: properties) {
 		auto const decl = context.getExpression(property);
 		auto& prop = *decl.scope->property;
@@ -602,24 +620,6 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		prop.fieldOf = scope->type.asWeak();
 		type.methods[prop.name] = decl.scope->function;
 		scope->subspaces[prop.name] = decl.scope;
-	}
-	MAKAILIB_DEBUGLN_FULL("Parsing methods...");
-	MAKAILIB_DEBUGLN_FULL("Method count: ", methods.size());
-	for (auto& method: methods) {
-		auto const decl = context.getExpression(method);
-		auto& fn = *decl.scope->function;
-		for (auto& ov: fn.current) {
-			if (!ov->staticEntity && (ov->arguments.empty() or ov->arguments[0]->type != scope->type))
-				context.error("Missing appropriate [this] parameter!", method);
-			if (!ov->staticEntity)
-				ov->methodOf = scope->type.asWeak();
-			if (ov->constructor)
-				type.constructors.pushBack(ov);
-		}
-		if (scope->subspaces.contains(fn.name))
-			context.error("Symbol with this name already exists!", method);
-		type.methods[fn.name] = decl.scope->function;
-		scope->subspaces[fn.name] = decl.scope;
 	}
 	context.pop(implName.size());
 	for (auto& var: privates)

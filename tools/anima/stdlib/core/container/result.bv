@@ -1,6 +1,9 @@
 using import core.types
 
 struct Result[Ok, Error] {
+	@Private
+	using Underlying = join (Ok, Error)
+
 	@New
 	init :: (self: Self, value: Ok) -> Self {
 		self.result.Ok = value
@@ -14,7 +17,7 @@ struct Result[Ok, Error] {
 	}
 
 	prop value {
-		get (@ByRef self: Self) -> ?Ok => match typeof self.result.any {
+		get (@ByRef self: Self) -> ?Ok => match self.result.any {
 			is Ok => self.result.Ok
 			is Error => null
 		}
@@ -23,7 +26,7 @@ struct Result[Ok, Error] {
 	}
 
 	prop fail {
-		get (@ByRef self: Self) -> ?Error => match typeof self.result.any {
+		get (@ByRef self: Self) -> ?Error => match self.result.any {
 			is Error => null
 			is Ok => self.result.Error
 		}
@@ -31,7 +34,7 @@ struct Result[Ok, Error] {
 		set (@ByRef self: Self, v: Error) => self.result.Error = v
 	}
 
-	prop ok get (self: Self) => self.any is Ok
+	prop ok get (self: Self) => self.result.any is Ok
 
-	@Private result: join (Ok, Error)
+	@[Private, ByRef] result: Underlying
 }
