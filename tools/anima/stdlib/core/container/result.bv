@@ -4,12 +4,14 @@ using import core.types
 struct Result[Ok, Error]: join (Ok, Error) {
 	@New
 	init(self: Self, value: Ok) -> Self {
+		// TODO: Figure out constructor jank
 		baseinit(self, value)
 		return self
 	}
 
 	@New
 	init(self: Self, fail: Error) -> Self {
+		// TODO: Figure out constructor jank
 		baseinit(self, fail)
 		return self
 	}
