@@ -173,7 +173,7 @@ contexts:
     - match: ','
       scope: punctuation.separator.breve
 
-    - match: '\.'
+    - match: '[\?\*]?\.'
       scope: punctuation.accessor.breve
 
     - match: '\?'
