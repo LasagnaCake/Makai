@@ -16,6 +16,7 @@ struct Map[Key, Value] {
 	@New
 	init :: (self: Self) -> Self {
 		self.entries = new Entries {}
+		return self
 	}
 
 	@Operator(infix="[]")
