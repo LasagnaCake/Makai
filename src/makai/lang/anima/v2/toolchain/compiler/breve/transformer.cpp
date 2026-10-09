@@ -434,6 +434,7 @@ ATransformer::Result Aliasing::transform(Context& context, Node::Instance const&
 	if (node->templateDecl) {
 		auto const scope = context.declare(name);
 		scope->declaration = node;
+		scope->state = context.scopeStack;
 		context.pop(name.size());
 		return {.scope = scope};
 	}
@@ -484,6 +485,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		type.flags.isGeneric = true;
 		type.declaration = node;
 		scope->declaration = node;
+		scope->state = context.scopeStack;
 		return rett;
 	}
 	if (node->middle) {
@@ -566,8 +568,8 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	implName.back() = "::IMPL__" + implName.back();
 	auto const implScope = context.declare(implName);
 	implScope->subspaces["Self"] = scope;
-	if (type->base)
-		implScope->subspaces["Base"] = type->base->scope.asStrong();
+	if (type.base)
+		implScope->subspaces["Base"] = type.base->scope.asStrong();
 	MAKAILIB_DEBUGLN_FULL("Parsing methods...");
 	MAKAILIB_DEBUGLN_FULL("Method count: ", methods.size());
 	for (auto& method: methods) {
@@ -1419,6 +1421,7 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_EXPANSION:			return context.transform<Spread>(node);
 		case Node::Content::AV2_TANC_PROOF:				return context.transform<Proof>(node);
 		case Node::Content::AV2_TANC_ASSERTION:			return context.transform<Assertion>(node);
+		case Node::Content::AV2_TANC_PROMOTION:			return context.transform<Promotion>(node);
 		default: context.error("Unsupported expression!", node);
 	}
 }
@@ -1600,6 +1603,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		fn.generic = true;
 		fn.declaration = node;
 		scope->declaration = node;
+		scope->state = context.scopeStack;
 		return {.scope = scope};
 	}
 	auto const proto = node->middle;
@@ -2776,7 +2780,27 @@ ATransformer::Result Proof::transform(Context& context, Node::Instance const& no
 }
 
 ATransformer::Result Assertion::transform(Context& context, Node::Instance const& node) {
+	auto const expr = context.getExpression(node->leftSide);
+	if (expr.direct.isUndefined())
+		context.error("Expected direct expression here!", node->leftSide);
+	else if (!expr.direct) {
+		String message = "!";
+		if (node->rightSide) {
+			auto const msg = context.getExpression(node->rightSide);
+			if (msg.direct.isString())
+				context.error("Assertion message must be a direct string!");
+			message = ": `\n" + msg.direct.getString() + "\n`";
+		}
+		context.error("Assertion failed" + message, node->leftSide);
+	}
 	return {};
+}
+
+ATransformer::Result Promotion::transform(Context& context, Node::Instance const& node) {
+	auto const type = context.getType(node->leftSide).type;
+	if (!type)
+		context.error("Expected type here!", node->leftSide);
+	return {.direct = Makai::toString("info::", type->node->name()), .type = context.infoType()};
 }
 
 ATransformer::Result Switch::transform(Context& context, Node::Instance const& node) {
@@ -2835,15 +2859,17 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 		caseScope->varc += switchScope->varc;
 		caseScope->implementContents = true;
 		if (caseExpr->leftSide->base.text != "else") {
-			auto const match = context.getExpression(caseExpr->leftSide);
-			if (!match.isCompilable())
-				context.error("Expected direct value here!", caseExpr->leftSide);
-			if (match.type != switchType)
-				context.error("Type mismatch in switch case!", caseExpr->leftSide);
-			ssize matchIndex = match.direct.getSigned();
-			if (matches.contains(matchIndex))
-				context.error("A case for this value was already declared!", caseExpr->leftSide);
-			matches[matchIndex] = caseMarker + caseExpr->name();
+			for (auto const& ccx: caseExpr->leftSide->children) {
+				auto const match = context.getExpression(ccx);
+				if (!match.isCompilable())
+					context.error("Expected direct value here!", ccx);
+				if (match.type != switchType)
+					context.error("Type mismatch in switch case!", ccx);
+				ssize matchIndex = match.direct.getSigned();
+				if (matches.contains(matchIndex))
+					context.error("A case for this value was already declared!", ccx);
+				matches[matchIndex] = caseMarker + caseExpr->name();
+			}
 		} else if (!hasDefault) {
 			hasDefault = true;
 			isDefaultCase = true;
@@ -2889,6 +2915,7 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 	matchScope->implementContents = true;
 	auto const caseMarker = "__match_case" + node->name();
 	auto const caseSkipMarker = "__match_case_skip" + node->name();
+	auto const caseSkipCheckMarker = "__match_case_skip_chk" + node->name();
 	auto const matchEnd = "__match_end" + node->name();
 	auto const defaultCase = "__match_default" + node->name();
 	Node::Instance defaultCaseExpr;
@@ -2901,12 +2928,15 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 		caseScope->varc += matchScope->varc;
 		caseScope->implementContents = true;
 		if (caseExpr->leftSide->base.text != "else") {
-			auto const match = context.getExpression(caseExpr->leftSide);
-			if (match.shouldBePushed())
-				caseScope->impl->writeMainLine("push", match.source.value());
-			else if (match.isStackTop() && match.isCopied())
-				caseScope->impl->writeMainLine("copy", *match.source, "-> top");
-			caseScope->impl->writeMainLine("jump if false", caseSkipMarker + caseExpr->name());
+			for (auto const& ccx: caseExpr->leftSide->children) {
+				auto const match = context.getExpression(ccx);
+				if (match.shouldBePushed())
+					caseScope->impl->writeMainLine("push", match.source.value());
+				else if (match.isStackTop() && match.isCopied())
+					caseScope->impl->writeMainLine("copy", *match.source, "-> top");
+				caseScope->impl->writeMainLine("jump if" + toString(caseExpr->base == "not" ? "false" : "true"), caseMarker + caseExpr->name());
+			}
+			caseScope->impl->writeMainLine("jump", caseSkipMarker + caseExpr->name());
 		} else if (!defaultCaseExpr) {
 			context.pop(1);
 			defaultCaseExpr = caseExpr;
@@ -3086,7 +3116,10 @@ ATransformer::Result TemplateReification::transform(Context& context, Node::Inst
 		context.error("Symbol does not exist!", node->leftSide);
 	if (!decl->declaration)
 		context.error("Symbol is not a template!", node->leftSide);
+	auto const curStack = context.scopeStack;
+	context.scopeStack = decl->state;
 	auto const reified = context.reify(decl->declaration, node->children);
+	context.scopeStack = curStack;
 	return {.scope = reified, .type = reified->type};
 }
 
@@ -3271,13 +3304,12 @@ Node::Instance ATransformer::Context::evaluate(Makai::UTF8String const& eval) {
 	return parse;
 }
 
-Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Makai::List<Node::Instance> const& targs) {
+Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Context::ReificationArgs const& targs) {
 	static usize rid = 0;
 	auto const tdecl = node->templateDecl;
 	node->templateDecl = nullptr;
 	auto const generic = templateFor(node);
 	usize index = 0;
-	usize const count = targs.size();
 	Makai::UTF8Dictionary<bool> visited;
 	List<KeyValuePair<UTF8String, Node::Instance>> set;
 	declare(UTF8StringList::from("<reify>::" + node->name() + Makai::toString("_rid", rid)));
@@ -3358,7 +3390,22 @@ Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Mak
 				if (!type.type->derivedFrom(arg.type))
 					error("Type does not derive from required type!", decl);
 			}
-			// TODO: Constraint checking
+			StringList missing;
+			for (auto const& constraint: arg.constraints) {
+				auto const refx = reify(constraint->node, ReificationArgs::from(decl));
+				if (auto const out = satisfies(refx->variable)) {
+					if (!out.value())
+						missing.pushBack(constraint->name);
+				} else error("Constraint [" + constraint->name + "] is a bad constraint!", decl);
+			}
+			if (missing.size())
+				error("Template argument ["+ name + "] does not satisfy required constraint(s) [" + missing.join(", ") + "]!", decl);
+			missing.clear();
+			for (auto const& trait: arg.traits)
+				if (!type.type->traits.contains(trait->node->name()))
+					missing.pushBack(trait->name);
+			if (missing.size())
+				error("Template argument ["+ name + "] does not implement required trait(s) [" + missing.join(", ") + "]!", decl);
 			scope->type = type.type;
 			reifyName += ";" + name + "=type:" + type.type->name;
 		}
@@ -3396,15 +3443,38 @@ ATransformer::Template::Instance ATransformer::Context::templateFor(Node::Instan
 		} else if (arg->leftSide->content == Node::Content::AV2_TANC_NAME) {
 			Template::Parameter param = {arg->leftSide->base.text};
 			if (generic->params.contains(param.name))
-				error("Redeclaration of parameter!", arg);
+				error("Redeclaration of template parameter!", arg);
 			generic->names.pushBack(param.name);
 			if (arg->content == Node::Content::AV2_TANC_DECLARATION) {
 				if (!(
 					arg->base.text == ":"
 				||	arg->base.text == ":="
 				)) error("Only variable-like declarations are allowed within template arguments!", arg);
-				if (arg->middle)
-					param.type = getType(arg->middle).type;
+				if (arg->middle) {
+					auto const process = [&] (decltype(arg->middle) const& carg) {
+						auto const texpr = getExpression(carg);
+						if (!texpr.scope)
+							error("Invalid template argument specifier!", carg);
+						if (texpr.scope->type && !param.type)
+							param.type = texpr.type;
+						else if (texpr.scope->variable) {
+							if (!(
+								texpr.scope->variable->isCompiled()
+							&&	texpr.scope->variable->value.isBoolean()
+							)) error("Bad constraint declaration (not direct and/or not boolean)!", carg);
+							param.constraints.pushBack(texpr.scope->variable);
+						}
+						else if (texpr.scope->trait)
+							param.traits.pushBack(texpr.scope->trait);
+						else if (texpr.scope->type && param.type)
+							error("Redeclaration of derived type argument rule!", carg);
+						else error("Invalid template argument rule declaration!", carg);
+					};
+					if (arg->middle->children.size())
+						for (auto const& carg: arg->middle->children)
+							process(carg);
+					else process(arg->middle);
+				}
 				if (arg->rightSide) {
 					param.defaultValue = arg->rightSide;
 					if (arg->rightSide->content == Node::Content::AV2_TANC_VALUE && !arg->middle)
@@ -3418,6 +3488,12 @@ ATransformer::Template::Instance ATransformer::Context::templateFor(Node::Instan
 	node->templateDecl = tdecl;
 	templates[node] = generic;
 	return generic;
+}
+
+Makai::Nullable<bool> ATransformer::Context::satisfies(Namespace::VariableRef const& constraint) {
+	if (!(constraint && constraint->isCompiled()))
+		return null;
+	return constraint->value.getBoolean();
 }
 
 Namespace::TypeRef ATransformer::Context::infoType() {

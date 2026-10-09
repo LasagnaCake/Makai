@@ -916,27 +916,42 @@ Node::Instance MatchResolver::resolve(Parser& parser, Node::Instance const& left
 		result->middle = parser.nextExpression();
 	parser.context.expectNext(LTS_TT_OPEN_CURLY);
 	while (true) {
-		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
-			parser.context.next();
-			break;
-		}
 		auto const caseDecl = Node::Instance::create();
-		if (
-			result->middle
-		and	(
-				parser.context.peek().type == LTS_TT_COMPARE_EQUALS
-			or	parser.context.peek().type == LTS_TT_COMPARE_NOT_EQUALS
-			or	parser.context.peek().type == LTS_TT_LESS_THAN
-			or	parser.context.peek().type == LTS_TT_GREATER_THAN
-			or	parser.context.peek().type == LTS_TT_COMPARE_GREATER_EQUALS
-			or	parser.context.peek().type == LTS_TT_COMPARE_LESS_EQUALS
-			or	parser.context.peek().type == LTS_TT_LOGIC_NOT
-			or	parser.context.peek().text == "not"
-			)
-		) {
-			caseDecl->base = parser.context.next().token();
-		} else caseDecl->base.type = LTS_TT_COMPARE_EQUALS;
-		caseDecl->leftSide = parser.nextExpression();
+		caseDecl->leftSide = Node::Instance::create();
+		do {
+			if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY)) {
+				parser.context.next();
+				break;
+			}
+			if (
+				caseDecl->leftSide->children->size()
+			&&	(
+				caseDecl->base.type == LTS_TT_COMPARE_NOT_EQUALS
+			or	caseDecl->base.type == LTS_TT_COMPARE_EQUALS
+			or	caseDecl->base.text == "not"
+			) parser.context.error("Cannot have more than one option in order matches!");
+			);
+			if (
+				result->middle
+			and	(
+					parser.context.peek().type == LTS_TT_COMPARE_EQUALS
+				or	parser.context.peek().type == LTS_TT_COMPARE_NOT_EQUALS
+				or	parser.context.peek().type == LTS_TT_LESS_THAN
+				or	parser.context.peek().type == LTS_TT_GREATER_THAN
+				or	parser.context.peek().type == LTS_TT_COMPARE_GREATER_EQUALS
+				or	parser.context.peek().type == LTS_TT_COMPARE_LESS_EQUALS
+				or	parser.context.peek().type == LTS_TT_LOGIC_NOT
+				or	parser.context.peek().text == "not"
+				)
+			) {
+				caseDecl->base = parser.context.next().token();
+			} else caseDecl->base.type = LTS_TT_COMPARE_EQUALS;
+			caseDecl->leftSide->children.pushBack(parser.nextExpression());
+			if (parser.context.peek().type == LTS_TT_COMMA) {
+				context.next();
+				continue;
+			}
+		} while (parser.context.peek().type == LTS_TT_COMMA);
 		parser.context.expectNext(LTS_TT_BIG_ARROW);
 		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY))
 			parser.context.error("Missing case statement!");
@@ -947,6 +962,14 @@ Node::Instance MatchResolver::resolve(Parser& parser, Node::Instance const& left
 			break;
 		}
 	}
+	return result;
+}
+
+Node::Instance PromotionResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_PROMOTION;
+	result->leftSide = parser.nextExpression();
 	return result;
 }
 

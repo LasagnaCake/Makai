@@ -132,7 +132,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Reifiable {
 		using TemplateArgument = Union<Instance<Namespace>, Data::Value>;
 
-		Instance<Node> declaration;
+		Instance<Node>				declaration;
+		List<Instance<Namespace>>	state;
 	};
 
 	struct Namespace: Labeled, Positioned, IComposable, Visible, ISerializable, Reifiable {
@@ -196,6 +197,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		List<Namespace::OverloadRef>			constructors;
 		UTF8Dictionary<Namespace::OverloadRef>	operators;
 		List<Namespace::TypeRef>				args;
+		UTF8Dictionary<Namespace::TraitRef>		traits;
 
 		usize uses = 0;
 

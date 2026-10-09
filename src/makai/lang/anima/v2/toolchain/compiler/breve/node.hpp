@@ -66,6 +66,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			AV2_TANC_ASSERTION,
 			AV2_TANC_PROOF,
 			AV2_TANC_FILE_MODULE_DECL,
+			AV2_TANC_PROMOTION,
 		};
 
 		Content							content = Content::AV2_TANC_EMPTY;

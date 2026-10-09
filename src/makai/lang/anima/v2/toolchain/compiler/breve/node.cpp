@@ -90,6 +90,8 @@ Makai::String Node::asString(Content const content) {
 		case Content::AV2_TANC_UNION_DECL:			return "union";
 		case Content::AV2_TANC_ASSERTION:			return "assert";
 		case Content::AV2_TANC_PROOF:				return "proof";
+		case Content::AV2_TANC_FILE_MODULE_DECL:	return "file_module";
+		case Content::AV2_TANC_PROMOTION:			return "promo";
 	}
 	return "???";
 }

@@ -12,10 +12,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			using Instance = Instance<Template>;
 
 			struct Parameter {
-				UTF8String					name;
-				Namespace::TypeRef			type;
-				List<Namespace::TraitRef>	constraints;
-				Node::Instance				defaultValue;
+				UTF8String						name;
+				Namespace::TypeRef				type;
+				List<Namespace::TraitRef>		traits;
+				List<Namespace::VariableRef>	constraints;
+				Node::Instance					defaultValue;
 			};
 
 			using ParameterNames	= UTF8StringList;
@@ -121,12 +122,16 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 
 			Result transform(ATransformer& transformer, Node::Instance const& node);
 
-			Namespace::Instance reify(Node::Instance const& node, List<Node::Instance> const& targs);
+			using ReificationArgs = List<Node::Instance>;
+
+			Namespace::Instance reify(Node::Instance const& node, ReificationArgs const& targs);
 			Template::Instance templateFor(Node::Instance const& node);
 
 			static Namespace::TypeRef infoType();
 
 			static Result info(Namespace::Instance const& ns);
+
+			Nullable<bool> satisfies(Namespace::VariableRef const& constraint);
 		};
 
 		virtual ~ATransformer();
@@ -406,6 +411,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	};
 
 	struct Assertion: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Promotion: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 }
