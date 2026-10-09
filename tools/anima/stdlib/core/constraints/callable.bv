@@ -2,6 +2,8 @@ using import core.types
 
 using import core.meta.spoof
 
+using import core.constraints.same
+
 with module Is
 
 @Direct Callable[T, Args...] := prove {
@@ -9,7 +11,7 @@ with module Is
 }
 
 @Direct Function[T, Return, Args...] := prove {
-	if #Return == #void
+	if Is.Same[T, void]
 		assert Callable[T, Args...]
 	else (Meta.spoof[T]!(Meta.spoof[Args]!...)) as Return
 }
