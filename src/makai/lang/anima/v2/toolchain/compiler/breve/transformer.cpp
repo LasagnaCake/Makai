@@ -643,9 +643,9 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 		if (!base)
 			context.error("No type with this name exists!", node->middle);
 		if (!base->flags.isBasic)
-			context.error("Enums can only inherit integers!", node->middle);
+			context.error("Enums can only derive from integers!", node->middle);
 		if (!Core::isInteger(*base->basic))
-			context.error("Enums can only inherit integers!", node->middle);
+			context.error("Enums can only derive from integers!", node->middle);
 		type.base = base;
 	} else type.base = context.basicType("int64");
 	MAKAILIB_DEBUGLN_FULL("Integer type is ", type.base->name);
@@ -736,9 +736,6 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 	if (val.mayBeEmpty) context.error("One or more code paths may not result in a value!", node->leftSide);
 	if (val.shouldBePushed())
 		context.top()->impl->writeMainLine("push", *val.source);
-	else if (val.isStackTop() && val.isCopied()) {
-		context.top()->impl->writeMainLine("copy", *val.source, "-> top");
-	}
 	else if (val.isStackTop() && val.isCopied()) {
 		context.top()->impl->writeMainLine("copy", *val.source, "-> top");
 	}
