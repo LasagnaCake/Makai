@@ -4,4 +4,4 @@ using import core.meta.spoof
 
 with module Is
 
-@Direct Comparable[A, B] := prove (Meta.spoof[T]! <=> Meta.spoof[T]!)
+@Direct Comparable[A, B] := prove (Meta.spoof[A]! <=> Meta.spoof[B]!)

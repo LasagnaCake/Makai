@@ -14,13 +14,19 @@ struct Map[Key, Value] {
 	using Entries = with List[Entry]
 
 	@New
-	init :: (self: Self) -> Self {
+	init :: (@ByRef self: Self) -> Self {
 		self.entries = new Entries {}
 		return self
 	}
 
+	@[New, Variadic]
+	init :: (@ByRef self: Self, entries: Entries) -> Self {
+		self.entries = entries 
+		return self
+	}
+
 	@Operator(infix="[]")
-	at :: (self: Self, @ByRef key: Key) -> Value =>
+	at :: (@ByRef self: Self, @ByRef key: Key) -> Value =>
 		self.search(key)?.value ?? {
 			@ByRef val := new Value{}
 			self.entries.insert(self.placeOf(key), new Entry {key, val})
@@ -28,13 +34,13 @@ struct Map[Key, Value] {
 		}
 
 	@Operator(infix="[]=")
-	insert :: (self: Self, @ByRef key: Key, @ByRef value: value) -> void =>
+	insert :: (@ByRef self: Self, @ByRef key: Key, @ByRef value: value) -> void =>
 		self.entries.insert(self.placeOf(key), new Entry {key, val})
 			except self.has(key)
 			else self.entries[self.placeOf(key)].value = value
 
 	@Operator(infix="in")
-	has :: (self: Self, key: Key) -> bool {
+	has :: (@ByRef self: Self, key: Key) -> bool {
 		return match self.search(key) {
 			is Key => true
 			else => false 
@@ -52,7 +58,7 @@ struct Map[Key, Value] {
 		}
 
 	@Private
-	search :: (self: Self, key: Key) -> ?Entry =>
+	search :: (@ByRef self: Self, key: Key) -> ?Entry =>
 		self.search(key, (countof self.entries) / 2, 0, (countof self.entries) - 1)
 	
 	@Private
@@ -68,7 +74,7 @@ struct Map[Key, Value] {
 	placeOf :: (@ByRef self: Self, @ByCopy key: Key) -> u64 =>
 		self.placeOf(key, (countof self.entries) / 2, 0, (countof self.entries) - 1)
 
-	prop iterator get (@ByRef self: Self) => entries.iterator
+	prop iterator get (@ByRef self: Self) => self.entries.iterator
 
 	@[Private, ByRef] entries: Entries
 }
