@@ -11,7 +11,7 @@ with module Is
 }
 
 @Direct Function[T, Return, Args...] := prove {
-	if Is.Same[T, void]
+	if Same[Return, void]
 		assert Callable[T, Args...]
 	else (Meta.spoof[T]!(Meta.spoof[Args]!...)) as Return
 }
