@@ -340,6 +340,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		virtual ~PromotionResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
+
+	struct TryResolver: AResolver {
+		TryResolver(): AResolver() {}
+		virtual ~TryResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
 }
 
 #endif

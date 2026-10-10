@@ -220,6 +220,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_LAMBDA, infixes, new LambdaResolver());
 	add(LTS_TT_LITTLE_ARROW, infixes, new FunctionPrototypeResolver());
 	add("as", infixes, new CastResolver());
+	add("try", infixes, new TryResolver());
 	MAKAILIB_DEBUGLN_FULL("Done!");
 }
 

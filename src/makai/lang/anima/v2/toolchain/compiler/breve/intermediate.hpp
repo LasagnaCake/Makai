@@ -345,6 +345,11 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			return context > ExecutionContext::AV2_TCB_EC_RUNTIME;
 		}
 
+		constexpr void compile(Data::Value const& dv) {
+			context = ExecutionContext::AV2_TCB_EC_RUNTIME;
+			value = dv;
+		}
+
 		constexpr bool exists() const {
 			return isCompiled() or hasValue;
 		}

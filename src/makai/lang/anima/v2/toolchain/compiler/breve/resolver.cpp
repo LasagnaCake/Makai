@@ -924,13 +924,13 @@ Node::Instance MatchResolver::resolve(Parser& parser, Node::Instance const& left
 				break;
 			}
 			if (
-				caseDecl->leftSide->children->size()
+				caseDecl->leftSide->children.size()
 			&&	(
 				caseDecl->base.type == LTS_TT_COMPARE_NOT_EQUALS
 			or	caseDecl->base.type == LTS_TT_COMPARE_EQUALS
 			or	caseDecl->base.text == "not"
+			)
 			) parser.context.error("Cannot have more than one option in order matches!");
-			);
 			if (
 				result->middle
 			and	(
@@ -948,7 +948,7 @@ Node::Instance MatchResolver::resolve(Parser& parser, Node::Instance const& left
 			} else caseDecl->base.type = LTS_TT_COMPARE_EQUALS;
 			caseDecl->leftSide->children.pushBack(parser.nextExpression());
 			if (parser.context.peek().type == LTS_TT_COMMA) {
-				context.next();
+				parser.context.next();
 				continue;
 			}
 		} while (parser.context.peek().type == LTS_TT_COMMA);
@@ -986,10 +986,37 @@ Node::Instance AssertionResolver::resolve(Parser& parser, Node::Instance const& 
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_ASSERTION;
 	result->leftSide = parser.nextExpression();
+	if (parser.context.peek().text == "else") {
+		parser.context.next();
+		result->rightSide = parser.nextExpression();
+	}
 	return result;
 }
 
 AResolver::AResolver(Parser::Precedence const precedence, bool const rightToLeft):
 	precedence(Cast::as<Parser::Precedence>(enumcast(precedence) - !rightToLeft)),
 	rightToLeft(rightToLeft) {
+}
+
+
+Node::Instance TryResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	MAKAILIB_DEBUGLN_FULL("Resolving try expression...");
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_BRANCH;
+	result->value = token.text.toString();
+	result->middle		= parser.nextExpression();
+	if (result->middle->content != Node::Content::AV2_TANC_DECLARATION)
+		parser.context.error("Expected variable declaration here!");
+	if (!(
+		result->middle->base.text == ":"
+	or	result->middle->base.text == ":="
+	)) parser.context.error("Expected variable declaration here!");
+	result->leftSide = parser.nextExpression();
+	if (parser.context.peek().text == "else") {
+		parser.context.next();
+		result->rightSide = parser.nextExpression();
+	}
+	MAKAILIB_DEBUGLN_FULL("Try:DONE!");
+	return result;
 }

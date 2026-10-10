@@ -507,8 +507,8 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	List<Node::Instance> fields;
 	List<Node::Instance> methods;
 	List<Node::Instance> properties;
-	Makai::Function<void(Node::Instance const&, Node::Instance const&)> evalDecl;
-	evalDecl = [&] (Node::Instance const& node, Node::Instance const& root) {
+	Makai::Function<bool(Node::Instance const&, Node::Instance const&)> evalDecl;
+	evalDecl = [&] (Node::Instance const& node, Node::Instance const& root) -> bool {
 		if (node->content == Node::Content::AV2_TANC_DECLARATION) {
 			if (node->base.type == LTS_TT_NAMESPACE_RESOLVE) {
 				MAKAILIB_DEBUGLN_FULL("  > Function");
@@ -526,12 +526,14 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 			}
 			else context.error("Invalid declaration inside structure declaration!", node);
 		} else if (node->content == Node::Content::AV2_TANC_ATTRIBUTE) {
-			evalDecl(node->rightSide, root);
-		} else context.error("Invalid expression inside structure declaration!", node);
+			return evalDecl(node->rightSide, root);
+		} else return false;
+		return true;
 	};
 	MAKAILIB_DEBUGLN_FULL("struct {");
 	for (auto& entry: node->rightSide->children)
-		evalDecl(entry, entry);
+		if (!evalDecl(entry, entry))
+			context.getExpression(entry);
 	MAKAILIB_DEBUGLN_FULL("}");
 	type.scope = scope.asWeak();
 	type.node = node;
@@ -1422,6 +1424,7 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_PROOF:				return context.transform<Proof>(node);
 		case Node::Content::AV2_TANC_ASSERTION:			return context.transform<Assertion>(node);
 		case Node::Content::AV2_TANC_PROMOTION:			return context.transform<Promotion>(node);
+		case Node::Content::AV2_TANC_FILE_MODULE_DECL:	return context.transform<FileModule>(node);
 		default: context.error("Unsupported expression!", node);
 	}
 }
@@ -2276,6 +2279,7 @@ ATransformer::Result InlineIfElse::transform(Context& context, Node::Instance co
 }
 
 ATransformer::Result Branch::transform(Context& context, Node::Instance const& node) {
+	if (node->base.text == "try") return context.transform<TryBlock>(node);
 	auto const cond = context.getExpression(node->middle);
 	auto const invert = (node->base.text == "unless" or node->base.text == "except");
 	MAKAILIB_DEBUGLN_FULL("If-Condition: ", cond.type ? cond.type->name : "ERR", "(must be ", invert ? "TRUE" : "FALSE", ")");
@@ -2770,7 +2774,7 @@ ATransformer::Result Proof::transform(Context& context, Node::Instance const& no
 	bool success = false;
 	context.declare(UTF8StringList::from("<proof>::" + node->name()));
 	try {
-		context.getExpression(node);
+		context.getExpression(node->leftSide);
 		success = true;
 	} catch (Makai::Error::Generic const& e) {
 		success = false;
@@ -2800,7 +2804,7 @@ ATransformer::Result Promotion::transform(Context& context, Node::Instance const
 	auto const type = context.getType(node->leftSide).type;
 	if (!type)
 		context.error("Expected type here!", node->leftSide);
-	return {.direct = Makai::toString("info::", type->node->name()), .type = context.infoType()};
+	return {.type = context.infoType(), .direct = Makai::Data::Value(Makai::toString("info::", type->node->name()))};
 }
 
 ATransformer::Result Switch::transform(Context& context, Node::Instance const& node) {
@@ -2824,14 +2828,17 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 		if (!switchExpr.direct.isInteger())
 			context.error("Expected enumerable value here!", node->leftSide);
 		for (auto& caseExpr: node->children) {
-			auto const match = context.getExpression(caseExpr->leftSide);
-			if (!match.isCompilable())
-				context.error("Expected direct value here!", caseExpr->leftSide);
-			if (!match.direct.isInteger())
-				context.error("Expected enumerable value here!", caseExpr->leftSide);
-			if (match.direct.getSigned() != switchExpr.direct.getSigned()) continue;
-			context.pop(1);
-			return context.getExpression(caseExpr->rightSide);
+			for (auto const& ccx: caseExpr->leftSide->children) {
+				auto const match = context.getExpression(ccx);
+				if (!match.isCompilable())
+					context.error("Expected direct value here!", ccx);
+				if (!match.direct.isInteger())
+					context.error("Expected enumerable value here!", ccx);
+				if (match.direct.getSigned() == switchExpr.direct.getSigned()) {
+					context.pop(1);
+					return context.getExpression(caseExpr->rightSide);
+				}
+			}
 		}
 		context.error("No matching case found!", node->leftSide);
 	}
@@ -2915,7 +2922,6 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 	matchScope->implementContents = true;
 	auto const caseMarker = "__match_case" + node->name();
 	auto const caseSkipMarker = "__match_case_skip" + node->name();
-	auto const caseSkipCheckMarker = "__match_case_skip_chk" + node->name();
 	auto const matchEnd = "__match_end" + node->name();
 	auto const defaultCase = "__match_default" + node->name();
 	Node::Instance defaultCaseExpr;
@@ -2934,7 +2940,7 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 					caseScope->impl->writeMainLine("push", match.source.value());
 				else if (match.isStackTop() && match.isCopied())
 					caseScope->impl->writeMainLine("copy", *match.source, "-> top");
-				caseScope->impl->writeMainLine("jump if" + toString(caseExpr->base == "not" ? "false" : "true"), caseMarker + caseExpr->name());
+				caseScope->impl->writeMainLine("jump if false", caseMarker + caseExpr->name());
 			}
 			caseScope->impl->writeMainLine("jump", caseSkipMarker + caseExpr->name());
 		} else if (!defaultCaseExpr) {
@@ -3030,6 +3036,8 @@ ATransformer::Result ShortMatch::transform(Context& context, Node::Instance cons
 			context.error("Expected value here!", node->middle);
 		matchScope->impl->writeMainLine("copy", *query.source, " ->", var.getSource());
 		var.type = query.type.asWeak();
+		if (!query.direct.isUndefined())
+			var.compile(query.direct);
 		return varScope->variable;
 	} ();
 	MAKAILIB_DEBUGLN_FULL("Total cases: ", node->children.size());
@@ -3037,22 +3045,51 @@ ATransformer::Result ShortMatch::transform(Context& context, Node::Instance cons
 		auto const caseScope = context.declare(UTF8StringList::from("<case>" + caseExpr->name()));
 		caseScope->varc += matchScope->varc;
 		caseScope->implementContents = true;
+		Makai::StandardOrder check = Makai::StandardOrder::EQUAL;
+		bool invert = false;
+		switch (caseExpr->base.type) {
+			case (LTS_TT_COMPARE_GREATER_EQUALS):	invert = true;
+			case (LTS_TT_LESS_THAN):				check = Makai::StandardOrder::LESS;
+			break;
+			case (LTS_TT_COMPARE_LESS_EQUALS):		invert = true;
+			case (LTS_TT_GREATER_THAN):				check = Makai::StandardOrder::GREATER;
+			break;
+			case (LTS_TT_IDENTIFIER):
+			case (LTS_TT_COMPARE_NOT_EQUALS):		invert = true;
+			case (LTS_TT_COMPARE_EQUALS):			check = Makai::StandardOrder::EQUAL;
+			break;
+			default: context.error("Invalid case!", caseExpr);
+		}
 		if (caseExpr->leftSide->base.text != "else") {
-			auto const match = context.getExpression(caseExpr->leftSide);
-			if (match.type != matchVar->type)
-				context.error("Case type is not matched value type!", caseExpr->leftSide);
-			if (match.shouldBePushed())
-				caseScope->impl->writeMainLine("push", match.source.value());
-			else if (match.isStackTop() && match.isCopied())
-				caseScope->impl->writeMainLine("copy", *match.source, "-> top");
-			caseScope->impl->writeMainLine("push val", matchVar->getSource());
-			caseScope->impl->writeMainLine("cmp order");
-			caseScope->impl->writeMainLine("jump if", matchType(caseExpr->base.type), caseSkipMarker + caseExpr->name());
+			for (auto const& ccx: caseExpr->leftSide->children) {
+				auto const match = context.getExpression(ccx);
+				if (match.type != matchVar->type)
+					context.error("Case type is not matched value type!", ccx);
+				if (matchVar->isCompiled()) {
+					context.pop(1);
+					auto const ord = matchVar->value <=> match.direct;
+					if (invert != (ord == check)) continue;
+					return context.getExpression(caseExpr->rightSide);
+				} else {
+					if (match.shouldBePushed())
+						caseScope->impl->writeMainLine("push", match.source.value());
+					else if (match.isStackTop() && match.isCopied())
+						caseScope->impl->writeMainLine("copy", *match.source, "-> top");
+					caseScope->impl->writeMainLine("push val", matchVar->getSource());
+					caseScope->impl->writeMainLine("cmp order");
+					caseScope->impl->writeMainLine("jump if", matchType(caseExpr->base.type), caseMarker + caseExpr->name());
+				}
+			}
+			if (!matchVar->isCompiled()) caseScope->impl->writeMainLine("jump", caseSkipMarker + caseExpr->name());
 		} else if (!defaultCaseExpr) {
 			context.pop(1);
 			defaultCaseExpr = caseExpr;
 			continue;
 		} else context.error("Redeclaration of default case!", caseExpr->leftSide);
+		if (matchVar->isCompiled()) {
+			context.pop(1);
+			continue;
+		}
 		auto const then = context.getExpression(caseExpr->rightSide);
 		mayBeEmpty = mayBeEmpty or then.mayBeEmpty;
 		if (!isFirstCase && prevCaseType != then.type)
@@ -3075,6 +3112,7 @@ ATransformer::Result ShortMatch::transform(Context& context, Node::Instance cons
 		isFirstCase = false;
 	}
 	if (defaultCaseExpr) {
+		if (matchVar->isCompiled()) return context.getExpression(defaultCaseExpr->rightSide);
 		auto const caseScope = context.declare(UTF8StringList::from("<default>" + defaultCaseExpr->name()));
 		caseScope->varc += matchScope->varc;
 		caseScope->implementContents = true;
@@ -3094,12 +3132,12 @@ ATransformer::Result ShortMatch::transform(Context& context, Node::Instance cons
 		matchScope->impl->writeMainLine(caseScope->compose()->toString());
 		result = then;
 	}
+	if (matchVar->isCompiled()) return {};
 	matchScope->impl->writePostLine("@target", matchEnd, ":");
 	context.pop(1);
 	context.impl()->writeMainLine(matchScope->compose()->toString());
 	if (!result.source) return {};
 	return {.source = {"move top"}, .type = result.type, .likelihood = result.likelihood + result.likelihood, .mayBeEmpty = mayBeEmpty or defaultCaseExpr};
-	return {};
 }
 
 ATransformer::Result SwitchMatch::transform(Context& context, Node::Instance const& node) {
@@ -3125,6 +3163,19 @@ ATransformer::Result TemplateReification::transform(Context& context, Node::Inst
 
 ATransformer::Result TypeReification::transform(Context& context, Node::Instance const& node) {
 	return context.getType(node->leftSide);
+}
+
+ATransformer::Result FileModule::transform(Context& context, Node::Instance const& node) {
+	auto const path = context.pathOf(node->leftSide);
+	if ((context.top()->resolve(path) && !context.top()->resolve(path)->isPureNamespace()))
+		context.error("Redeclaration of previously-declared symbol!", node->leftSide);
+	auto const scope = context.declare(path);
+	scope->declaredAsNamespace = true;
+	return {};
+}
+
+ATransformer::Result TryBlock::transform(Context& context, Node::Instance const& node) {
+	return {};
 }
 
 Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {
