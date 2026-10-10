@@ -2784,6 +2784,13 @@ ATransformer::Result Proof::transform(Context& context, Node::Instance const& no
 }
 
 ATransformer::Result Assertion::transform(Context& context, Node::Instance const& node) {
+	if (!node->leftSide) {
+		auto const msg = context.getExpression(node->rightSide);
+		if (!msg.direct.isString())
+			context.error("Error message must be a direct string!");
+		String const message = ": " + msg.direct.toString();
+		context.error("Static Error: " + message, node->leftSide);
+	}
 	auto const expr = context.getExpression(node->leftSide);
 	if (expr.direct.isUndefined())
 		context.error("Expected direct expression here!", node->leftSide);
@@ -2793,7 +2800,7 @@ ATransformer::Result Assertion::transform(Context& context, Node::Instance const
 			auto const msg = context.getExpression(node->rightSide);
 			if (msg.direct.isString())
 				context.error("Assertion message must be a direct string!");
-			message = ": `\n" + msg.direct.getString() + "\n`";
+			message = ": " + msg.direct.toString();
 		}
 		context.error("Assertion failed" + message, node->leftSide);
 	}

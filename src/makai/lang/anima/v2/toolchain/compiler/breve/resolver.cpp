@@ -985,6 +985,11 @@ Node::Instance AssertionResolver::resolve(Parser& parser, Node::Instance const& 
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_ASSERTION;
+	if (parser.context.peek().text == "error") {
+		parser.context.next();
+		result->rightSide = parser.nextExpression();
+		return result;
+	}
 	result->leftSide = parser.nextExpression();
 	if (parser.context.peek().text == "else") {
 		parser.context.next();

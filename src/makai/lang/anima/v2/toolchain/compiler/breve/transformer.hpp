@@ -51,18 +51,20 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 		using Instance = Instance<ATransformer>;
 
 		struct Context: Intermediate {
-			template <Makai::Type::Derived<Error::Generic> E = Error::InvalidValue>
+			DEFINE_ERROR_TYPE_EX(CompilationFailure, InvalidValue);
+
+			template <Makai::Type::Derived<Error::Generic> E = CompilationFailure>
 			[[noreturn]]
 			static void error(String const& what, Node::Instance const& where = nullptr) {
 				if (!where)
-					throw E(
+					throw CompilationFailure(
 						"At: EOF",
 						what,
 						Makai::CPP::SourceFile{"n/a", -1, "???"}
 					);
 				else {
 					auto const pos = where->base.at;
-					throw E(
+					throw CompilationFailure(
 						Makai::toString(
 							"At:\nLINE: ", pos.line,
 							"\nCOLUMN: ", pos.column,

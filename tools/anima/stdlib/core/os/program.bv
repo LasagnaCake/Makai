@@ -1,15 +1,12 @@
 using import core.types
 
+using import core.container.map
+
 module OS {
 	struct Program {
-		struct Option {
-			@ByValue key: string
-			@ByValue value: ?any
-		}
-
 		@ByRef name:	?string
 		@ByRef args:	?[string]
-		@ByRef config:	?[Option]
+		@ByRef config:	?Map[string, ?any]
 
 		@Static
 		info :: () -> ?Program =>
@@ -18,8 +15,6 @@ module OS {
 				args = Program.getArgs!,
 				config = Program.getConfig!
 			}
-			when Program.getConfigKeyCount!
-			else null
 
 		@Private
 		@Static
@@ -57,13 +52,9 @@ module OS {
 			@ByCopy total := Program.getConfigKeyCount!
 			if not total return null
 			@ByRef out := new Setting[total]
-			repeat @ByRef i: uint64 -> total {
-				key := Program.getConfigKey(i - total)
-				if copy key {
-					@ByRef kx := key ?? ""
-					out[i - total] = new Program{key = kx, value = Program.getConfigValue(kx)}
-				}
-			}
+			repeat @ByRef i: uint64 -> total
+				try key := Program.getConfigKey(i - total)
+					out.insert(kx, Program.getConfigValue(kx))
 			return out
 		}
 
