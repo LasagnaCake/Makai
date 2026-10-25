@@ -3,6 +3,8 @@
 
 #include "../core/controlable.hpp"
 #include "core.hpp"
+#include "actor.hpp"
+#include "box.hpp"
 
 /// @brief Game dialog extensions.
 namespace Makai::Ex::Game::Dialog {
@@ -234,11 +236,17 @@ namespace Makai::Ex::Game::Dialog {
 		usize maxDelay = 0;
 	};
 
-	template <Type::Derived<IActor> TActor, Type::Derived<IBox> TBox>
+	template <Type::Subclass<IActor> TActor = StandardActor>
 	struct StandardScene: ARTScene {
+		static_assert(Type::DefaultConstructible<TActor, Data::Value>, "Actor is not prop-constructible!");
+
 	protected:
 		String loadActor(String const& path) {
-			// TODO: This
+			auto const props = Makai::File::getFLOW(path);
+			auto const name = props["name"].getString();
+			Instance<TActor> const actor = actor.create(props);
+			actors[name] = actor;
+			return name;
 		}
 
 		void onLoad() override {

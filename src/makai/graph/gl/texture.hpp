@@ -403,6 +403,9 @@ namespace Makai::Graph {
 		/// @brief Returns whether there is an image bound to this texture, and that image isn't empty.
 		operator bool() const;
 
+		Data::Value serialize() const;
+		static Attributes deserialize(Data::Value const& value);
+
 	private:
 		/// @brief Image bound to texture.
 		Image2DInstance image;

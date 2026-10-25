@@ -2,16 +2,20 @@
 #define MAKAILIB_EX_GAME_DIALOG_ACTOR_H
 
 #include "core.hpp"
+#include "box.hpp"
+#include "../core/sprite.hpp"
 
 /// @brief Game dialog extensions.
 namespace Makai::Ex::Game::Dialog {
 	struct Actor: IActor, AUpdateable {
 		Instance<IBox> box;
 
+		Actor(Data::Value const& props, Instance<IBox> const& box): box(box) {}
+
 		void onUpdate(float delta, App& app) {}
 
-		void show() override {}
-		void hide() override {}
+		void show() override {if (box) box->show();}
+		void hide() override {if (box) box->hide();}
 
 		usize enter() override {}
 		usize exit() override {}
@@ -31,9 +35,43 @@ namespace Makai::Ex::Game::Dialog {
 	};
 
 	struct StandardActor: Actor {
-		Instance<IBox> box;
+		struct Configuration {
+			struct Layers {
+				usize body;
+				usize face;
+			} layers;
+		};
 
-		void onUpdate(float delta, App& app) {}
+		Graph::Renderable body;
+		Graph::Renderable face;
+
+		SpriteHolder bodySprite, faceSprite;
+
+		Transform3D trans;
+
+		StandardActor(Data::Value const& props, Configuration const& config = {}, Instance<IBox> const& box = new StandardBox()): Actor(props, box) {
+			body.setRenderLayer(config.layers.body);
+			face.setRenderLayer(config.layers.face);
+			body.material.texture = Graph::Texture2D::deserialize(props.fetch("body/image"));
+			face.material.texture = Graph::Texture2D::deserialize(props.fetch("face/image"));
+			bodySprite = body.createReference<Sprite>();
+			faceSprite = face.createReference<Sprite>();
+			bodySprite->local = {
+				props.fetch("body/trans/position").vectorize(0),
+				props.fetch("body/trans/rotation").vectorize(0),
+				props.fetch("body/trans/scale").vectorize(1)
+			};
+			faceSprite->local = {
+				props.fetch("face/trans/position").vectorize(0),
+				props.fetch("face/trans/rotation").vectorize(0),
+				props.fetch("face/trans/scale").vectorize(1)
+			};
+		}
+
+		void onUpdate(float delta, App& app) {
+			body.trans =
+			face.trans = trans;
+		}
 
 		void show() override {}
 		void hide() override {}

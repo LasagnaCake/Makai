@@ -217,12 +217,18 @@ namespace Makai::Graph {
 			FilterMode		minFilter;
 			/// @brief Magnifying filter.
 			FilterMode		magFilter;
+
+			Data::Value serialize() const;
+			static Attributes deserialize(Data::Value const& value);
 		};
 
 		/// @brief Image contents.
 		struct ImageData: Attributes {
 			/// @brief Contents.
 			List<ubyte> data;
+
+			Data::Value serialize() const;
+			static Attributes deserialize(Data::Value const& value);
 		};
 
 		/// @brief Creates the image, if it doesn't already exist.

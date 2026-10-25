@@ -2,6 +2,7 @@
 #define MAKAILIB_EX_GAME_DIALOG_BOX_H
 
 #include "core.hpp"
+#include "../core/sprite.hpp"
 
 /// @brief Game dialog extensions.
 namespace Makai::Ex::Game::Dialog {
@@ -11,6 +12,9 @@ namespace Makai::Ex::Game::Dialog {
 			Graph::Renderable	background;
 			Graph::UTF8Label	title;
 			Graph::UTF8Label	text;
+
+			SpriteHolder backTitleSprite	= background.createReference<Sprite>();
+			SpriteHolder backTextSprite		= background.createReference<Sprite>();
 		} display;
 
 		struct Configuration {
@@ -28,7 +32,22 @@ namespace Makai::Ex::Game::Dialog {
 			background.active =
 			display.title.active =
 			display.text.active = false;
+			display.background.material.color.a = 0.5;
+			// Title
+			display.backTitleSprite->local.scale = Vector3(40, 1) / 2;
+			display.backTitleSprite->local.position = Vector3(0, 1.5);
+			display.backTitleSprite->setColor(Color::WHITE);
+			display.title.text->lineWrap = Graph::LineWrap::LW_HYPHEN_WORD;
+			display.title.text->rect = {40, 5};
+			display.title.text->rectAlign = .5;
 			display.title.text->content = "";
+			// Text
+			display.backTextSprite->local.scale = Vector3(40, 4) / 2;
+			display.backTextSprite->local.position = Vector3(0, -0.5);
+			display.backTextSprite->setColor(Color::BLACK);
+			display.text.text->lineWrap = Graph::LineWrap::LW_HYPHEN_WORD;
+			display.text.text->rectAlign = .5;
+			display.text.text->rect = {40, 5};
 			display.text.text->content = "";
 		}
 
@@ -43,9 +62,9 @@ namespace Makai::Ex::Game::Dialog {
 		usize present() override	{show();}
 		usize withdraw() override	{hide();}
 
-		usize title(UTF8String const& what) override	{display.title.text->content = what; return 0;	}
-		usize text(UTF8String const& what) override		{display.text.text->content = what; return 0;	}
-		usize display(TextContent const& what) override	{title(what.title); text(what.text); return 0;	}
+		usize title(UTF8String const& what) override	{display.title.text->content = what; return 0;			}
+		usize text(UTF8String const& what) override		{display.text.text->content = "\n" + what; return 0;	}
+		usize display(TextContent const& what) override	{title(what.title); text(what.text); return 0;			}
 
 		usize say(UTF8String const& what) override	{text(what); return 0;								}
 		usize add(UTF8String const& what) override	{text(display.text.text->content + what); return 0;	}
@@ -74,13 +93,13 @@ namespace Makai::Ex::Game::Dialog {
 
 		Transform3D trans;
 
-		StandardBox(Configuration const& config): animation(config.animation) {
+		StandardBox(Configuration const& config = {}): animation(config.animation) {
 			background.setRenderLayer(layers.background);
 			textDisplay.setRenderLayer(layers.text);
 			background.active =
 			textDisplay.active = false;
 			animator.position.reinterpolate(0, 0, 1, interpolator<Vector3>(Math::Ease::Out::cubic));
-			animator.scale.reinterpolate(-2, -2, 1, interpolator<Vector3>(Math::Ease::Out::cubic));
+			animator.scale.reinterpolate(-1, -1, 1, interpolator<Vector3>(Math::Ease::Out::cubic));
 			animator.position.start();
 			animator.scale.start();
 		}
