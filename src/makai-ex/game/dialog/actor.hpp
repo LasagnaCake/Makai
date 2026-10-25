@@ -17,10 +17,10 @@ namespace Makai::Ex::Game::Dialog {
 		void show() override {if (box) box->show();}
 		void hide() override {if (box) box->hide();}
 
-		usize enter() override {}
-		usize exit() override {}
-		usize present() override {}
-		usize withdraw() override {}
+		usize enter() override		{if (box) return box->enter(); return 0;	}
+		usize exit() override		{if (box) return box->exit(); return 0;		}
+		usize present() override	{if (box) return box->present(); return 0;	}
+		usize withdraw() override	{if (box) return box->withdraw(); return 0;	}
 
 		usize title(UTF8String const& what) override	{if (box) return box->title(what); return 0;	}
 		usize text(UTF8String const& what) override		{if (box) return box->text(what); return 0;		}
@@ -29,9 +29,9 @@ namespace Makai::Ex::Game::Dialog {
 		usize say(UTF8String const& what) override	{if (box) return box->say(what); return 0;}
 		usize add(UTF8String const& what) override	{if (box) return box->add(what); return 0;}
 
-		usize perform(String const& action) override	{}
-		usize emote(String const& emotion) override		{}
-		usize change(String const& costume) override	{}
+		usize perform(String const& action) override	{return 0;}
+		usize emote(String const& emotion) override		{return 0;}
+		usize change(String const& costume) override	{return 0;}
 	};
 
 	struct StandardActor: Actor {
@@ -40,14 +40,23 @@ namespace Makai::Ex::Game::Dialog {
 				usize body;
 				usize face;
 			} layers;
+			usize duration = 30;
 		};
+
+		struct Animator {
+			Tween<Vector3> position;
+			Tween<float> alpha;
+		} animator;
 
 		Graph::Renderable body;
 		Graph::Renderable face;
 
-		SpriteHolder bodySprite, faceSprite;
+		TileHolder bodySprite, faceSprite;
 
 		Transform3D trans;
+
+		Dictionary<Vector2> emotions;
+		Dictionary<Vector2> costumes;
 
 		StandardActor(Data::Value const& props, Configuration const& config = {}, Instance<IBox> const& box = new StandardBox()): Actor(props, box) {
 			body.setRenderLayer(config.layers.body);
@@ -66,36 +75,52 @@ namespace Makai::Ex::Game::Dialog {
 				props.fetch("face/trans/rotation").vectorize(0),
 				props.fetch("face/trans/scale").vectorize(1)
 			};
+			body.active = false;
+			face.active = false;
+			animator.position.reinterpolate(Vector3::UP(), Vector3::UP(), 1, interpolator<Vector3>(Math::Ease::Out::cubic));
+			animator.alpha.reinterpolate(0, 0, 1, interpolator<float>(Math::Ease::Out::linear));
 		}
 
 		void onUpdate(float delta, App& app) {
 			updateDisplay();
 		}
 
-		void show() override {}
-		void hide() override {}
+		void show() override {Actor::show(); body.active = face.active = true;	}
+		void hide() override {Actor::hide(); body.active = face.active = false;	}
 
-		usize enter() override {}
-		usize exit() override {}
-		usize present() override {}
-		usize withdraw() override {}
+		usize enter() override	{animator.alpha.reinterpolateTo(1, animation.duration); return Math::max(Actor::enter(), animation.duration);	}
+		usize exit() override	{animator.alpha.reinterpolateTo(0, animation.duration); return Math::max(Actor::exit(), animation.duration);	}
 
-		usize title(UTF8String const& what) override	{if (box) return box->title(what); return 0;	}
-		usize text(UTF8String const& what) override		{if (box) return box->text(what); return 0;		}
-		usize display(TextContent const& what) override	{if (box) return box->display(what); return 0;	}
+		usize present() override	{animator.position.reinterpolateTo(0, animation.duration); return Math::max(Actor::present(), animation.duration);				}
+		usize withdraw() override	{animator.position.reinterpolateTo(Vector3::UP(), animation.duration); return Math::max(Actor::withdraw(), animation.duration);	}
 
-		usize say(UTF8String const& what) override	{if (box) return box->say(what); return 0;}
-		usize add(UTF8String const& what) override	{if (box) return box->add(what); return 0;}
+		usize emote(String const& emotion) override	 {
+			if (emotions.contains(emotion)) {
+				auto const what = emotions[emotion];
+				faceSprite->tile = {what.x, what.y};
+			}
+			return 0;
+		}
 
-		usize perform(String const& action) override	{}
-		usize emote(String const& emotion) override		{}
-		usize change(String const& costume) override	{}
+		usize change(String const& costume) override {
+			if (costumes.contains(costume)) {
+				auto const what = costumes[costume];
+				bodySprite->tile = {what.x, what.y};
+			}
+			return 0;
+		}
 
 	private:
 		void updateDisplay() {
-			Transform3D anim;
+			Transform3D anim {
+				animator.position.value(),
+				0,
+				1
+			};
 			body.trans =
 			face.trans = trans * anim;
+			body.material.color.a =
+			face.material.color.a = animator.alpha.value();
 		}
 	};
 }

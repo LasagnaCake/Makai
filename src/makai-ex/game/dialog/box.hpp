@@ -7,7 +7,6 @@
 /// @brief Game dialog extensions.
 namespace Makai::Ex::Game::Dialog {
 	struct Box: IBox, AUpdateable {
-
 		struct Display {
 			Graph::Renderable	background;
 			Graph::UTF8Label	title;
@@ -80,7 +79,7 @@ namespace Makai::Ex::Game::Dialog {
 					GDB_CDM_STEP_WORD_VARIABLE
 				} mode = Mode::GDB_CDM_NONE;
 				Nullable<float> textSpeed;
-				usize tweenSpeed = 30;
+				usize duration = 30;
 			} display;
 		};
 
@@ -98,8 +97,8 @@ namespace Makai::Ex::Game::Dialog {
 			textDisplay.setRenderLayer(layers.text);
 			background.active =
 			textDisplay.active = false;
-			animator.position.reinterpolate(0, 0, 1, interpolator<Vector3>(Math::Ease::Out::cubic));
-			animator.scale.reinterpolate(-1, -1, 1, interpolator<Vector3>(Math::Ease::Out::cubic));
+			animator.position.reinterpolate(Vector3::DOWN(), Vector3::DOWN(), 1, interpolator<Vector3>(Math::Ease::Out::cubic));
+			animator.scale.reinterpolate(0, 0, 1, interpolator<Vector3>(Math::Ease::Out::cubic));
 			animator.position.start();
 			animator.scale.start();
 		}
@@ -113,11 +112,11 @@ namespace Makai::Ex::Game::Dialog {
 				updateText();
 		}
 
-		usize enter() override	{animator.scale.reinterpolateTo(1, animation.tweenSpeed); return animation.tweenSpeed;}
-		usize exit() override	{animator.scale.reinterpolateTo(0, animation.tweenSpeed); return animation.tweenSpeed;}
+		usize enter() override	{animator.scale.reinterpolateTo(Vector3::UP(), animation.duration); return animation.duration;	}
+		usize exit() override	{animator.scale.reinterpolateTo(0, animation.duration); return animation.duration;				}
 
-		usize present() override	{animator.position.reinterpolateTo(0, animation.tweenSpeed); return animation.tweenSpeed;}
-		usize withdraw() override	{animator.position.reinterpolateTo(-1, animation.tweenSpeed); return animation.tweenSpeed;}
+		usize present() override	{animator.position.reinterpolateTo(0, animation.duration); return animation.duration;				}
+		usize withdraw() override	{animator.position.reinterpolateTo(Vector3::DOWN(), animation.duration); return animation.duration;	}
 
 		usize text(UTF8String const& what) override {
 			words = getWords(what);

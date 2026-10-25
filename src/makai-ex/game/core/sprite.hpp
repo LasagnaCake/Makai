@@ -30,7 +30,7 @@ namespace Makai::Ex::Game {
 	using ThreePatchHandle		= Handle<Graph::Ref::ThreePatch1D>;
 	/// @brief Three-patch shape unique pointer type.
 	using ThreePatchHolder		= Unique<Graph::Ref::ThreePatch1D>;
-	
+
 	/// @brief Nine-patch shape instance type.
 	using NinePatchInstance		= Instance<Graph::Ref::NinePatch2D>;
 	/// @brief Nine-patch shape handle type.
