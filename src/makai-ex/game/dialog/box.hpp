@@ -143,12 +143,14 @@ namespace Makai::Ex::Game::Dialog {
 
 	private:
 		void updateDisplay() {
-			display.background.trans.position =
-			display.title.trans.position =
-			display.text.trans.position = trans.position + animator.position.value();
-			display.background.trans.scale =
-			display.title.trans.scale =
-			display.text.trans.scale = trans.scale * animator.scale.value();
+			Transform3D anim {
+				animator.position.value(),
+				0,
+				animator.scale.value()
+			};
+			display.background.trans =
+			display.title.trans =
+			display.text.trans = trans * anim;
 		}
 
 		void updateText() {

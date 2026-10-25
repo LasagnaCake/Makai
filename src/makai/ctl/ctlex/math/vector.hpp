@@ -1384,6 +1384,30 @@ struct Transform {
 		return *this;
 	}
 
+	constexpr Transform operator*(Transform const& other) const {
+		return {
+			position + other.position,
+			rotation + other.rotation,
+			scale * other.scale
+		};
+	}
+
+	constexpr Transform operator&(Transform const& other) const {
+		return {
+			position * other.position,
+			rotation * other.rotation,
+			scale * other.scale
+		};
+	}
+
+	constexpr Transform operator|(Transform const& other) const {
+		return {
+			position + other.position,
+			rotation + other.rotation,
+			scale + other.scale
+		};
+	}
+
 	/// @brief Position transform.
 	TPosition	position	= TPosition(0);
 	/// @brief Rotation transform.

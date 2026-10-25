@@ -69,8 +69,7 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 		void onUpdate(float delta, App& app) {
-			body.trans =
-			face.trans = trans;
+			updateDisplay();
 		}
 
 		void show() override {}
@@ -91,6 +90,13 @@ namespace Makai::Ex::Game::Dialog {
 		usize perform(String const& action) override	{}
 		usize emote(String const& emotion) override		{}
 		usize change(String const& costume) override	{}
+
+	private:
+		void updateDisplay() {
+			Transform3D anim;
+			body.trans =
+			face.trans = trans * anim;
+		}
 	};
 }
 
