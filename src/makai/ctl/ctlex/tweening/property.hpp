@@ -12,19 +12,19 @@ CTL_EX_NAMESPACE_BEGIN
 template<Type::Ex::Tween::Tweenable T>
 struct Property {
 	/// @brief Current value.
-	T					value		= 0;
+	T				value		= 0;
 	/// @brief Whether to interpolate the property.
-	bool				interpolate	= false;
+	bool			interpolate	= false;
 	/// @brief Starting value.
-	T					start		= 0;
+	T				start		= 0;
 	/// @brief End value.
-	T					stop		= 0;
+	T				stop		= 0;
 	/// @brief Interpolation speed.
-	float				speed		= 0;
+	float			speed		= 0;
 	/// @brief Interpolation function.
-	Math::Ease::Mode	ease		= Math::Ease::linear;
+	Interpolator<T>	ease		= interpolator<T>(Math::Ease::linear);
 	/// @brief Current interpolation factor.
-	float				factor		= 0;
+	float			factor		= 0;
 
 	/// @brief Updates the property, and returns its current value.
 	/// @return Current value after processing.
@@ -32,7 +32,7 @@ struct Property {
 		if (!(interpolate && speed != 0))
 			return value;
 		factor = CTL::Math::clamp<float>(factor, 0, 1);
-		value = ::CTL::Ex::interpolate<T>(start, stop, factor, ease);
+		value = interpolate(start, stop, factor);
 		factor += speed;
 		return value;
 	}

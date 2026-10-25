@@ -37,6 +37,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			Namespace::TypeRef		parent;
 			bool					mayBeEmpty = false;
 			bool					spreaded = false;
+			bool					endOfBlock = false;
 
 			bool shouldBePushed() const;
 			bool isStackTop() const;

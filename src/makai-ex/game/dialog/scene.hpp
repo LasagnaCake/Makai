@@ -234,10 +234,18 @@ namespace Makai::Ex::Game::Dialog {
 		usize maxDelay = 0;
 	};
 
+	template <Type::Derived<IActor> TActor, Type::Derived<IBox> TBox>
 	struct StandardScene: ARTScene {
 	protected:
-		void onLoad() override {
+		String loadActor(String const& path) {
+			// TODO: This
+		}
 
+		void onLoad() override {
+			context.art.addNativeCall<String(String)>(
+				"makai/ex/game/dialog/scene/loadActor/v1",
+				memberCall(*this, loadActor)
+			);
 		}
 	};
 }

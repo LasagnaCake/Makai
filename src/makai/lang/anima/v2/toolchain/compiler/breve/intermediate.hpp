@@ -273,6 +273,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		bool							constructor = false;
 		UTF8String						operatorFor = "";
 		Handle<Overload>				fullImpl;
+		Node::Instance					proto = nullptr;
 		Node::Instance					decl = nullptr;
 
 		usize uses = 0;

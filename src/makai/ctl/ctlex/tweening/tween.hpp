@@ -66,8 +66,8 @@ public:
 
 	using ATweenPeriodic::ATweenPeriodic;
 
-	/// @brief Easing function to use.
-	Math::Ease::Mode easeMode = Math::Ease::linear;
+	/// @brief Interpolation function to use.
+	Interpolator<T> interpolate = interpolator<T>(Math::Ease::linear);
 	/// @brief Start value.
 	T from;
 	/// @brief End value.
@@ -77,17 +77,17 @@ public:
 	/// @param from Start value.
 	/// @param to End value.
 	/// @param step Step count.
-	/// @param easeMode Ease function. By default, it is `Math::Ease::linear`.
+	/// @brief Interpolation function to use. By default, it is `Math::Ease::linear`.
 	/// @param manual Whether the tween is processed manually. By default, it is `false`.
 	Tween(
 		T const& from,
 		T const& to,
 		usize const step,
-		Math::Ease::Mode const& easeMode = Math::Ease::linear,
+		Interpolator<T> const& interpolate = interpolator<T>(Math::Ease::linear),
 		bool const manual = false
 	)
 	: ATweenPeriodic(manual) {
-		setInterpolation(from, to, step, easeMode);
+		setInterpolation(from, to, step, interpolate);
 	}
 
 	/// @brief Move constructor.
@@ -97,7 +97,7 @@ public:
 		other.from,
 		other.to,
 		other.stop,
-		other.easeMode,
+		other.interpolate,
 		other.isManual()
 	) {
 		paused = other.paused;
@@ -128,7 +128,7 @@ public:
 			// If begin != end, calculate step
 			if (from != to) {
 				factor = (static_cast<float>(step)/static_cast<float>(stop));
-				current = interpolate<T>(from, to, factor, easeMode);
+				current = interpolate(from, to, factor);
 			}
 			// Else, set target to end
 			else current = to;
@@ -144,16 +144,16 @@ public:
 	/// @param from Start value.
 	/// @param to End value.
 	/// @param step Step count.
-	/// @param easeMode Ease function.
+	/// @param interpolate Interpolation function.
 	/// @return Reference to self.
-	Tween<T>& setInterpolation(T const& from, T const& to, usize const step, Math::Ease::Mode const& easeMode) {
+	Tween<T>& setInterpolation(T const& from, T const& to, usize const step, Interpolator<T> const& interpolate) {
 		isFinished = false;
 		this->step = 0;
 		this->from = from;
 		this->to = to;
 		stop = step;
 		current = from;
-		this->easeMode = easeMode;
+		this->interpolate = interpolate;
 		factor = 0.0f;
 		return *this;
 	}
@@ -166,7 +166,7 @@ public:
 	/// @return Reference to self.
 	Tween<T>& reinterpolateTo(T const& to) {
 		paused = false;
-		setInterpolation(current, to, step, easeMode);
+		setInterpolation(current, to, step, interpolate);
 		return *this;
 	}
 
@@ -178,7 +178,7 @@ public:
 	/// @return Reference to self.
 	Tween<T>& reinterpolate(T const& from, T const& to) {
 		paused = false;
-		setInterpolation(from, to, step, easeMode);
+		setInterpolation(from, to, step, interpolate);
 		return *this;
 	}
 
@@ -191,7 +191,7 @@ public:
 	/// @return Reference to self.
 	Tween<T>& reinterpolateTo(T const& to, usize const step) {
 		paused = false;
-		setInterpolation(current, to, step, easeMode);
+		setInterpolation(current, to, step, interpolate);
 		return *this;
 	}
 
@@ -204,7 +204,7 @@ public:
 	/// @return Reference to self.
 	Tween<T>& reinterpolate(T const& from, T const& to, usize const step) {
 		paused = false;
-		setInterpolation(from, to, step, easeMode);
+		setInterpolation(from, to, step, interpolate);
 		return *this;
 	}
 
@@ -296,8 +296,8 @@ struct TweenStage {
 	DataType to;
 	/// @brief Step count.
 	usize step;
-	/// @brief Ease function to use. By default, it is `Math::Ease::linear`.
-	Math::Ease::Mode ease	= Math::Ease::linear;
+	/// @brief Interpolation function to use. By default, it is `Math::Ease::linear`.
+	Interpolator<T> interpolate	= interpolation<T>(Math::Ease::linear);
 	/// @brief Action to do when this stage is finished. By default, does nothing.
 	::CTL::Functor<void()> onCompleted;
 };
@@ -387,7 +387,7 @@ public:
 			// If begin != end, calculate step
 			if (current.from != current.to) {
 				factor = (static_cast<float>(step)/static_cast<float>(current.step));
-				current = interpolate<T>(current.from, current.to, factor, current.ease);
+				current = current.interpolate(current.from, current.to, factor);
 			}
 			// Else, set target to end
 			currentValue = current.to;

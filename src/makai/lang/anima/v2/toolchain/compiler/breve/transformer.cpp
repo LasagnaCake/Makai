@@ -786,7 +786,7 @@ ATransformer::Result Return::transform(Context& context, Node::Instance const& n
 			context.error("Expected string value here!", node->leftSide);
 		context.top()->impl->writeMainLine("error");
 	}
-	return {{"move top"}, val.scope, val.type, {}, val.likelihood, nullptr, val.mayBeEmpty};
+	return {{"move top"}, val.scope, val.type, {}, val.likelihood, nullptr, val.mayBeEmpty, val.spreaded, val.endOfBlock};
 }
 
 ATransformer::Result Exit::transform(Context& context, Node::Instance const& node) {
@@ -808,6 +808,7 @@ ATransformer::Result Block::transform(Context& context, Node::Instance const& no
 			context.top()->impl->writeMainLine(result.scope->variable->initializer->impl->toString());
 			result.scope->variable->initializer = null;
 		}
+		if (result.endOfBlock) break;
 	}
 	context.top()->impl->writeMainLine("end");
 	return result;
@@ -824,6 +825,7 @@ ATransformer::Result SubExpression::transform(Context& context, Node::Instance c
 			context.top()->impl->writeMainLine(result.scope->variable->initializer->impl->toString());
 			result.scope->variable->initializer = null;
 		}
+		if (result.endOfBlock) break;
 	}
 	return result;
 }
@@ -1700,6 +1702,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 		current = current.create();
 		current->fullImpl = first->fullImpl;
 		current->decl = node->rightSide;
+		current->proto = node->middle;
 		fn->current.pushBack(current);
 		current->arguments = prev->arguments;
 		overload->varc = current->arguments.size();
@@ -1722,6 +1725,7 @@ ATransformer::Result FunctionDecl::transform(Context& context, Node::Instance co
 	auto const argc = required.size() + optional.size();
 	if (node->rightSide) {
 		current->decl = node->rightSide;
+		current->proto = node->middle;
 		if (ovImpl.size())
 			current = current.create();
 		context.functionStack.pushBack(current);
@@ -2033,7 +2037,24 @@ ATransformer::Result Declaration::transform(Context& context, Node::Instance con
 }
 
 static Makai::Data::Value callDirect(ATransformer::Context& context, Function::Overload& ov, Makai::Data::Value::ArrayType const& args) {
-	// TODO: Direct functions
+	usize ivoc = 0;
+	auto const tempScope = context.declare(UTF8StringList::from("<resolve>::" + ov->decl->name() + ov->entry + "__" + Makai::toString(ivoc)))
+	for (auto const& [arg, index]: ov->proto->children) {
+		auto const ax = context.getExpression(arg);
+		current->arguments.pushBack(ax.scope->variable);
+		ax.scope->variable->fill();
+		if (i < args.size())
+			ax.compile(args[i]);
+		if (!ax.isCompiled())
+			context.error("Optional value does not resolve to a direct expression!", arg);
+	}
+	if (!ov->decl)
+		context.error("Direct function does not contain a declaration!", ov->proto);
+	auto const expr = context.getExpression(ov->decl);
+	context.pop(1);
+	if (expr.type && !expr.type->flags.isEmpty && expr.direct.isUndefined())
+		context.error("This expression does not result in a direct value!", ov->decl);
+	return expr;
 }
 
 ATransformer::Result Call::transform(Context& context, Node::Instance const& node) {
@@ -2066,7 +2087,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		argResults.pushBack(expr);
 		if (expr.isCompilable())
 			directArgs.pushBack(expr.direct);
-		else runtimeCall = true;
+		else runtimeCall = false;
 	}
 	MAKAILIB_DEBUGLN_FULL("Function: ", f.name);
 	MAKAILIB_DEBUGLN_FULL("Overloads: [ ");
@@ -2104,7 +2125,7 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 		auto const copyAction = (fn.isStackTop() && fn.isCopied()) ? Makai::toString("\ncopy ", *fn.source, " -> top")  : "";
 		context.top()->impl->main[memspot] = pushAction + copyAction;
 	}
-	if (!runtimeCall && ov.variant.context > ExecutionContext::AV2_TCB_EC_RUNTIME) {
+	if (!runtimeCall && ov.variant.context >= ExecutionContext::AV2_TCB_EC_MIXED) {
 		auto const ret = callDirect(context, ov, directArgs);
 		context.impl()->main.eraseRange(-dx, -1);
 		if (ret.isUndefined())

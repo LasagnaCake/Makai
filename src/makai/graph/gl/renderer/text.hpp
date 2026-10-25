@@ -44,7 +44,7 @@ namespace Makai::Graph {
 	struct FontFace {
 	public:
 		using FontInstance = Instance<FontData>;
-		
+
 		// This needs to be initialized this specific way, else it breaks somehow???
 		/// @brief Default constructor.
 		FontFace();
@@ -119,7 +119,7 @@ namespace Makai::Graph {
 
 			/// @brief Converts the text data to different encoding.
 			template <class T>
-			constexpr operator TextData<T>() const 
+			constexpr operator TextData<T>() const
 			requires (Type::Different<T, TString>) {
 				return {toString(content), *this};
 			}
