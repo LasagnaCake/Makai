@@ -79,7 +79,8 @@ struct LinkedList:
 		typename Iteratable::PointerType,
 		typename Iteratable::ConstPointerType,
 		typename Iteratable::ReferenceType,
-		typename Iteratable::ConstReferenceType
+		typename Iteratable::ConstReferenceType,
+		typename Iteratable::TemporaryType
 	;
 
 	using
@@ -194,7 +195,8 @@ public:
 
 	template <bool A, bool B> friend struct Iterator;
 
-	constexpr LinkedList(SelfType const& other) {for (auto const& e: other) pushBack(e);}
+	constexpr LinkedList(SelfType const& other)	{for (auto const& e: other) pushBack(e);	}
+	constexpr LinkedList(SelfType&& other)		{swap(*this, other);						}
 
 	template <class... Args>
 	constexpr LinkedList(Args const&... args)
@@ -223,6 +225,16 @@ public:
 		return *this;
 	}
 
+	constexpr SelfType& pushBack(TemporaryType value) {
+		ref<Node> const node = new Node{move(value)};
+		if (head == nullptr)
+			head = node;
+		else Node::parent(*tail, *node);
+		tail = node;
+		++count;
+		return *this;
+	}
+
 	constexpr DataType popBack() {
 		if (!count) emptyError();
 		--count;
@@ -239,6 +251,16 @@ public:
 
 	constexpr SelfType& pushFront(ConstReferenceType value) {
 		ref<Node> const node = new Node{value};
+		if (tail == nullptr)
+			tail = node;
+		else Node::parent(*node, *head);
+		head = node;
+		++count;
+		return *this;
+	}
+
+	constexpr SelfType& pushFront(TemporaryType value) {
+		ref<Node> const node = new Node{move(value)};
 		if (tail == nullptr)
 			tail = node;
 		else Node::parent(*node, *head);
@@ -323,6 +345,22 @@ public:
 		swap(a.count, b.count);
 	}
 
+	constexpr Iterator<false, false> at(IndexType index) {
+		assertIsInBounds(index);
+		while(index < 0) index += count;
+		auto it = begin();
+		while (index--) ++it;
+		return it;
+	}
+
+	constexpr Iterator<false, true> at(IndexType index) const {
+		assertIsInBounds(index);
+		while(index < 0) index += count;
+		auto it = begin();
+		while (index--) ++it;
+		return it;
+	}
+
 private:
 	constexpr void removeHeadAndTail() {
 		delete head;
@@ -331,7 +369,7 @@ private:
 
 	owner<Node>	head	= nullptr;
 	owner<Node>	tail	= nullptr;
-	usize		count	= 0;
+	SizeType	count	= 0;
 
 	constexpr void assertIsInBounds(IndexType const index) const {
 		CTL_DEVMODE_FN_DECL;

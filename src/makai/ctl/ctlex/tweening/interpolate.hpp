@@ -22,7 +22,7 @@ template<Type::Ex::Tween::Tweenable T>
 constexpr Interpolator<T> interpolator(Math::Ease::Mode const& mode = Math::Ease::linear) {
 	return [mode] (T const& from, T const& to, float const factor) {
 		interpolate<T>(from, to, factor, mode);
-	}
+	};
 }
 
 CTL_EX_NAMESPACE_END

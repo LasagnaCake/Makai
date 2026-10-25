@@ -4,19 +4,65 @@
 #include "../../../../../compat/ctl.hpp"
 
 namespace Makai::Anima::V2::Runtime {
-	struct Allocator {
-		struct Block {
-			usize used, free;
-			pointer memory;
-			usize refs;
-		};
+	namspace Impl {
+		struct BlockAllocator {
+			BlockAllocator(usize const blockSize);
 
-		struct Section {
-			ref<Block>	block;
-			pointer		start;
-			pointer		size;
+			~BlockAllocator();
+
+			struct Block {
+				MemorySlice<byte>	memory;
+				usize				used, free;
+				usize				refs;
+				Mutex				lock;
+
+				constexpr bool contains(ref<byte const> const ptr) {return ptr >= memory.data() && ptr < memory.data() + memory.size();}
+			};
+
+			struct Section {
+				ref<Block>	block;
+				pointer		start;
+				usize		size;
+				Mutex		lock;
+			};
+
+			LinkedList<Block>	blocks;
+			LinkedList<Section>	free;
+
+			pointer	allocate(usize const sz);
+			void	deallocate(pointer const at, usize const sz);
+
+		private:
+			void collect();
+
+			pointer newBlock(usize const sz, usize const preused);
+
+			usize const blockSize;
+
+			Mutex lock;
 		};
+	}
+
+	template <class TData>
+	struct BlockAllocator {
+		using DataType = TData;
+
+		[[nodiscard, gnu::malloc, gnu::noinline, gnu::nonnull(1)]]
+		owner<DataType> allocate(usize const sz) {
+			return (owner<DataType>)alloc.allocate(sz * sizeof(DataType));
+		}
+
+		[[gnu::noinline, gnu::nonnull(2)]]
+		void deallocate(owner<DataType> const mem, usize const sz) {
+			return alloc.deallocate((pointer)mem, sz * sizeof(DataType));
+		}
+
+	private:
+		BlockAllocator alloc;
 	};
+
+	template <class T>
+	using Allocator = GSAllocator<T, BlockAllocator>;
 }
 
 #endif

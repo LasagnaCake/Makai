@@ -80,20 +80,20 @@ namespace Math {
 
 	/// @brief Returns the highest in a set of values.
 	template<class T, class... Rest>
-	constexpr T highest(T const& first, Types const&... rest) {
-		if constexpr (sizeof...(Types) == 0)
+	constexpr T highest(T const& first, Rest const&... rest) {
+		if constexpr (sizeof...(Rest) == 0)
 			return first;
-		else if constexpr(sizeof...(Types) == 1)
+		else if constexpr(sizeof...(Rest) == 1)
 			return max(first, rest...);
 		else return max(first, largest(rest...));
 	}
 
 	/// @brief Returns the lowest in a set of values.
 	template<class T, class... Rest>
-	constexpr T lowest(T const& first, Types const&... rest) {
-		if constexpr (sizeof...(Types) == 0)
+	constexpr T lowest(T const& first, Rest const&... rest) {
+		if constexpr (sizeof...(Rest) == 0)
 			return first;
-		else if constexpr(sizeof...(Types) == 1)
+		else if constexpr(sizeof...(Rest) == 1)
 			return min(first, rest...);
 		else return min(first, largest(rest...));
 	}
