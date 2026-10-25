@@ -13,7 +13,7 @@ namespace Makai::Ex::Game::Dialog {
 	struct IAnimatable {
 		virtual ~IAnimatable() {}
 
-		virtual usize play(usize const animation) = 0;
+		virtual usize play(usize const animation) {}
 	};
 
 	struct IPresentable {
@@ -46,6 +46,13 @@ namespace Makai::Ex::Game::Dialog {
 		virtual usize perform(String const& action) = 0;
 	};
 
+	struct ITransformable {
+		virtual ~ITransformable() {}
+
+		virtual void setTransform(Transform3D const& trans) = 0;
+		virtual Transform3D getTransform() const = 0;
+	};
+
 	struct IEmotive {
 		virtual ~IEmotive() {}
 
@@ -58,8 +65,8 @@ namespace Makai::Ex::Game::Dialog {
 		virtual usize change(String const& costume) = 0;
 	};
 
-	struct IBox:	IVisible, IAnimatable, IPresentable, ITextDisplay, ITalkative	{};
-	struct IActor:	IBox, IPerformable, IEmotive, ICostumed							{};
+	struct IBox:	IVisible, ITransformable, IAnimatable, IPresentable, ITextDisplay, ITalkative	{};
+	struct IActor:	IBox, IPerformable, IEmotive, ICostumed											{};
 }
 
 #endif

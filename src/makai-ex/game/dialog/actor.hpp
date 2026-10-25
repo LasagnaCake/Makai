@@ -40,7 +40,13 @@ namespace Makai::Ex::Game::Dialog {
 				usize body;
 				usize face;
 			} layers;
-			usize duration = 30;
+			struct Animation {
+				usize duration = 30;
+			};
+			struct Base {
+				Transform3D actor;
+				Transform3D box;
+			} base;
 		};
 
 		struct Animator {
@@ -53,32 +59,53 @@ namespace Makai::Ex::Game::Dialog {
 
 		TileHolder bodySprite, faceSprite;
 
+		Configuration::Animation animation = {};
+
+		Configuration::Base base = {};
+
 		Transform3D trans;
 
 		Dictionary<Vector2> emotions;
 		Dictionary<Vector2> costumes;
 
-		StandardActor(Data::Value const& props, Configuration const& config = {}, Instance<IBox> const& box = new StandardBox()): Actor(props, box) {
+		StandardActor(Data::Value const& props, Configuration const& config = {}, Instance<IBox> const& box = new StandardBox()):
+		Actor(props, box),
+		animation(config.animation),
+		base(config.base) {
 			body.setRenderLayer(config.layers.body);
 			face.setRenderLayer(config.layers.face);
 			body.material.texture = Graph::Texture2D::deserialize(props.fetch("body/image"));
 			face.material.texture = Graph::Texture2D::deserialize(props.fetch("face/image"));
 			bodySprite = body.createReference<Sprite>();
 			faceSprite = face.createReference<Sprite>();
-			bodySprite->local = {
+			bodySprite->local = Transform3D {
 				props.fetch("body/trans/position").vectorize(0),
 				props.fetch("body/trans/rotation").vectorize(0),
 				props.fetch("body/trans/scale").vectorize(1)
 			};
-			faceSprite->local = {
+			faceSprite->local = Transform3D {
 				props.fetch("face/trans/position").vectorize(0),
 				props.fetch("face/trans/rotation").vectorize(0),
 				props.fetch("face/trans/scale").vectorize(1)
+			};
+			trans = Transform3D {
+				props.fetch("trans/position").vectorize(0),
+				props.fetch("trans/rotation").vectorize(0),
+				props.fetch("trans/scale").vectorize(1)
 			};
 			body.active = false;
 			face.active = false;
 			animator.position.reinterpolate(Vector3::UP(), Vector3::UP(), 1, interpolator<Vector3>(Math::Ease::Out::cubic));
 			animator.alpha.reinterpolate(0, 0, 1, interpolator<float>(Math::Ease::Out::linear));
+			if (box) {
+				box->setTransform(
+					Transform3D {
+						props.fetch("box/trans/position").vectorize(0),
+						props.fetch("box/trans/rotation").vectorize(0),
+						props.fetch("box/trans/scale").vectorize(1)
+					} * base.box
+				);
+			}
 		}
 
 		void onUpdate(float delta, App& app) {
@@ -88,11 +115,11 @@ namespace Makai::Ex::Game::Dialog {
 		void show() override {Actor::show(); body.active = face.active = true;	}
 		void hide() override {Actor::hide(); body.active = face.active = false;	}
 
-		usize enter() override	{animator.alpha.reinterpolateTo(1, animation.duration); return Math::max(Actor::enter(), animation.duration);	}
-		usize exit() override	{animator.alpha.reinterpolateTo(0, animation.duration); return Math::max(Actor::exit(), animation.duration);	}
+		usize enter() override	{animator.alpha.reinterpolateTo(1, animation.duration); return Math::highest(Actor::enter(), animation.duration);	}
+		usize exit() override	{animator.alpha.reinterpolateTo(0, animation.duration); return Math::highest(Actor::exit(), animation.duration);	}
 
-		usize present() override	{animator.position.reinterpolateTo(0, animation.duration); return Math::max(Actor::present(), animation.duration);				}
-		usize withdraw() override	{animator.position.reinterpolateTo(Vector3::UP(), animation.duration); return Math::max(Actor::withdraw(), animation.duration);	}
+		usize present() override	{animator.position.reinterpolateTo(0, animation.duration); return Math::highest(Actor::present(), animation.duration);				}
+		usize withdraw() override	{animator.position.reinterpolateTo(Vector3::UP(), animation.duration); return Math::highest(Actor::withdraw(), animation.duration);	}
 
 		usize emote(String const& emotion) override	 {
 			if (emotions.contains(emotion)) {
@@ -110,6 +137,9 @@ namespace Makai::Ex::Game::Dialog {
 			return 0;
 		}
 
+		void setTransform(Transform3D const& tt) override	{trans = tt;	}
+		Transform3D getTransform() const override			{return trans;	}
+
 	private:
 		void updateDisplay() {
 			Transform3D anim {
@@ -118,7 +148,7 @@ namespace Makai::Ex::Game::Dialog {
 				1
 			};
 			body.trans =
-			face.trans = trans * anim;
+			face.trans = trans * anim * base.actor;
 			body.material.color.a =
 			face.material.color.a = animator.alpha.value();
 		}

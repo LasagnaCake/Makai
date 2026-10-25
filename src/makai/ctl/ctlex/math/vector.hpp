@@ -1392,6 +1392,10 @@ struct Transform {
 		};
 	}
 
+	constexpr Transform operator/(Transform const& other) const {
+		return Transform(*this) * other.inverted();
+	}
+
 	constexpr Transform operator&(Transform const& other) const {
 		return {
 			position * other.position,

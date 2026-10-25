@@ -132,9 +132,9 @@ namespace Makai::Ex::Game::Dialog {
 		}
 
 	protected:
-		void wait(usize const delay)		{maxDelay = Math::max(maxDelay, delay);	}
-		void addWait(usize const delay)		{maxDelay += delay;						}
-		void setDelay(usize const delay)	{maxDelay = delay;						}
+		void wait(usize const delay)		{maxDelay = Math::highest(maxDelay, delay);	}
+		void addWait(usize const delay)		{maxDelay += delay;							}
+		void setDelay(usize const delay)	{maxDelay = delay;							}
 
 		void onLoad() override {
 			context.art.addNativeCall<void(UTF8String)>(

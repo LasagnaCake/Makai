@@ -56,26 +56,46 @@ namespace Math {
 		return static_cast<T>(val < 0 ? -1 : (val > 0 ? +1 : 0));
 	}
 
-	/// @brief Returns the smallest of the two values.
+	/// @brief Returns the lower of the two values.
 	/// @tparam T Value type.
 	/// @param a First value.
 	/// @param b Second value.
-	/// @return Smallest of the two values.
+	/// @return Lower of the two values.
 	template<Type::Math::Operatable T = float>
 	constexpr T min(T const& a, T const& b)
 	requires Type::Comparable::Lesser<T, T> {
 		return ((a < b) ? a : b);
 	}
 
-	/// @brief Returns the largest of the two values.
+	/// @brief Returns the higher of the two values.
 	/// @tparam T Value type.
 	/// @param a First value.
 	/// @param b Second value.
-	/// @return Largest of the two values.
+	/// @return Higher of the two values.
 	template<Type::Math::Operatable T = float>
 	constexpr T max(T const& a, T const& b)
 	requires Type::Comparable::Greater<T, T> {
 		return ((a > b) ? a : b);
+	}
+
+	/// @brief Returns the highest in a set of values.
+	template<class T, class... Rest>
+	constexpr T highest(T const& first, Types const&... rest) {
+		if constexpr (sizeof...(Types) == 0)
+			return first;
+		else if constexpr(sizeof...(Types) == 1)
+			return max(first, rest...);
+		else return max(first, largest(rest...));
+	}
+
+	/// @brief Returns the lowest in a set of values.
+	template<class T, class... Rest>
+	constexpr T lowest(T const& first, Types const&... rest) {
+		if constexpr (sizeof...(Types) == 0)
+			return first;
+		else if constexpr(sizeof...(Types) == 1)
+			return min(first, rest...);
+		else return min(first, largest(rest...));
 	}
 
 	/// @brief Clamps the value between a given range.
@@ -183,7 +203,7 @@ namespace Math {
 	}
 
 	static_assert(compare<float>(ceil(PI * 10e7), 314159266));
-	
+
 	/// @brief Rounds a number up.
 	/// @tparam T Number type.
 	/// @param val Value to round.
@@ -219,7 +239,7 @@ namespace Math {
 		// Add 1/2 & floor it
 		return static_cast<T>(floor((val + 0.5) * zeros) / zeros);
 	}
-	
+
 	template<Type::Number T = float>
 	constexpr T fmult(T const val, T const mult) {
 		return floor(val / (double)mult) * mult;
@@ -344,7 +364,7 @@ namespace Math {
 	constexpr inline Function<T(T const&)> getInterpolationFunction(T const& from, T const& to) {
 		return [=](T const& by) -> T {return static_cast<T>(lerp(from, to, by));};
 	}
-	
+
 	/// @brief Multiplies an unsigned integer to a power of two.
 	/// @tparam T Integer type.
 	/// @param val Value to multiply.

@@ -67,6 +67,9 @@ namespace Makai::Ex::Game::Dialog {
 
 		usize say(UTF8String const& what) override	{text(what); return 0;								}
 		usize add(UTF8String const& what) override	{text(display.text.text->content + what); return 0;	}
+
+		void setTransform(Transform3D const& tt) override	{trans = tt;	}
+		Transform3D getTransform() const override			{return trans;	}
 	};
 
 	struct StandardBox: Box {
