@@ -8,7 +8,6 @@ override prefix := $(call concat, $(prefix), rt)
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call submake-all, model)
 	$(call compile-all, engine)
 endef
 
