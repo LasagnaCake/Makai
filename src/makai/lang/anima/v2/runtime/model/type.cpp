@@ -15,7 +15,7 @@ static TypeModel::Destructor castAndConstruct() {
 	return {castAndConstructImpl<T>};
 }
 
-static TypeModel::BasicTypeImpl::Constructor constructorOf(BasicType const type) {
+static TypeModel::ProxyTypeImpl::Constructor constructorOf(BasicType const type) {
 	switch (type) {
 		case BasicType::AV2_BT_MATRIX:	return castAndConstruct<Matrix4x4>();
 		case BasicType::AV2_BT_VECTOR:	return castAndConstruct<Vector4>();
@@ -38,7 +38,7 @@ static TypeModel::Destructor doNotDestruct() {
 	return {};
 }
 
-static TypeModel::BasicTypeImpl::Destructor destructorOf(BasicType const type) {
+static TypeModel::ProxyTypeImpl::Destructor destructorOf(BasicType const type) {
 	switch (type) {
 		case BasicType::AV2_BT_MATRIX:	return castAndDestruct<Matrix4x4>();
 		case BasicType::AV2_BT_VECTOR:	return castAndDestruct<Vector4>();
@@ -74,7 +74,7 @@ static TypeModel::Cloner doNotClone() {
 	return {};
 }
 
-static TypeModel::BasicTypeImpl::Cloner clonerOf(BasicType const type) {
+static TypeModel::ProxyTypeImpl::Cloner clonerOf(BasicType const type) {
 	switch (type) {
 		case BasicType::AV2_BT_BOOL:	return castAndClone<bool>();
 		case BasicType::AV2_BT_INT8:	return castAndClone<int8>();
@@ -141,7 +141,7 @@ static TypeModel::Comparator doNotCompare() {
 	return {};
 }
 
-static TypeModel::BasicTypeImpl::Comparator comparatorOf(BasicType const type) {
+static TypeModel::ProxyTypeImpl::Comparator comparatorOf(BasicType const type) {
 	switch (type) {
 		case BasicType::AV2_BT_BOOL:	return primitiveCompare<bool>();
 		case BasicType::AV2_BT_INT8:	return primitiveCompare<int8>();
@@ -164,7 +164,7 @@ static TypeModel::BasicTypeImpl::Comparator comparatorOf(BasicType const type) {
 	}
 }
 
-TypeModel::BasicTypeImpl TypeModel::BasicTypeImpl::implementFor(BasicType const type) {
+TypeModel::ProxyTypeImpl TypeModel::ProxyTypeImpl::implementFor(BasicType const type) {
 	return {
 		constructorOf(type),
 		destructorOf(type),
@@ -201,5 +201,5 @@ void TypeModel::makeBasic(TypeModel& type) {
 		case AV2_BT_NULL:		type.alignment = 0;							break;
 		default: break;
 	}
-	type.bti = BasicTypeImpl::implementFor(*type.basic);
+	type.proxy = ProxyTypeImpl::implementFor(*type.basic);
 }

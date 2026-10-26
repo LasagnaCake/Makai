@@ -2,14 +2,18 @@
 #define MAKAILIB_ANIMA_V2_RUNTIME_MODEL_TYPE_H
 
 #include "allocator.hpp"
+#include "../../core/entry.hpp"
+#include "../../core/flags.hpp"
 
 namespace Makai::Anima::V2::Runtime {
 	using Core::Operator;
 	using Core::BasicType;
 	using Core::TypeFlags;
+	using Core::Flagged;
+	using Core::Entry;
 
-	struct TypeModel: Core::Entry, Core::Flagged<TypeFlags> {
-		struct BasicTypeImpl {
+	struct TypeModel: Entry, Flagged<TypeFlags> {
+		struct ProxyTypeImpl {
 			using Constructor	= Functor<void(Source&)>;
 			using Destructor	= Functor<void(Source&)>;
 			using Cloner		= Functor<void(Source&, Source const&)>;
@@ -20,7 +24,7 @@ namespace Makai::Anima::V2::Runtime {
 			Cloner		copy;
 			Comparator	compare;
 
-			static AtomicCell<BasicTypeImpl> implementFor(BasicType const type);
+			static AtomicCell<ProxyTypeImpl> implementFor(BasicType const type);
 		};
 
 		using Source = MemorySlice<byte, Allocator>;
@@ -46,7 +50,7 @@ namespace Makai::Anima::V2::Runtime {
 
 		Data::Value::ObjectType		meta;
 
-		AtomicCell<BasicTypeImpl>	bti;
+		AtomicCell<BasicTypeImpl>	proxy;
 	};
 }
 
