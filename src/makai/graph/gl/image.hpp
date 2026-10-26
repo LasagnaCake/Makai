@@ -228,7 +228,7 @@ namespace Makai::Graph {
 			List<ubyte> data;
 
 			Data::Value serialize() const;
-			static Attributes deserialize(Data::Value const& value);
+			static ImageData deserialize(Data::Value const& value);
 		};
 
 		/// @brief Creates the image, if it doesn't already exist.
