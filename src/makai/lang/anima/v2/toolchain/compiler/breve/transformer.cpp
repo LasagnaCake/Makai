@@ -2041,11 +2041,11 @@ static Makai::Data::Value callDirect(ATransformer::Context& context, Function::O
 	auto const tempScope = context.declare(Makai::UTF8StringList::from("<resolve>::" + ov.decl->name() + ov.entry + "__" + Makai::toString(ivoc)));
 	for (auto const& [arg, index]: Makai::Range::expand(ov.proto->children)) {
 		auto const ax = context.getExpression(arg);
-		current->arguments.pushBack(ax.scope->variable);
-		ax.scope->variable->fill();
+		auto& av = *ax.scope->variable;
+		av.fill();
 		if (index < args.size())
-			ax.compile(args[index]);
-		if (!ax.isCompiled())
+			av.compile(args[index]);
+		if (!av.isCompiled())
 			context.error("Optional value does not resolve to a direct expression!", arg);
 	}
 	if (!ov.decl)
