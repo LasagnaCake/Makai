@@ -2038,7 +2038,7 @@ ATransformer::Result Declaration::transform(Context& context, Node::Instance con
 
 static Makai::Data::Value callDirect(ATransformer::Context& context, Function::Overload& ov, Makai::Data::Value::ArrayType const& args) {
 	usize ivoc = 0;
-	auto const tempScope = context.declare(UTF8StringList::from("<resolve>::" + ov->decl->name() + ov->entry + "__" + Makai::toString(ivoc)))
+	auto const tempScope = context.declare(Makai::UTF8StringList::from("<resolve>::" + ov->decl->name() + ov->entry + "__" + Makai::toString(ivoc)))
 	for (auto const& [arg, index]: ov->proto->children) {
 		auto const ax = context.getExpression(arg);
 		current->arguments.pushBack(ax.scope->variable);
