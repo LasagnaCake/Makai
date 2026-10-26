@@ -2038,7 +2038,7 @@ ATransformer::Result Declaration::transform(Context& context, Node::Instance con
 
 static Makai::Data::Value callDirect(ATransformer::Context& context, Function::Overload& ov, Makai::Data::Value::ArrayType const& args) {
 	usize ivoc = 0;
-	auto const tempScope = context.declare(Makai::UTF8StringList::from("<resolve>::" + ov->decl->name() + ov->entry + "__" + Makai::toString(ivoc)))
+	auto const tempScope = context.declare(Makai::UTF8StringList::from("<resolve>::" + ov.decl->name() + ov.entry + "__" + Makai::toString(ivoc)))
 	for (auto const& [arg, index]: ov->proto->children) {
 		auto const ax = context.getExpression(arg);
 		current->arguments.pushBack(ax.scope->variable);
@@ -2048,12 +2048,12 @@ static Makai::Data::Value callDirect(ATransformer::Context& context, Function::O
 		if (!ax.isCompiled())
 			context.error("Optional value does not resolve to a direct expression!", arg);
 	}
-	if (!ov->decl)
-		context.error("Direct function does not contain a declaration!", ov->proto);
-	auto const expr = context.getExpression(ov->decl);
+	if (!ov.decl)
+		context.error("Direct function does not contain a declaration!", ov.proto);
+	auto const expr = context.getExpression(ov.decl);
 	context.pop(1);
 	if (expr.type && !expr.type->flags.isEmpty && expr.direct.isUndefined())
-		context.error("This expression does not result in a direct value!", ov->decl);
+		context.error("This expression does not result in a direct value!", ov.decl);
 	return expr;
 }
 
