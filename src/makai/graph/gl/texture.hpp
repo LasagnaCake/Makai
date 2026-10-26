@@ -404,7 +404,7 @@ namespace Makai::Graph {
 		operator bool() const;
 
 		Data::Value serialize() const;
-		static Attributes deserialize(Data::Value const& value);
+		static Texture2D deserialize(Data::Value const& value);
 
 	private:
 		/// @brief Image bound to texture.
