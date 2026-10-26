@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "../../include/TtsEngine.h"
+#include "TtsEngine.h"
 
 namespace SharpVox {
 
