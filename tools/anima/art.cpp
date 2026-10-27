@@ -1,7 +1,7 @@
 #include <makai/makai.hpp>
 #include <makai/main.hpp>
 
-constexpr auto const VER = Makai::Data::Version{1};
+constexpr auto const VER = Makai::Anima::V2::Core::Module::ART_VER;
 
 DEFINE_ERROR_TYPE_EX(EngineError, FailedAction);
 
@@ -192,12 +192,23 @@ struct ARTEMain: Makai::AMain {
 		));
 	}
 
+	void doHelp(Makai::Data::Value const& args) {
+		writeLine("Anima RunTime - V" + VER.serialize().get<Makai::String>());
+		writeLine("Available commands:");
+		writeLine("\nart <program> [-BA:C] [-BA:T] [-BA:S] [-DL] [-B] [-S]");
+		writeLine("\nWhere:");
+		writeLine("[-BA:C]:  Enable builtin OS console API handler");
+		writeLine("[-BA:T]:  Enable builtin OS time API handler");
+		writeLine("[-BA:S]:  Enable builtin OS shell API handler");
+		writeLine("[-DL]:    Enable loading of shared libraries");
+		writeLine("[-B]:     Attempt to search for .anpb files before searching for .anp ones");
+		writeLine("[-S]:     Load, compile and run ART language source file in one go (\"Build-and-Run\" mode)");
+	}
+
 	void run(Makai::Data::Value const& args) override {
-		if (args.fetch("help", false)) {
-			writeLine("Anima RunTime - V" + VER.serialize().get<Makai::String>());
-			writeLine("Available commands:");
-			writeLine("art <program> [-BA:C] [-BA:T] [-BA:S] [-DL] [-B] [-S]");
-		} else {
+		if (args.fetch("help", false) or args["__args"].empty() or args["__args"][1] == "help")
+			doHelp(args);
+		else {
 			ARTE engine{
 				args["allow-dynlibs"].getBoolean(),
 				{
@@ -306,6 +317,14 @@ struct ARTEMain: Makai::AMain {
 							CTL_CPP_PRETTY_SOURCE
 						);
 				}
+			}
+			if (VER.major < file.art.major) {
+				throw Makai::Error::InvalidValue(
+					"ART version is too old!\n"
+					+ Makai::toString("ART major version is [", VER.major, "]\n")
+					+ Makai::toString("Expected major version is at least [", file.art.major, "]"),
+					CTL_CPP_PRETTY_SOURCE
+				);
 			}
 			engine.load(file);
 			engine.execute();

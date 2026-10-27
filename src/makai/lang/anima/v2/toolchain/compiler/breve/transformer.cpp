@@ -1418,7 +1418,7 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 			context.error("Symbol does not exist!", node);
 		return resolveSubfield(context, node, ns, path.front());
 	}
-	if (!result.scope->subspaces.contains(path.front()))
+	if (!(result.scope && result.scope->subspaces.contains(path.front())))
 		context.error("Subpath type doesn't contain the given member!", node->leftSide);
 	return resolveSubfield(context, node, result.scope, path.front());
 }

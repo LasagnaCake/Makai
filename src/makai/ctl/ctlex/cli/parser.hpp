@@ -41,7 +41,7 @@ namespace CLI {
 						StringList argx;
 						while (current < count)
 							argx.pushBack(args[current++]);
-						opt.value = argx;
+						opt.value = argx.toList<Data::Value>();
 					} else {
 						opt.key = opt.key.substring(1);
 						opt.value = true;
