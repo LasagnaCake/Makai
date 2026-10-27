@@ -28,10 +28,12 @@ String hashString(String const& str) {
 
 BinaryData<> Makai::Data::hashed(BinaryData<> const& data, HashMode const mode) {
 	switch (mode) {
-		case HashMode::HM_SHA3_224: return hashData<CryptoPP::SHA3_224>(data);
-		case HashMode::HM_SHA3_256: return hashData<CryptoPP::SHA3_256>(data);
-		case HashMode::HM_SHA3_384: return hashData<CryptoPP::SHA3_384>(data);
-		case HashMode::HM_SHA3_512: return hashData<CryptoPP::SHA3_512>(data);
+		case HashMode::HM_SHA3_224:	return hashData<CryptoPP::SHA3_224>(data);
+		case HashMode::HM_SHA3_256:	return hashData<CryptoPP::SHA3_256>(data);
+		case HashMode::HM_SHA3_384:	return hashData<CryptoPP::SHA3_384>(data);
+		case HashMode::HM_SHA3_512:	return hashData<CryptoPP::SHA3_512>(data);
+		case HashMode::HM_SHA0:		return hashData<CryptoPP::SHA0>(data);
+		case HashMode::HM_SHA1:		return hashData<CryptoPP::SHA1>(data);
 	};
 	return data;
 }
