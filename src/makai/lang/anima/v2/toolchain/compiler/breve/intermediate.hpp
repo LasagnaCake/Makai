@@ -6,6 +6,8 @@
 #include "node.hpp"
 
 namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
+	// TODO: Breve Intermediate Representation Binary (.birb) file format
+
 	struct Intermediate;
 
 	struct Labeled {

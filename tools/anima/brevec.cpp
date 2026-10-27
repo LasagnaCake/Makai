@@ -34,7 +34,7 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 static void doHelpMessage() {
 	DEBUGLN("Breve Compiler - V" + VER.serialize().get<Makai::String>());
 	DEBUGLN("Usage:");
-	DEBUGLN(R"(    brevec <file> [--output <name>] [-l <compilation-level>] [--src "[<source-dirs> ...]"] [-W] [-S])");
+	DEBUGLN(R"(    brevec <file> [--output <name>] [-l <compilation-level>] [--src "[<source-dirs> ...]"] [-W] [-S] [-B])");
 }
 
 int main(int argc, char** argv) try {

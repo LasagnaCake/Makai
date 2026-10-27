@@ -395,6 +395,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 	var.name = scope->name;
 	var.parentScope = parent.asWeak();
 	var.id = parent->varc++;
+	var.scope = scope.asWeak();
 	TypeRequest t;
 	if (node->templateDecl) {
 		var.declaration = node;

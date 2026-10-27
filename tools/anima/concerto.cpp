@@ -79,12 +79,25 @@ struct ConcertoMain: Makai::AMain {
 
 	void write(Makai::String const& what) const override {DEBUGLN(what);}
 
+	void doHelp(Makai::Data::Value const& args) {
+		writeLine("Concerto - V" + VER.serialize().get<Makai::String>());
+		writeLine("Available commands:");
+		writeLine("concerto create <project> [--lang (breve|minima)] [--type (prog|lib|exe)] [-B]");
+		writeLine("concerto build <target>");
+		writeLine("concerto cache (clean|update)");
+		writeLine("concerto app (add <app>|update|run <app>) [<args...>] [<flags...>]");
+		writeLine("concerto source <source> [-G]");
+		writeLine("concerto hub <repo>");
+		writeLine("concerto init");
+		writeLine("concerto run <target>");
+	}
+
 	void doCreate(Makai::Data::Value const& args) {
 		if (args["__args"].size() < 2)
 			error("Missing project name!");
 		auto const projName = args["__args"][1].getString();
 		if (Makai::OS::FS::exists(projName))
-			error("Project with this name already exists!");
+			error("Folder/Project with this name already exists!");
 		if (!projName.validate(isValidProjectNameChar))
 			error("Project name must only contain alphanumeric characters, '_', '.' and '-'!");
 		Makai::OS::FS::makeDirectory(Makai::StringList::from(projName, projName + "/src"));
@@ -206,12 +219,6 @@ struct ConcertoMain: Makai::AMain {
 		}
 		if (verb == "update") updateApps();
 		else error("Invalid cache action [" + verb + "]!");
-	}
-
-	void doHelp(Makai::Data::Value const& args) {
-		writeLine("Concerto - V" + VER.serialize().get<Makai::String>());
-		writeLine("Available commands:");
-		writeLine("concerto <action>");
 	}
 
 	void addSource(Makai::String const& path, bool const global = false) {
