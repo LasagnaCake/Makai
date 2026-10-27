@@ -2,7 +2,7 @@ using import core
 
 module Test.Namespace {
 	struct MySpecialStruct {
-		@ByCopy example : int64 = 0
+		@ByCopy example : int64
 	}
 
 	foo :: (@ByCopy var: int64) -> int64 {
@@ -14,7 +14,7 @@ module Test.Namespace {
 	baz :: (@ByCopy var: int64) => (bar(var) - var)
 
 	biff :: () -> void
-	
+
 	printToOutput :: () => IO.writeLine("Beginning calculations...")
 }
 
