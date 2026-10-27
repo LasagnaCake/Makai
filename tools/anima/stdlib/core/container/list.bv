@@ -16,7 +16,7 @@ struct List[Element] {
 			prop next get (@ByRef self: Self) -> ?Element =>
 				if (self.index >= countof self.elements)
 					null
-				else self.elements[self.index++]
+				else self.elements[(++self.index)-1]
 
 			@New
 			init :: (@ByRef self: Self, elements: Elements) -> Self {
@@ -67,6 +67,7 @@ struct List[Element] {
 		bsearch :: (@ByRef self: Self, key: Element) -> ?u64 =>
 			self.search(key, (countof self.elements) / 2, 0, (countof self.elements) - 1)
 
+		/*
 		filtered :: (@ByRef self: Self, @ByRef rule: (Element) -> bool) -> Self {
 			values := new Elements
 			for element => self.elements
@@ -83,6 +84,8 @@ struct List[Element] {
 			self.elements = values
 			return self
 		}
+		*/
+		assert true
 	}
 	
 	@New

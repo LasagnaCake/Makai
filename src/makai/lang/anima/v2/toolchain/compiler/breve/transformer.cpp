@@ -2359,12 +2359,13 @@ ATransformer::Result InlineIfElse::transform(Context& context, Node::Instance co
 }
 
 ATransformer::Result Branch::transform(Context& context, Node::Instance const& node) {
+	static usize id = 0;
 	if (node->base.text == "try") return context.transform<TryBlock>(node);
 	auto const cond = context.getExpression(node->middle);
 	auto const invert = (node->base.text == "unless" or node->base.text == "except");
 	MAKAILIB_DEBUGLN_FULL("If-Condition: ", cond.type ? cond.type->name : "ERR", "(must be ", invert ? "TRUE" : "FALSE", ")");
 	auto const varc = context.top()->varc;
-	auto const ifScope = context.declare(UTF8StringList::from("<if>" + node->name()));
+	auto const ifScope = context.declare(UTF8StringList::from("<if>" + node->name() + Makai::toString(id)));
 	bool mayBeEmpty = true;
 	ifScope->varc += varc;
 	ifScope->implementContents = true;
