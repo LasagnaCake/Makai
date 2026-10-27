@@ -49,6 +49,8 @@ String Makai::Data::hashed(String const& str, HashMode const mode) {
 		case HashMode::HM_SHA3_256: return hashString<CryptoPP::SHA3_256>(str);
 		case HashMode::HM_SHA3_384: return hashString<CryptoPP::SHA3_384>(str);
 		case HashMode::HM_SHA3_512: return hashString<CryptoPP::SHA3_512>(str);
+		case HashMode::HM_SHA0:		return hashString<CryptoPP::SHA0>(data);
+		case HashMode::HM_SHA1:		return hashString<CryptoPP::SHA1>(data);
 	};
 	return str;
 }
