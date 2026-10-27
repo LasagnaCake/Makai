@@ -2365,7 +2365,7 @@ ATransformer::Result Branch::transform(Context& context, Node::Instance const& n
 	auto const invert = (node->base.text == "unless" or node->base.text == "except");
 	MAKAILIB_DEBUGLN_FULL("If-Condition: ", cond.type ? cond.type->name : "ERR", "(must be ", invert ? "TRUE" : "FALSE", ")");
 	auto const varc = context.top()->varc;
-	auto const ifScope = context.declare(UTF8StringList::from("<if>" + node->name() + Makai::toString(id)));
+	auto const ifScope = context.declare(UTF8StringList::from("<if>" + node->name() + "_" + Makai::toString(id++)));
 	bool mayBeEmpty = true;
 	ifScope->varc += varc;
 	ifScope->implementContents = true;
