@@ -536,7 +536,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 			or	node->base.text == "kind"
 			) {
 				context.getExpression(root);
-			}context.error("Invalid declaration inside structure declaration!", node);
+			} else context.error("Invalid declaration inside structure declaration!", node);
 		} else if (node->content == Node::Content::AV2_TANC_ATTRIBUTE) {
 			return evalDecl(node->rightSide, root);
 		} else if (node->content == Node::Content::AV2_TANC_ALIAS) {
