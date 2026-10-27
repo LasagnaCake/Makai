@@ -37,6 +37,11 @@ namespace CLI {
 							opt.value = Data::Value::undefined();
 						else
 							opt.value = Data::Value::StringType(args[current]);
+					} else if (opt.key == "--") {
+						StringList argx;
+						while (current < count)
+							argx.pushBack(args[current++]);
+						opt.value = argx;
 					} else {
 						opt.key = opt.key.substring(1);
 						opt.value = true;

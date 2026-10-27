@@ -121,9 +121,9 @@ struct ConcertoMain: Makai::AMain {
 				writeLine("concerto app (add|update|run) ");
 				writeLine("");
 				writeLine("Actions:");
-				writeLine("add <app> [-G]                 Installs a concerto app [-G: globally]");
-				writeLine("update                         Updates all installed apps");
-				writeLine("run <app> [--args \"<args>\"]    Runs an installed app [--args: with the given arguments]");
+				writeLine("add <app> [-G]              Installs a concerto app [-G: globally]");
+				writeLine("update                      Updates all installed apps");
+				writeLine("run <app> [-- <args...>]    Runs an installed app [--: With the given arguments]");
 			} else if (verb == "source") {
 				writeLine("concerto source <source> [-G]");
 				writeLine("");
