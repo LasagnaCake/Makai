@@ -21,17 +21,17 @@ module Test.Namespace {
 @Main
 main :: () {
     IO.writeLine("We are calculating!")
-    Test.Namespace.printToOutput()
+    Test.Namespace.printToOutput!
     val := 32 + 64
     IO.write("32 + 64 = ")
-    IO.writeLine(val as any)
+    IO.writeLine(val)
     val = Test.Namespace.baz(32 + 64)
     IO.write("baz(32 + 64) = ")
-    IO.writeLine(val as any)
+    IO.writeLine(val)
     val = 32 - 64
     IO.write("32 - 64 = ")
-    IO.writeLine(val as any)
+    IO.writeLine(val)
     val = Test.Namespace.baz(32 - 64)
     IO.write("baz(32 - 64) = ")
-    IO.writeLine(val as any)
+    IO.writeLine(val)
 }

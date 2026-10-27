@@ -648,7 +648,6 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		var->scope->makePrivate();
 	for (auto& var: protecteds)
 		var->scope->makeProtected();
-	context.pop(1);
 	return rett;
 }
 

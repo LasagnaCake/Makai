@@ -102,7 +102,7 @@ struct ConcertoMain: Makai::AMain {
 				writeLine("Creates a concerto project with the name <project>, where:");
 				writeLine("  --lang: Target language");
 				writeLine("  --type: Project type");
-				writeLine("  --bin: Whether to generate a binary or a web-safe file (for [--type prog] only)")
+				writeLine("  --bin: Whether to generate a binary or a web-safe file (for [--type prog] only)");
 			} else if (verb == "build") {
 				writeLine("concerto build <target>");
 				writeLine("");
@@ -227,7 +227,7 @@ struct ConcertoMain: Makai::AMain {
 						"-S",
 						project.type == Project::Type::AV2_TCPT_BIN_PROGRAM ? "-B" : "",
 						"-o",
-						"../output/" +  project.name,
+						Makai::OS::FS::currentDirectory() + "/output/" +  project.name,
 						"-s",
 						"[" + project.sources.join(" ") + (Makai::OS::FS::isDirectory("lib/.cache") ? " lib/.cache" : "") + "]"
 					)
@@ -423,5 +423,3 @@ struct ConcertoMain: Makai::AMain {
 };
 
 Makai_bindMain(ConcertoMain)
-
-// TODO: This (again)
