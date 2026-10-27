@@ -80,16 +80,72 @@ struct ConcertoMain: Makai::AMain {
 	void write(Makai::String const& what) const override {DEBUGLN(what);}
 
 	void doHelp(Makai::Data::Value const& args) {
-		writeLine("Concerto - V" + VER.serialize().get<Makai::String>());
-		writeLine("Available commands:");
-		writeLine("concerto create <project> [--lang (breve|minima)] [--type (prog|lib|exe)] [-B]");
-		writeLine("concerto build <target>");
-		writeLine("concerto cache (clean|update)");
-		writeLine("concerto app (add <app>|update|run <app>) [<args...>] [<flags...>]");
-		writeLine("concerto source <source> [-G]");
-		writeLine("concerto hub <repo>");
-		writeLine("concerto init");
-		writeLine("concerto run <target>");
+		if (args["__args"].size() < 2 or args["__args"][0].getString() != "help") {
+			writeLine("Concerto - V" + VER.serialize().get<Makai::String>());
+			writeLine("Available commands:");
+			writeLine("concerto create    Creates a concerto project");
+			writeLine("concerto add       Adds a library to the project");
+			writeLine("concerto build     Builds a concerto project");
+			writeLine("concerto cache     Manage the build cache");
+			writeLine("concerto app       Manage installed concerto apps");
+			writeLine("concerto source    Adds a library source");
+			writeLine("concerto hub       Adds a hub to the library lookup registry");
+			writeLine("concerto init      Initializes a concerto project");
+			writeLine("concerto run       Runs a concerto project");
+			writeLine("concerto help      Displays information for a specific command");
+		} else {
+			auto const verb = args["__args"][1].getString();
+			writeLine("\nCommand:");
+			if (verb == "create") {
+				writeLine("concerto create <project> [--lang (breve|minima)] [--type (prog|lib|exe)] [--bin (true|false)]");
+				writeLine("");
+				writeLine("Creates a concerto project with the name <project>, where:");
+				writeLine("  --lang: Target language");
+				writeLine("  --type: Project type");
+				writeLine("  --bin: Whether to generate a binary or a web-safe file (for [--type prog] only)")
+			} else if (verb == "build") {
+				writeLine("concerto build <target>");
+				writeLine("");
+				writeLine("Builds the current project for the given build <target>");
+			} else if (verb == "add") {
+				writeLine("concerto add <lib>");
+				writeLine("");
+				writeLine("Adds a library <lib> to the current project");
+			} else if (verb == "cache") {
+				writeLine("concerto cache (clean|update)");
+				writeLine("");
+				writeLine("Actions:");
+				writeLine("clean    Clears the build cache");
+				writeLine("update   Ensures the build cache is up-to-date");
+			} else if (verb == "app") {
+				writeLine("concerto app (add|update|run) ");
+				writeLine("");
+				writeLine("Actions:");
+				writeLine("add <app> [-G]                   Installs a concerto app [-G: globally]");
+				writeLine("update                           Updates all installed apps");
+				writeLine("run <app> [--args \"<args>\"]    Runs an installed app [--args: with the given arguments]");
+			} else if (verb == "source") {
+				writeLine("concerto source <source> [-G]");
+				writeLine("");
+				writeLine("Adds a library source <source> [-G: globally]");
+			} else if (verb == "hub") {
+				writeLine("concerto hub <repo>");
+				writeLine("");
+				writeLine("Adds a library hub <repo> globally");
+			} else if (verb == "init") {
+				writeLine("concerto init");
+				writeLine("");
+				writeLine("Initialises the current project for building");
+			} else if (verb == "run") {
+				writeLine("concerto run <target>");
+				writeLine("");
+				writeLine("Runs the current project for the given build <target>");
+			} else if (verb == "help") {
+				writeLine("concerto help [<command>]");
+				writeLine("");
+				writeLine("Displays help for a given command");
+			}
+		}
 	}
 
 	void doCreate(Makai::Data::Value const& args) {
