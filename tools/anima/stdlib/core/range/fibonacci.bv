@@ -9,7 +9,7 @@ module Iterators {
 		@ByCopy prev: T
 		@ByCopy now: T
 
-		prop next get(@ByRef self: Self) -> T {
+		prop next get(@ByRef self: Self) -> ?T {
 			@ByCopy current := self.now
 			self.now += self.prev
 			self.prev = current
