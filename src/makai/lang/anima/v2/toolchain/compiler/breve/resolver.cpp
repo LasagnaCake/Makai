@@ -340,7 +340,7 @@ Node::Instance AssignmentResolver::resolve(Parser& parser, Node::Instance const&
 		result->leftSide = leftSide;
 		result->forAssignment = true;
 	} else result->leftSide = leftSide;
-	result->rightSide = parser.nextExpression(precedence);
+	result->rightSide = parser.nextExpression();
 	return result;
 }
 

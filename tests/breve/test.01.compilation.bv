@@ -22,7 +22,7 @@ module Test.Namespace {
 main :: () {
     IO.writeLine("We are calculating!")
     Test.Namespace.printToOutput!
-    val := 32 + 64
+    @ByCopy val := 32 + 64
     IO.write("32 + 64 = ")
     IO.writeLine(val)
     val = Test.Namespace.baz(32 + 64)

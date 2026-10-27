@@ -2058,6 +2058,7 @@ static Makai::Data::Value callDirect(ATransformer::Context& context, Function::O
 }
 
 ATransformer::Result Call::transform(Context& context, Node::Instance const& node) {
+	MAKAILIB_DEBUGLN_FULL("Handling call...");
 	MAKAILIB_DEBUGLN_FULL("Left-side: ", node->leftSide->base.text);
 	auto const dx = context.impl()->main.size();
 	auto const fn = context.getExpression(node->leftSide);

@@ -12,8 +12,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		enum class Precedence: uint16 {
 			AV2_TAPP_NONE,
 			AV2_TAPP_POSTFIX,
-			AV2_TAPP_FN_CALL,
 			AV2_TAPP_PATH,
+			AV2_TAPP_FN_CALL,
 			AV2_TAPP_PREFIX,
 			AV2_TAPP_CROSS_FCROSS,
 			AV2_TAPP_ATAN2,
