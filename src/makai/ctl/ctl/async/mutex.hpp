@@ -30,7 +30,13 @@ struct Mutex: SelfIdentified<Mutex> {
 		#else
 		pthread_mutex_t	mutex;
 		#endif
-		bool exists = true;
+		bool exists = false;
+
+		friend constexpr void swap(Impl& a, Impl& b) noexcept {
+			swap(a.locked, b.locked);
+			swap(a.mutex, b.mutex);
+			swap(a.exists, b.exists);
+		}
 	};
 
 	/// @brief Empty constuctor.
@@ -44,15 +50,23 @@ struct Mutex: SelfIdentified<Mutex> {
 		pthread_mutex_init(&mutex.mutex, &pat);
 		pthread_mutexattr_destroy(&pat);
 		#endif
+		mutex.exists = true;
 	}
 
 	~Mutex() {unbind();}
 
-	Mutex(Mutex const&)				= delete;
-	Mutex(Mutex&&)					= delete;
+	Mutex(Mutex const&) = delete;
 
-	Mutex& operator=(Mutex const&)	= delete;
-	Mutex& operator=(Mutex&&)		= delete;
+	Mutex(Mutex&& other) {
+		swap(*this, other);
+	}
+
+	Mutex& operator=(Mutex const&) = delete;
+
+	Mutex& operator=(Mutex&& other) {
+		swap(*this, other);
+		return *this;
+	}
 
 	/// @brief Captures the mutex. If mutex is captured by another thread, waits for it to be released.
 	/// @return Reference to self.
@@ -99,7 +113,7 @@ struct Mutex: SelfIdentified<Mutex> {
 		#else
 		if (pthread_mutex_unlock(&mutex.mutex) != EPERM)
 		#endif
-			mutex.locked = false;
+		mutex.locked = false;
 		return *this;
 	}
 
@@ -116,7 +130,6 @@ struct Mutex: SelfIdentified<Mutex> {
 		#else
 		lock().unlock();
 		#endif
-		mutex.exists = false;
 		return *this;
 	}
 
@@ -128,13 +141,19 @@ struct Mutex: SelfIdentified<Mutex> {
 		return captured();
 	}
 
+	friend constexpr void swap(Mutex& a, Mutex& b) noexcept {
+		swap(a.mutex, b.mutex);
+	}
+
 private:
 	void unbind() {
+		if (!mutex.exists) return;
 		#ifdef CTL_ON_WINDOWS
 		CloseHandle(mutex.mutex);
 		#else
 		pthread_mutex_destroy(&mutex.mutex);
 		#endif
+		mutex.exists = false;
 	}
 
 	Impl mutex;

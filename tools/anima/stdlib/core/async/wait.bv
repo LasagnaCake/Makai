@@ -1,9 +1,10 @@
 using import core.types
+using import core.constraints
 
 with module Async
 
 @Variadic
-awaitAll :: (@ByRef subs[T]: [?T]) => [T] {
+awaitAll :: (@ByRef subs[T: not Is.Void]: [?T]) => [T] {
 	out := new T[countof subs] {}
 	for sub => subs out <| await sub
 	return out

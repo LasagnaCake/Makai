@@ -187,6 +187,27 @@ struct ConcertoMain: Makai::AMain {
 		else error("Invalid cache action [" + verb + "]!");
 	}
 
+	void addApp(Makai::String const& path) {
+
+	}
+
+	void updateApps() {
+
+	}
+
+	void doApp(Makai::Data::Value const& args) {
+		if (args["__args"].size() < 2)
+			error("Missing app action!");
+		auto const verb = args["__args"][1].getString();
+		if (verb == "add") {
+			if (args["__args"].size() < 3)
+				error("Missing app source/name!");
+			addApp(args["__args"][2].getString());
+		}
+		if (verb == "update") updateApps();
+		else error("Invalid cache action [" + verb + "]!");
+	}
+
 	void doHelp(Makai::Data::Value const& args) {
 		writeLine("Concerto - V" + VER.serialize().get<Makai::String>());
 		writeLine("Available commands:");
@@ -332,6 +353,7 @@ struct ConcertoMain: Makai::AMain {
 			else if (verb == "cache")	doCache(args);
 			else if (verb == "init")	doInit(args);
 			else if (verb == "export")	doExport(args);
+			else if (verb == "help")	doHelp(args);
 			else error("Invalid action [" + verb + "]!");
 		}
 	}

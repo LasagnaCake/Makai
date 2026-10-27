@@ -164,7 +164,7 @@ public:
 		constexpr Iterator operator++(int)	{auto prev = copy(*this); if constexpr (R) retreat(); else advance(); return prev;}
 		constexpr Iterator operator--(int)	{auto prev = copy(*this); if constexpr (R) advance(); else retreat(); return prev;}
 
-		constexpr auto operator*() const {
+		constexpr auto& operator*() const {
 			if (!current) emptyError();
 			return current->value;
 		}

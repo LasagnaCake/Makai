@@ -1,7 +1,7 @@
-#ifndef MAKAILIB_ANIMA_V2_RUNTIME_MODEL_ALLOCATOR_H
-#define MAKAILIB_ANIMA_V2_RUNTIME_MODEL_ALLOCATOR_H
+#ifndef MAKAILIB_ANIMA_V2_MEMORY_MODEL_ALLOCATOR_H
+#define MAKAILIB_ANIMA_V2_MEMORY_MODEL_ALLOCATOR_H
 
-#include "../../../../../compat/ctl.hpp"
+#include "../../../../compat/ctl.hpp"
 
 namespace Makai::Anima::V2::Runtime {
 	namspace Impl {
@@ -58,7 +58,7 @@ namespace Makai::Anima::V2::Runtime {
 		}
 
 	private:
-		BlockAllocator alloc;
+		Impl::BlockAllocator alloc(2u << 20);
 	};
 
 	template <class T>
