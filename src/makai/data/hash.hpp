@@ -11,7 +11,6 @@ namespace Makai::Data {
 		HM_SHA3_256,
 		HM_SHA3_384,
 		HM_SHA3_512,
-		HM_SHA0,
 		HM_SHA1,
 	};
 

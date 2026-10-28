@@ -1,6 +1,4 @@
-#include <cryptopp/sha0.h>
-#include <cryptopp/sha1.h>
-#include <cryptopp/sha2.h>
+#include <cryptopp/sha.h>
 #include <cryptopp/sha3.h>
 
 #include "hash.hpp"
@@ -35,7 +33,6 @@ BinaryData<> Makai::Data::hashed(BinaryData<> const& data, HashMode const mode) 
 		case HashMode::HM_SHA3_256:	return hashData<CryptoPP::SHA3_256>(data);
 		case HashMode::HM_SHA3_384:	return hashData<CryptoPP::SHA3_384>(data);
 		case HashMode::HM_SHA3_512:	return hashData<CryptoPP::SHA3_512>(data);
-		case HashMode::HM_SHA0:		return hashData<CryptoPP::SHA0>(data);
 		case HashMode::HM_SHA1:		return hashData<CryptoPP::SHA1>(data);
 	};
 	return data;
@@ -52,8 +49,7 @@ String Makai::Data::hashed(String const& str, HashMode const mode) {
 		case HashMode::HM_SHA3_256: return hashString<CryptoPP::SHA3_256>(str);
 		case HashMode::HM_SHA3_384: return hashString<CryptoPP::SHA3_384>(str);
 		case HashMode::HM_SHA3_512: return hashString<CryptoPP::SHA3_512>(str);
-		case HashMode::HM_SHA0:		return hashString<CryptoPP::SHA0>(data);
-		case HashMode::HM_SHA1:		return hashString<CryptoPP::SHA1>(data);
+		case HashMode::HM_SHA1:		return hashString<CryptoPP::SHA1>(str);
 	};
 	return str;
 }
