@@ -135,9 +135,9 @@ namespace Makai::Anima::V2::Core::Meta {
 
 		template<ARTType T>
 		struct Implementor: AImplementor<T> {
-			constexpr usize hash() const override			{return T::ART_HASH;		}
-			static T unwrap(Object const& obj) override		{return T::fromART(obj);	}
-			static Storage wrap(T const& value) override	{return T::toART(obj);		}
+			constexpr usize hash() const override			{return T::ART_HASH;			}
+			static T unwrap(Object const& obj) override		{return T::fromART(obj);		}
+			static Storage wrap(T const& value) override	{return T::toART(types, obj);	}
 		};
 
 		template<class T>
@@ -294,6 +294,7 @@ namespace Makai::Anima::V2::Core::Meta {
 		&&	Type::Pure<T>
 		&&	Type::DefaultConstructible<T>
 		);
+
 		template <TriviallyImplementable T>
 		class EasyImplementor {
 			constexpr static bool const IS_ART_TYPE			= ProxyType<T>;
@@ -307,7 +308,7 @@ namespace Makai::Anima::V2::Core::Meta {
 
 			static_assert(HAS_CONSTRUCTOR && HAS_DESTRUCTOR, "Type must have a constructor and a destructor!");
 
-			static TypeModel::ProxyTypeImpl::Constructor constructor()
+			static TypeModel::Proxy::Constructor constructor()
 			requires (HAS_CONSTRUCTOR) {
 				return {
 					[] (auto e) {
@@ -316,7 +317,7 @@ namespace Makai::Anima::V2::Core::Meta {
 				};
 			}
 
-			static TypeModel::ProxyTypeImpl::Destructor destructor()
+			static TypeModel::Proxy::Destructor destructor()
 			requires (HAS_DESTRUCTOR) {
 				return {
 					[] (auto e) {
@@ -325,7 +326,7 @@ namespace Makai::Anima::V2::Core::Meta {
 				};
 			}
 
-			static TypeModel::ProxyTypeImpl::Cloner cloner()
+			static TypeModel::Proxy::Cloner cloner()
 			requires (HAS_CLONER) {
 				return {
 					[] (auto a, auto b) {
@@ -334,7 +335,7 @@ namespace Makai::Anima::V2::Core::Meta {
 				};
 			}
 
-			static TypeModel::ProxyTypeImpl::Comparator comparator()
+			static TypeModel::Proxy::Comparator comparator()
 			requires (HAS_COMPARATOR) {
 				return {
 					[] (auto a, auto b) {
