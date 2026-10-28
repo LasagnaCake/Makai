@@ -1,5 +1,5 @@
-#ifndef MAKAILIB_DATA_HASH_H
-#define MAKAILIB_DATA_HASH_H
+#ifndef MAKAILIB_DATA_TOTP_H
+#define MAKAILIB_DATA_TOTP_H
 
 #include "../compat/ctl.hpp"
 
@@ -9,4 +9,4 @@ namespace Makai::Data {
 	void totp(Span<char const> const& secret, usize const timeIntervalInSeconds = 0);
 }
 
-#endif // MAKAILIB_DATA_HASH_H
+#endif // MAKAILIB_DATA_TOTP_H
