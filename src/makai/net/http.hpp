@@ -18,8 +18,8 @@ namespace Makai::Net::HTTP {
 	};
 
 	struct Request {
-		enum class Type {
-			MN_HRT_GET,
+		enum class Type: u32 {
+			MN_HRT_GET = 0,
 			MN_HRT_HEAD,
 			MN_HRT_POST,
 			MN_HRT_PUT,

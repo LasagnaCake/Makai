@@ -44,7 +44,7 @@ namespace OS::Time {
 		/// @tparam T Time unit.
 		/// @return Time since epoch in specified unit.
 		template <class T = Micros>
-		constexpr static usize sinceEpoch() {
+		constexpr static i64 sinceEpoch() {
 			return chrono::duration_cast<T>(SysClock::now().time_since_epoch()).count();
 		}
 
@@ -52,15 +52,21 @@ namespace OS::Time {
 		/// @tparam T Time unit.
 		/// @return Time since start in specified unit.
 		template <class T = Micros>
-		constexpr static usize sinceStart() {
+		constexpr static i64 sinceStart() {
 			return chrono::duration_cast<T>(SysClock::now() - start).count();
 		}
 	};
 
 	/// @brief Returns the current time, since the epoch, in milliseconds.
 	/// @return Time in milliseconds.
-	inline usize now() {
+	inline i64 now() {
 		return Clock::sinceEpoch<Millis>();
+	}
+
+	/// @brief Returns the current time, since the epoch, in seconds.
+	/// @return Time in milliseconds.
+	inline i64 unixNow() {
+		return Clock::sinceEpoch<Seconds>();
 	}
 }
 

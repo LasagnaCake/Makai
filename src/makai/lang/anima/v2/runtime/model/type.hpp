@@ -13,7 +13,7 @@ namespace Makai::Anima::V2::Runtime {
 	using Core::Entry;
 
 	struct TypeModel: Entry, Flagged<TypeFlags> {
-		struct ProxyTypeImpl {
+		struct Proxy {
 			using Constructor	= Functor<void(Source&)>;
 			using Destructor	= Functor<void(Source&)>;
 			using Cloner		= Functor<void(Source&, Source const&)>;
@@ -24,7 +24,7 @@ namespace Makai::Anima::V2::Runtime {
 			Cloner		copy;
 			Comparator	compare;
 
-			static AtomicCell<ProxyTypeImpl> implementFor(BasicType const type);
+			static AtomicCell<Proxy> implementFor(BasicType const type);
 		};
 
 		using Source = MemorySlice<byte, Allocator>;
@@ -50,7 +50,7 @@ namespace Makai::Anima::V2::Runtime {
 
 		Data::Value::ObjectType		meta;
 
-		AtomicCell<BasicTypeImpl>	proxy;
+		AtomicCell<Proxy>			proxy;
 	};
 }
 
