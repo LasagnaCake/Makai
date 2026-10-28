@@ -1,3 +1,6 @@
+#include <cryptopp/sha0.h>
+#include <cryptopp/sha1.h>
+#include <cryptopp/sha2.h>
 #include <cryptopp/sha3.h>
 
 #include "hash.hpp"
