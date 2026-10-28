@@ -16,6 +16,4 @@ kind Attempt[T] => prove {
 	try v := Meta.spoof[T]! {}
 }
 
-kind Result[T] => prove {
-	try v := Meta.spoof[T]! {} else e {}
-}
+kind Result[T] => Value[T] and Error[T]
