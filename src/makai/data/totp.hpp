@@ -5,8 +5,7 @@
 
 /// @brief Data manipulation facilities.
 namespace Makai::Data {
-	void totp(Span<byte const> const& secret, usize const timeIntervalInSeconds = 0);
-	void totp(Span<char const> const& secret, usize const timeIntervalInSeconds = 0);
+	String totp(String const& secret, usize const interval = 30, usize const digits = 6, HashMode const mode = HashMode::HM_SHA1);
 }
 
 #endif // MAKAILIB_DATA_TOTP_H
