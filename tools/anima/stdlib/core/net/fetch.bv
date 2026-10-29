@@ -1,0 +1,31 @@
+using import core.types
+
+with module Net.HTTP
+
+enum Command: u32 {
+	GET = 0,
+	HEAD,
+	POST,
+	PUT,
+	PATCH,
+	UPDATE,
+	DELETE
+}
+
+@Proxy(name="Proxy<Response>")
+struct Response {
+	@Shared(lib=av2net, name="av2/net/Response.status")
+	status :: (self: Self) -> u32
+
+	@Shared(lib=av2net, name="av2/net/Response.source")
+	source :: (self: Self) -> string
+
+	@Shared(lib=av2net, name="av2/net/Response.header")
+	header :: (self: Self) -> string
+
+	@Shared(lib=av2net, name="av2/net/Response.content")
+	content :: (self: Self) -> string
+}
+
+@Shared(lib=av2net, name="av2/net/fetch")
+fetch :: (url: string, command: Command, data: string, ssl: string) -> Response

@@ -122,7 +122,7 @@ namespace Makai::Anima::V2::Runtime {
 						bridgeCall(f, tup);
 					} else {
 						MAKAILIB_DEBUGLN_FULL("Function returns value");
-						auto const v = Meta::Implementor<TReturn>(types).unwrap(
+						auto const v = Meta::Implementor<TReturn>(context.types).unwrap(
 							context.types,
 							bridgeCall(
 								f,
@@ -136,7 +136,7 @@ namespace Makai::Anima::V2::Runtime {
 					f();
 				} else {
 					MAKAILIB_DEBUGLN_FULL("Getter-like function");
-					return Meta::Implementor<TReturn>(types).unwrap(
+					return Meta::Implementor<TReturn>(context.types).unwrap(
 						context.types,
 						f()
 					);
@@ -312,7 +312,7 @@ namespace Makai::Anima::V2::Runtime {
 
 		template <class T>
 		Promise<T> promise() const {
-			return Core::Promise<T>{newEmpty<T>()};
+			return Promise<T>{newEmpty<T>()};
 		}
 
 		struct Library {
@@ -332,7 +332,9 @@ namespace Makai::Anima::V2::Runtime {
 		template <class T>
 		bool addNativeType() {
 			if (hasNativeType<T>()) return false;
-			types.addElement(Meta::implement<T>(types));
+			for (auto& t: types.values)
+				if (t && t->flags.isProxy && t->hash == Meta::arthashof<T>())
+					t = Meta::implement<T>(types);
 			return true;
 		}
 

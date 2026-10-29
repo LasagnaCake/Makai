@@ -1472,11 +1472,6 @@ void Engine::load() {
 	Map<uint64, uint64> boundTypes;
 	Map<uint64, List<uint64>> fields;
 	for (auto const& [type, i]: Range::expand(program.detail.types)) {
-		if (type.flags.isProxy && !(type.flags.isBasic)) {
-			boundTypes[i] = type.hash;
-			env.art.types.values.pushBack(nullptr);
-			continue;
-		}
 		AtomicCell<Runtime::TypeModel> dt = dt.create();
 		dt->hash = type.hash;
 		if (type.base) inheritances[i] = *type.base;
@@ -1490,35 +1485,6 @@ void Engine::load() {
 			TypeModel::makeBasic(*dt);
 		env.art.types.addElement(dt);
 	}
-	for (auto const& [self, artEquiv]: boundTypes) {
-		auto const types = env.art.types.byNameHash(artEquiv);
-		if (types.size())
-			env.art.types.values[self] = types.front();
-		else return crash(makeErrorHere("ART env does not contain the requested type!"));
-	}
-	List<String> missingTypes;
-	for (auto const& [type, index]: Range::expand(env.art.types.values)) {
-		if (!type)
-			missingTypes.pushBack(toString(index));
-	}
-	if (missingTypes.size())
-		return crash(makeErrorHere(toString(
-			"Program has missing types [ " + missingTypes.join(", ") + " ]!"
-		)));
-	for (auto const& [self, base]: inheritances)
-		env.art.types.values[self]->base = env.art.types.values[base];
-	if (env.art.types.values.size() < program.detail.types.size())
-		return crash(makeErrorHere(toString(
-			"Program has missing types [",
-			env.art.types.values.size(),
-			" < ",
-			program.detail.types.size(),
-			"]!"
-		)));
-	for (auto const& [self, fields]: fields)
-		for (auto const& field: fields)
-			env.art.types.values[self]->fields.pushBack(env.art.types.values[field]);
-	if (program.entry != Limit::MAX<uint64>) jumpByTableIndex(program.entry, false /*not returnable*/);
 	else return crash(makeErrorHere("Missing entrypoint!"));
 	if (config.allowDynamicLibraries) {
 		MAKAILIB_DEBUGLN_FULL("<dynlib-open>");
@@ -1532,12 +1498,35 @@ void Engine::load() {
 	}
 	MAKAILIB_DEBUGLN_FULL("Finishing loading step...");
 	onLoad();
+	for (auto const& [self, base]: inheritances)
+		env.art.types.values[self]->base = env.art.types.values[base];
+	if (env.art.types.values.size() < program.detail.types.size())
+		return crash(makeErrorHere(toString(
+			"Program has missing types [",
+			env.art.types.values.size(),
+			" < ",
+			program.detail.types.size(),
+			"]!"
+		)));
+	for (auto const& [self, fields]: fields)
+		for (auto const& field: fields)
+			env.art.types.values[self]->fields.pushBack(env.art.types.values[field]);
+	List<String> missingTypes;
+	for (auto const& [type, index]: Range::expand(env.art.types.values)) {
+		if (!type)
+			missingTypes.pushBack(toString(index));
+	}
+	if (missingTypes.size())
+		return crash(makeErrorHere(toString(
+			"Program has missing types [ " + missingTypes.join(", ") + " ]!"
+		)));
 	MAKAILIB_DEBUG_BLOCK_FULL {
 		MAKAILIB_DEBUGLN_FULL("Types:");
 		MAKAILIB_DEBUG_BLOCK_FULL
 			for (auto& type : env.art.types.values)
 				MAKAILIB_DEBUGLN_FULL("> ", type ? toString(type->cleanName()) : toString("NULL"));
 	}
+	if (program.entry != Limit::MAX<uint64>) jumpByTableIndex(program.entry, false /*not returnable*/);
 	engineState = State::AV2_RES_RUNNING;
 }
 

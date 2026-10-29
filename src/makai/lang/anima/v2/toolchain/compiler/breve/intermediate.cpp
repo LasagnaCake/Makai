@@ -762,8 +762,10 @@ static Namespace::AttributeRef createBoundAttribute() {
 	Namespace::AttributeRef attrib = attrib.create();
 	attrib->name = "Proxy";
 	attrib->target = Attribute::Target::AV2_TAAT_TYPE;
+	attrib->fields["name"] = {DVK_STRING};
 	attrib->transform = ATTRIBUTE_TRANSFORMER() {
 		ns->type->flags.isProxy = true;
+		ns->type->hash = Makai::hash(v["name"].getString());
 	};
 	return attrib;
 }

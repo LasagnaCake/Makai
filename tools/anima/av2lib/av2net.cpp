@@ -38,7 +38,7 @@ struct NetLib: ALibrary {
 		context.methods.add("av2/net/Response.header", ResponseHandler::header);
 		context.methods.add("av2/net/Response.content", ResponseHandler::content);
 		context.methods.add("av2/net/fetchText",	Net::File::fetchText);
-		context.methods.add("av2/net/fetchBinary",	Net::File::fetchText);
+		context.methods.add("av2/net/fetchBinary",	Net::File::fetchBinary);
 	}
 
 	String name() const override {return "av2/net";}

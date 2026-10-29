@@ -1,0 +1,9 @@
+using import core.types
+
+with module Net.File
+
+@Shared(lib=av2net, name="av2/net/fetchText")
+fetchText :: (url: string) -> string
+
+@Shared(lib=av2net, name="av2/net/fetchBinary")
+fetchBytes :: (url: string) -> bytes
