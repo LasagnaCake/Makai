@@ -48,7 +48,6 @@ namespace Makai::Anima::V2::Core {
 			uint64						byteSize	= 0;
 			uint64						alignment	= 0;
 			List<uint64>				fields;
-			MethodTable					vtable;
 			Data::Value					meta;
 
 			Data::Value serialize() const;

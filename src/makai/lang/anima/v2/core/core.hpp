@@ -3,15 +3,10 @@
 
 #include "info.hpp"
 #include "instruction.hpp"
-#include "meta.hpp"
 #include "entry.hpp"
 #include "method.hpp"
 #include "type.hpp"
-#include "object.hpp"
-#include "context.hpp"
-#include "database.hpp"
 #include "module.hpp"
-#include "dynlib.hpp"
 #include "binary.hpp"
 
 #endif

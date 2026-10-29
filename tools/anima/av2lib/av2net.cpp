@@ -5,7 +5,7 @@ using namespace Anima::V2::Core;
 
 struct NetLib: ALibrary {
 	static Net::HTTP::Response fetch(String const& url, u32 const type, String const& data, String const& ssl) {
-		return Makai::Net::HTTP::fetch({Makai::Net::HTTP::Request::Type{type}, data, ssl});
+		return Makai::Net::HTTP::fetch(url, Net::HTTP::Request{Net::HTTP::Request::Type{type}, data, ssl});
 	}
 
 	struct ResponseHandler {

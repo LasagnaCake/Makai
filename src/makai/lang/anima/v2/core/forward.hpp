@@ -4,15 +4,6 @@
 #include "../../../../compat/ctl.hpp"
 
 namespace Makai::Anima::V2::Core {
-	struct Method;
-	struct Definition;
-	struct Value;
-	struct Object;
-	struct ALibrary;
-
-	// While `AtomicCell` is not working, this will do
-	using ObjectStorage = Instance<Object, Object>;
-
 	struct Symbol {
 		Nullable<uint64>	source = null;
 		uint64				id;
@@ -32,42 +23,6 @@ namespace Makai::Anima::V2::Core {
 			return sym;
 		}
 	};
-
-	struct MethodTable {
-		Map<uint64, uint64>	table;
-
-		constexpr uint64 resolve(uint64 const sym) const {
-			if (table.contains(sym))
-				return table[sym];
-			return sym;
-		}
-	};
-
-	struct Void {};
-
-	struct Any {
-		ObjectStorage value;
-
-		constexpr ObjectStorage const& operator->() const {
-			return value;
-		}
-	};
-
-	struct Identifier: Ordered {
-		uint64 id;
-
-		constexpr OrderType operator<=>(Identifier const& other) const {
-			return id <=> other.id;
-		}
-
-		constexpr bool operator==(Identifier const& other) const {
-			return id == other.id;
-		}
-	};
-
-	struct TypeID:	Identifier {};
-	struct JumpID:	Identifier {};
-	struct CallID:	Identifier {};
 }
 
 #endif

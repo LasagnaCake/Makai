@@ -14,11 +14,6 @@ namespace Makai::Anima::V2::Core {
 	};
 
 	static_assert(sizeof(MethodFlags) == sizeof(uint64), "Uh oh :/");
-
-	struct Method: Entry, Flagged<MethodFlags> {
-		AtomicCell<Definition>			retType;
-		List<AtomicCell<Definition>>	argTypes;
-	};
 }
 
 #endif

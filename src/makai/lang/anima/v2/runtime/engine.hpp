@@ -1,7 +1,7 @@
 #ifndef MAKAILIB_ANIMA_V2_RUNTIME_ENGINE_H
 #define MAKAILIB_ANIMA_V2_RUNTIME_ENGINE_H
 
-#include "context.hpp"
+#include "model/environment.hpp"
 
 namespace Makai::Anima::V2::Runtime {
 	struct Engine {
@@ -76,7 +76,7 @@ namespace Makai::Anima::V2::Runtime {
 			auto const fid = invokeExposedCall(
 				name,
 				Core::Context::Arguments::from(
-					context.newValue<TArgs>(args)...
+					env.newValue<TArgs>(args)...
 				)
 			);
 			if (!fid) co_return null;
@@ -87,7 +87,7 @@ namespace Makai::Anima::V2::Runtime {
 			}
 			if constexpr (Type::NonVoid<TReturn>) {
 				if (err) return null;
-				co_return context.top() ? context.pop()->toValue<TReturn>() : null;
+				co_return env.top() ? env.pop()->toValue<TReturn>() : null;
 			}
 			else co_return;
 		}
@@ -103,10 +103,10 @@ namespace Makai::Anima::V2::Runtime {
 		bool finished() const;
 
 	protected:
-		virtual Context::Storage	external	(String const& name, bool const doNotCopy	);
-		Context::Storage&			global		(uint64 const globalID						);
+		virtual Storage	external	(String const& name, bool const doNotCopy	);
+		Storage&		global		(uint64 const globalID						);
 
-		bool inStrictMode() const {return context.scopeStack.back()->mode == Core::ContextMode::AV2_CM_STRICT;}
+		bool inStrictMode() const {return env.scopeStack.back()->mode == ContextMode::AV2_CM_STRICT;}
 
 		void crash(Engine::Error const& error);
 
@@ -115,7 +115,7 @@ namespace Makai::Anima::V2::Runtime {
 		Random::SecureGenerator	srng;
 		Random::SimpleGenerator	prng;
 
-		Context context;
+		Environment env;
 
 		Instance<ILibraryLoader> loader = new DefaultLibraryLoader();
 
@@ -135,7 +135,7 @@ namespace Makai::Anima::V2::Runtime {
 			AV2_RE_FCE_INVALID_RETURN_TYPE
 		};
 
-		using ForeignCallResult = Result<Core::Object::Storage, ForeignCallError>;
+		using ForeignCallResult = Result<Object::Storage, ForeignCallError>;
 
 		ForeignCallResult callForeign(
 			Core::Instruction::Invocation const& invocation,
@@ -146,7 +146,7 @@ namespace Makai::Anima::V2::Runtime {
 		);
 
 	private:
-		Nullable<usize> invokeExposedCall(String const& name, Core::Context::Arguments const& args);
+		Nullable<usize> invokeExposedCall(String const& name, Context::Arguments const& args);
 
 		template <class T> constexpr static Meta::If<Type::Void<T>, void, nulltype> noResponse() {if constexpr (Type::NonVoid<T>) return null;}
 
@@ -237,7 +237,7 @@ namespace Makai::Anima::V2::Runtime {
 		void jumpByMode(Core::Instruction::Leap::Mode const mode, usize const location, bool returnable);
 		void returnBack();
 
-		void initializeObject(Core::Object::Storage const& object);
+		void initializeObject(Object::Storage const& object);
 
 		bool inFunction(usize const id);
 

@@ -1,9 +1,9 @@
-#ifndef MAKAILIB_ANIMA_V2_CORE_DYNLIB_H
-#define MAKAILIB_ANIMA_V2_CORE_DYNLIB_H
+#ifndef MAKAILIB_ANIMA_V2_RUNTIME_MODEL_LIBRARY_H
+#define MAKAILIB_ANIMA_V2_RUNTIME_MODEL_LIBRARY_H
 
 #include "context.hpp"
 
-namespace Makai::Anima::V2::Core {
+namespace Makai::Anima::V2::Runtime {
 	struct ALibrary {
 		virtual ~ALibrary();
 		virtual void open();
@@ -30,11 +30,11 @@ namespace Makai::Anima::V2::Core {
 
 #define AV2_Library_Windows(LIB)\
 	static_assert(\
-		Makai::Type::Subclass<LIB, Makai::Anima::V2::Core::ALibrary>\
+		Makai::Type::Subclass<LIB, Makai::Anima::V2::Runtime::ALibrary>\
 	);\
 	CTL_CDECL CTL_DYNEXPORT\
-	owner<Makai::Anima::V2::Core::ALibrary> AV2_Extern_getLibrary() {\
-		return Makai::Anima::V2::Core::createLibrary<LIB>();\
+	owner<Makai::Anima::V2::Runtime::ALibrary> AV2_Extern_getLibrary() {\
+		return Makai::Anima::V2::Runtime::createLibrary<LIB>();\
 	}\
 	int main() {\
 		return 0;\
@@ -42,11 +42,11 @@ namespace Makai::Anima::V2::Core {
 
 #define AV2_Library_Unix(LIB)\
 		static_assert(\
-			Makai::Type::Subclass<LIB, Makai::Anima::V2::Core::ALibrary>\
+			Makai::Type::Subclass<LIB, Makai::Anima::V2::Runtime::ALibrary>\
 		);\
 		CTL_CDECL CTL_DYNEXPORT\
-		owner<Makai::Anima::V2::Core::ALibrary> AV2_Extern_getLibrary() {\
-			return Makai::Anima::V2::Core::createLibrary<LIB>();\
+		owner<Makai::Anima::V2::Runtime::ALibrary> AV2_Extern_getLibrary() {\
+			return Makai::Anima::V2::Runtime::createLibrary<LIB>();\
 		}
 
 #if defined (CTL_ON_UNIX)

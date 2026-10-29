@@ -3,7 +3,6 @@
 
 #include "forward.hpp"
 #include "entry.hpp"
-#include "allocator.hpp"
 
 namespace Makai::Anima::V2::Core {
 	/// @brief Operator.
@@ -181,50 +180,6 @@ namespace Makai::Anima::V2::Core {
 	};
 
 	static_assert(sizeof(TypeFlags) == sizeof(uint64), "Uh oh :/");
-
-	struct Definition: Entry, Flagged<TypeFlags> {
-		using Source = MemorySlice<byte, Allocator>;
-
-		bool canBecome(AtomicCell<Definition> const& type) const {
-			if (type == base) return true;
-			AtomicCell<Definition> current = base;
-			if (!base) return false;
-			do if (current == type) return true;
-			while ((current = current->base));
-			return false;
-		}
-
-		static void makeBasic(Definition& type);
-
-		String cleanName() const;
-
-		Nullable<BasicType>				basic;
-		AtomicCell<Definition>			base		= nullptr;
-		uint64							byteSize	= 0;
-		uint64							alignment	= 1;
-		List<AtomicCell<Definition>>	fields;
-
-		Data::Value::ObjectType		meta;
-
-		using Constructor	= Functor<void(Source&)>;
-		using Destructor	= Functor<void(Source&)>;
-		using Cloner		= Functor<void(Source&, Source const&)>;
-		using Comparator	= Functor<int64(Source const&, Source const&)>;
-		using Stringifier	= Functor<UTF8String(Object const&)>;
-
-		Constructor	construct;
-		Destructor	destruct;
-		Cloner		copy;
-		Comparator	compare;
-
-		Stringifier	toStringInternal;
-	};
-
-	Definition::Constructor	constructorOf(BasicType const type);
-	Definition::Destructor	destructorOf(BasicType const type);
-	Definition::Cloner		clonerOf(BasicType const type);
-	Definition::Comparator	comparatorOf(BasicType const type);
-	Definition::Stringifier	stringifierOf(BasicType const type);
 }
 
 #endif

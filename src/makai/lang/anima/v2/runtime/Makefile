@@ -9,6 +9,7 @@ override prefix := $(call concat, $(prefix), rt)
 
 define MAKE_SUB
 	$(call compile-all, engine)
+	$(call submake-all, model)
 endef
 
 all: debug release

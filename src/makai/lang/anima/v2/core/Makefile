@@ -8,7 +8,7 @@ override prefix := $(call concat, $(prefix), core)
 .SHELLFLAGS = -ec
 
 define MAKE_SUB
-	$(call compile-all, allocator module binary object context type dynlib)
+	$(call compile-all, module binary type)
 endef
 
 all: debug release
