@@ -291,8 +291,9 @@ namespace Makai::Anima::V2::Core::Meta {
 		template <class T>
 		concept TriviallyImplementable = (
 			Type::Class<T>
-		&&	Type::Pure<T>
 		&&	Type::DefaultConstructible<T>
+		&&	Type::CopyConstructible<T>
+		&&	Type::CopyAssignable<T>
 		);
 
 		template <TriviallyImplementable T>
@@ -300,7 +301,6 @@ namespace Makai::Anima::V2::Core::Meta {
 			constexpr static bool const IS_ART_TYPE			= ProxyType<T>;
 			constexpr static bool const HAS_CONSTRUCTOR		= Type::DefaultConstructible<T>;
 			constexpr static bool const HAS_DESTRUCTOR		= requires {T::~T();};
-			constexpr static bool const HAS_CLONER			= Type::CopyAssignable<T>;
 			constexpr static bool const HAS_COMPARATOR		= requires (T const a, T const b) {{a <=> b} -> Type::Convertible<StandardOrder>;};
 			constexpr static bool const HAS_EXPLICIT_BASE	= requires {typename T::BaseType;};
 
@@ -327,7 +327,7 @@ namespace Makai::Anima::V2::Core::Meta {
 			}
 
 			static TypeModel::Proxy::Cloner cloner()
-			requires (HAS_CLONER) {
+			requires {
 				return {
 					[] (auto a, auto b) {
 						violate<T>(a) = violate<T>(b);
@@ -353,10 +353,8 @@ namespace Makai::Anima::V2::Core::Meta {
 				type.destruct = destructor();
 				type.id = types.values.size();
 				type.name = nameof<T>();
-				if  constexpr (HAS_CLONER) {
-					type.flags.isCopyable = true;
-					type.proxy->copy = cloner();
-				}
+				type.flags.isCopyable = true;
+				type.proxy->copy = cloner();
 				if constexpr (HAS_COMPARATOR)
 					type.proxy->compare = comparator();
 				if constexpr (IS_ART_TYPE)
@@ -367,6 +365,38 @@ namespace Makai::Anima::V2::Core::Meta {
 				if constexpr (HAS_EXPLICIT_BASE)
 					type.base = types.byNameHash(EasyImplementor<typename T::BaseType>::TYPE_HASH).front();
 				type.flags.isProxy = true;
+			}
+		};
+	}
+
+	template <Impl::TriviallyImplementable T>
+	struct Proxy: Self<T> {
+		constexpr static usize ART_HASH = hash(nameof<T>());
+
+		using T::T;
+
+		static T fromART(Object const& object) {
+			return *(ref<T const>)object.data();
+		}
+
+		static Storage toART(Proxy<T> const& object, Database<TypeModel>& types) {
+			return Object::create(object, types.byNameHash(ART_HASH).front());
+		}
+	};
+
+	namespace Impl {
+		template<TriviallyImplementable T>
+		struct Implementor: AImplementor<Proxy<T>> {
+			constexpr usize hash() const override {
+				return 0;
+			}
+
+			T unwrap(Object const& obj) override {
+				return Proxy<T>::fromART(obj);
+			}
+
+			Storage wrap(T const& value, Database<TypeModel>& types) override {
+				return Proxy<T>::toART(obj, types);
 			}
 		};
 	}

@@ -119,13 +119,13 @@ namespace Makai::Anima::V2::Runtime {
 			return *ref<CallID>(content.data());
 		}
 
-		template <ARTType T>
+		template <ProxyType T>
 		T to() const {
 			if (sizeof(T) != type->byteSize)
 				invalidCastError<T>("Size mismatch");
 			if (type->name != T::ART_NAME)
 				invalidCastError<T>("Type mismatch");
-			return T::construct(*this);
+			return T::fromART(*this);
 		}
 
 		template <Type::Equal<Data::Value> T>
