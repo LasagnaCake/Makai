@@ -46,7 +46,7 @@ namespace Makai::Anima::V2::Runtime {
 		bool hasExposedCall(String const& name);
 
 		template <class T>
-		using Response = Meta::If<Type::Void<T>, Promise<void>, Promise<Nullable<T>>>;
+		using Response = Makai::Meta::If<Type::Void<T>, Promise<void>, Promise<Nullable<T>>>;
 
 		template <class TFunc>
 		struct ExposedCall;
@@ -75,8 +75,8 @@ namespace Makai::Anima::V2::Runtime {
 		Response<TReturn> callExposed(String const& name, TArgs... args) {
 			auto const fid = invokeExposedCall(
 				name,
-				Core::Context::Arguments::from(
-					env.newValue<TArgs>(args)...
+				Context::Arguments::from(
+					env->newValue<TArgs>(args)...
 				)
 			);
 			if (!fid) co_return null;
@@ -87,7 +87,7 @@ namespace Makai::Anima::V2::Runtime {
 			}
 			if constexpr (Type::NonVoid<TReturn>) {
 				if (err) return null;
-				co_return env.top() ? env.pop()->toValue<TReturn>() : null;
+				co_return env->top() ? env->pop()->to<TReturn>() : null;
 			}
 			else co_return;
 		}
@@ -102,11 +102,15 @@ namespace Makai::Anima::V2::Runtime {
 		bool running() const;
 		bool finished() const;
 
+
+		Context& context() const;
+
 	protected:
+
 		virtual Storage	external	(String const& name, bool const doNotCopy	);
 		Storage&		global		(uint64 const globalID						);
 
-		bool inStrictMode() const {return env.scopeStack.back()->mode == ContextMode::AV2_CM_STRICT;}
+		bool inStrictMode() const {return env->scopeStack.back()->mode == ContextMode::AV2_CM_STRICT;}
 
 		void crash(Engine::Error const& error);
 
@@ -115,7 +119,18 @@ namespace Makai::Anima::V2::Runtime {
 		Random::SecureGenerator	srng;
 		Random::SimpleGenerator	prng;
 
-		Environment env;
+		AtomicCell<Context>		art = art.create();
+		AtomicCell<Environment>	env;
+
+		List<Thread> subs;
+
+		Runtime::Storage forkTo(usize const call);
+
+		static Storage invoke(
+			Core::Module const&	program,
+			Environment const&	env,
+			usize const			call
+		);
 
 		Instance<ILibraryLoader> loader = new DefaultLibraryLoader();
 
@@ -148,7 +163,7 @@ namespace Makai::Anima::V2::Runtime {
 	private:
 		Nullable<usize> invokeExposedCall(String const& name, Context::Arguments const& args);
 
-		template <class T> constexpr static Meta::If<Type::Void<T>, void, nulltype> noResponse() {if constexpr (Type::NonVoid<T>) return null;}
+		template <class T> constexpr static Makai::Meta::If<Type::Void<T>, void, nulltype> noResponse() {if constexpr (Type::NonVoid<T>) return null;}
 
 		void load();
 		void unload();

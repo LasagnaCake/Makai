@@ -17,6 +17,8 @@ namespace Makai::Anima::V2::Runtime {
 	using AsConsumable = Makai::Meta::If<Makai::Type::OneOf<T, Context&>, T, AsNormal<T>>;
 
 	struct Context {
+		using Storage = Object::Storage;
+
 		using Arguments = List<Object::Storage>;
 
 		enum class Error {

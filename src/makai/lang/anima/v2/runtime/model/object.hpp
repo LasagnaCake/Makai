@@ -476,7 +476,46 @@ namespace Makai::Anima::V2::Runtime {
 
 		bool exists() const {return content.size();}
 
+		bool resolved() const {return isResolved;}
+
+		Storage waitUntilDone() {
+			while (!isResolved)
+				prommy.wait();
+			auto const _ = CTL::lock(prommy);
+			return clone();
+		}
+
+		Storage waitUntilNext() {
+			while (!hasValue)
+				prommy.wait();
+			auto const _ = CTL::lock(prommy);
+			return clone();
+		}
+
+		void noPromise() {
+			isResolved	= false;
+			hasValue	= false;
+			prommy.lock();
+		}
+
+		void nextPromise(Object const& object) {
+			Object::operator=(object);
+			hasValue = true;
+			prommy.unlock();
+		}
+		void finalPromise(Object const& object) {
+			isResolved	= true;
+			hasValue	= true;
+			Object::operator=(object);
+			prommy.unlock();
+		}
+
+
 	private:
+		Atomic<bool>	isResolved	= true;
+		Atomic<bool>	hasValue	= true;
+		Mutex			prommy;
+
 		friend Storage;
 
 		Object() noexcept {}

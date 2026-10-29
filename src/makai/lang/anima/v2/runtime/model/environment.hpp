@@ -4,7 +4,11 @@
 #include "context.hpp"
 
 namespace Makai::Anima::V2::Runtime {
+	using Core::ContextMode;
+
 	struct Environment {
+		using Storage = Context::Storage;
+
 		struct Pointers {
 			usize	offset		= 0;
 			usize	function	= 0;
@@ -33,18 +37,18 @@ namespace Makai::Anima::V2::Runtime {
 
 		using VariableBank = Map<uint64, Data::Value>;
 
-		Context& push(Storage const& value) {
+		Environment& push(Storage const& value) {
 			globalValueStack.pushBack(value);
 			return *this;
 		}
 
 		template <Type::Different<Storage> T>
-		Context& push(T const& value) {
+		Environment& push(T const& value) {
 			globalValueStack.pushBack(newValue(value));
 			return *this;
 		}
 
-		Context& pushEmpty() {
+		Environment& pushEmpty() {
 			globalValueStack.pushBack(nullptr);
 			return *this;
 		}
@@ -71,17 +75,17 @@ namespace Makai::Anima::V2::Runtime {
 
 		template <class T>
 		Storage newValue(T const& value) {
-			return art.newValue(value);
+			return art->newValue(value);
 		}
 
 		template <class T>
 		Storage newEmpty() {
-			return art.template newEmpty<T>();
+			return art->template newEmpty<T>();
 		}
 
 		template <class T>
 		Promise<T> promise() {
-			return art.template promise<T>();
+			return art->template promise<T>();
 		}
 
 		Pointers				pointers;
@@ -89,7 +93,7 @@ namespace Makai::Anima::V2::Runtime {
 		List<Pointers>			pointerStack;
 		List<AtomicCell<Scope>>	scopeStack;
 		Map<usize, Storage>		globals;
-		AtomicCell<Context>		art = art.create();
+		AtomicCell<Context>		art;
 	};
 }
 
