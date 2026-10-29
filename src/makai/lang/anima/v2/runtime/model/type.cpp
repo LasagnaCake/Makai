@@ -1,5 +1,7 @@
 #include "type.hpp"
 
+using namespace Makai::Anima::V2::Runtime;
+
 template <class T>
 static void castAndConstructImpl(TypeModel::Source& a) {
 	if (a.empty()) throw Makai::Error::NonexistentValue("Oops, hehe :3");

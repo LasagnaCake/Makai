@@ -4,7 +4,7 @@
 #include "info.hpp"
 #include "instruction.hpp"
 #include "entry.hpp"
-#include "method.hpp"
+#include "flags.hpp"
 #include "type.hpp"
 #include "module.hpp"
 #include "binary.hpp"

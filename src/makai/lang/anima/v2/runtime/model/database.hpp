@@ -1,9 +1,9 @@
 #ifndef MAKAILIB_ANIMA_V2_RUNTIME_MODEL_DATABASE_H
 #define MAKAILIB_ANIMA_V2_RUNTIME_MODEL_DATABASE_H
 
-#include "entry.hpp"
+#include "../../core/entry.hpp"
 
-namespace Makai::Anima::V2::Core {
+namespace Makai::Anima::V2::Runtime {
 	template <Type::Derived<Entry> T>
 	struct Database {
 		using ElementType		= AtomicCell<T>;

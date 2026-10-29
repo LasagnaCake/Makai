@@ -2,12 +2,12 @@
 #define MAKAILIB_ANIMA_V2_RUNTIME_MODEL_METHOD_H
 
 #include "type.hpp"
-#include "../../core/flags.hpp"
+#include "../../core/core.hpp"
 
 namespace Makai::Anima::V2::Runtime {
-	struct Method: Entry, Flagged<Core::MethodFlags> {
-		AtomicCell<Definition>			retType;
-		List<AtomicCell<Definition>>	argTypes;
+	struct MethodModel: Entry, Flagged<Core::MethodFlags> {
+		AtomicCell<TypeModel>		retType;
+		List<AtomicCell<TypeModel>>	argTypes;
 	};
 }
 

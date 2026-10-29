@@ -2,7 +2,7 @@
 #include "dynlib.hpp"
 
 using namespace Makai;
-using namespace Makai::Anima::V2::Core;
+using namespace Makai::Anima::V2::Runtime;
 
 struct Context::Library::Impl {
 	Instance<ALibrary>	lib;

@@ -3,7 +3,6 @@
 
 #include "instruction.hpp"
 #include "type.hpp"
-#include "method.hpp"
 #include "info.hpp"
 
 namespace Makai::Anima::V2::Core {

@@ -17,7 +17,7 @@ namespace Makai::Anima::V2::Runtime {
 	};
 
 	struct Object {
-		using Storage = ObjectStorage;
+		using Storage = Makai::Anima::V2::Runtime::Storage;
 		using Memory = MemorySlice<byte, Allocator>;
 
 		~Object();
@@ -130,12 +130,12 @@ namespace Makai::Anima::V2::Runtime {
 
 		template <Type::Equal<Data::Value> T>
 		T to() const {
-			return toDynamicValue();
+			return serialize();
 		}
 
-		Object::Storage as(AtomicCell<Definition> const& newType) const;
+		Object::Storage as(AtomicCell<TypeModel> const& newType) const;
 
-		bool changeType(AtomicCell<Definition> const& newType);
+		bool changeType(AtomicCell<TypeModel> const& newType);
 
 		Object& operator=(Object const& other);
 
@@ -325,14 +325,14 @@ namespace Makai::Anima::V2::Runtime {
 		Data::Value serialize() const {
 			if (!isBasic()) 		return Data::Value::undefined();
 			if (!content.size())	return Data::Value::undefined();
-			if (isNull())		return toValue<nulltype>();
-			if (isBoolean())	return toValue<bool>();
-			if (isUnsigned())	return toValue<uint64>();
-			if (isSigned())		return toValue<int64>();
-			if (isNumber())		return toValue<double>();
-			if (isVectorable())	return toValue<Vector4>();
-			if (isString())		return toValue<String>();
-			if (isBytes())		return toValue<Bytes<>>();
+			if (isNull())		return to<nulltype>();
+			if (isBoolean())	return to<bool>();
+			if (isUnsigned())	return to<uint64>();
+			if (isSigned())		return to<int64>();
+			if (isNumber())		return to<double>();
+			if (isVectorable())	return to<Vector4>();
+			if (isString())		return to<String>();
+			if (isBytes())		return to<Bytes<>>();
 			return Data::Value::undefined();
 		}
 
@@ -340,10 +340,10 @@ namespace Makai::Anima::V2::Runtime {
 			if (!other) return Ordered::Order::GREATER;
 			if (!count())
 				return (!other->count()) ? Ordered::Order::EQUAL : Ordered::Order::LESS;
-			if (!type->compare)
-				return (!other->type->compare) ? Ordered::Order::EQUAL : Ordered::Order::LESS;
+			if (!type->proxy)
+				return (!other->type->proxy) ? Ordered::Order::EQUAL : Ordered::Order::LESS;
 			if ((type == other->type) || type->canBecome(other->type))
-				return StandardOrder(type->compare(*content, *other->content).value());
+				return StandardOrder(type->proxy->compare(content, other->content).orElse(0));
 			return Ordered::Order::UNORDERED;
 		}
 
@@ -378,16 +378,16 @@ namespace Makai::Anima::V2::Runtime {
 			return Storage::create();
 		}
 
-		static Storage create(AtomicCell<Definition> const& type) {
+		static Storage create(AtomicCell<TypeModel> const& type) {
 			return Storage::create(type);
 		}
 
-		static Storage create(Object const& other, AtomicCell<Definition> const& newType) {
+		static Storage create(Object const& other, AtomicCell<TypeModel> const& newType) {
 			return Storage::create(other, newType);
 		}
 
 		template <Makai::Type::Different<Object> T>
-		static Storage create(T const& val, AtomicCell<Definition> const& info) {
+		static Storage create(T const& val, AtomicCell<TypeModel> const& info) {
 			return Storage::create(val, info);
 		}
 
@@ -401,8 +401,8 @@ namespace Makai::Anima::V2::Runtime {
 
 		static Storage create(
 			Memory&& content,
-			AtomicCell<Definition> const& type,
-			AtomicCell<Definition> const& origin
+			AtomicCell<TypeModel> const& type,
+			AtomicCell<TypeModel> const& origin
 		) {
 			return Storage::create(move(content), type, origin);
 		}
@@ -410,12 +410,12 @@ namespace Makai::Anima::V2::Runtime {
 		Object(Object&&)			= default;
 		Object& operator=(Object&&)	= default;
 
-		AtomicCell<Definition>	getType()	const;
+		AtomicCell<TypeModel>	getType()	const;
 
-		AtomicCell<Definition>	getCurrentType()	const;
-		AtomicCell<Definition>	getOriginalType()	const;
+		AtomicCell<TypeModel>	getCurrentType()	const;
+		AtomicCell<TypeModel>	getOriginalType()	const;
 
-		template <class T> explicit operator T() const {return toValue<T>();}
+		template <class T> explicit operator T() const {return to<T>();}
 
 		template <class T>
 		bool canBecome() const {
@@ -469,12 +469,12 @@ namespace Makai::Anima::V2::Runtime {
 		template <class T>
 		bool set(Nullable<T> const& value) {
 			if (!canBecome<T>()) return false;
-			if (content) unset();
+			if (content.size()) unset();
 			if (!value) return true;
 			return set(*value);
 		}
 
-		bool exists() const {return content;}
+		bool exists() const {return content.size();}
 
 	private:
 		friend Storage;
@@ -482,20 +482,19 @@ namespace Makai::Anima::V2::Runtime {
 		Object() noexcept {}
 
 		Object(
-			AtomicCell<Definition> const& type
+			AtomicCell<TypeModel> const& type
 		): type(type), origin(type) {
-			if (type->flags.isValueType)
-				content = content.create();
 		}
 
 		Object(
 			Object const& other,
-			AtomicCell<Definition> const& newType
-		): content(other.content), type(newType), origin(other.origin) {
+			AtomicCell<TypeModel> const& newType
+		): Object(other) {
+			type = newType;
 		}
 
-		template <Makai::Type::NoneOf<Object, AtomicCell<Definition>> T>
-		constexpr Object(T const& v, AtomicCell<Definition> const& info): Object(info) {
+		template <Makai::Type::NoneOf<Object, AtomicCell<TypeModel>> T>
+		constexpr Object(T const& v, AtomicCell<TypeModel> const& info): Object(info) {
 			set(v);
 		}
 
@@ -515,13 +514,13 @@ namespace Makai::Anima::V2::Runtime {
 
 		Object(
 			Memory&& content,
-			AtomicCell<Definition> const& type,
-			AtomicCell<Definition> const& origin
+			AtomicCell<TypeModel> const& type,
+			AtomicCell<TypeModel> const& origin
 		): content(move(content)), type(type), origin(origin) {}
 
 		explicit Object(
-			AtomicCell<Definition> const& type,
-			AtomicCell<Definition> const& origin
+			AtomicCell<TypeModel> const& type,
+			AtomicCell<TypeModel> const& origin
 		): type(type), origin(origin) {}
 
 		pointer addressAt(usize index) const;
@@ -560,16 +559,16 @@ namespace Makai::Anima::V2::Runtime {
 		void unset() {
 			auto const _ = Makai::lock(lock);
 			if (!origin) return;
-			if (!origin->flags.isValueType)
-				origin->destruct(*content);
+			if (origin->proxy)
+				origin->proxy->destruct(content);
 			content.free();
 		}
 
 		Mutex					lock;
 		List<Storage>			fields;
 		Memory					content;
-		AtomicCell<Definition>	type;
-		AtomicCell<Definition>	origin;
+		AtomicCell<TypeModel>	type;
+		AtomicCell<TypeModel>	origin;
 	};
 
 	inline Data::Value decay(Object::Storage const& val) {

@@ -6,7 +6,7 @@
 #include "object.hpp"
 #include "database.hpp"
 
-namespace Makai::Anima::V2::Core::Meta {
+namespace Makai::Anima::V2::Runtime::Meta {
 	namespace Impl {
 		template <class T>
 		concept ARTCompatible = requires {
@@ -37,7 +37,6 @@ namespace Makai::Anima::V2::Core::Meta {
 			if constexpr (Type::Equal<T, float128>)	return ConstHasher::hash("f128");
 		}
 
-		template <class T>
 		struct AImplementor {
 			Database<TypeModel>& types;
 
@@ -46,102 +45,137 @@ namespace Makai::Anima::V2::Core::Meta {
 			AImplementor(Database<TypeModel>& types): types(types) {}
 
 			constexpr virtual usize hash() const = 0;
-			virtual T unwrap(Object const& obj)	= 0;
-			virtual Object wrap(T const& value)	= 0;
 		};
 
 		template <class T> struct Implementor;
 
-		template<> struct Implementor<Any> {
-			constexpr usize hash() const override			{return Makai::hash("any");			}
-			static Any unwrap(Object const& obj) override	{return {obj.clone()};				}
-			static Storage wrap(Any const& value) override	{return value.value.shallowClone();	}
+		template <class T>
+		concept IsImplementor = (
+			requires (Object& obj, T& impl) {
+				Type::Subclass<T, AImplementor>;
+				Type::Constructible<T, AImplementor, Database<TypeModel>&>;
+				typename TImpl::DataType;
+				{TImpl::unwrap(obj)}	-> Type::Equal<Object>;
+				{impl.wrap(val)}		-> Type::Equal<typename TImpl::DataType>;
+			}
+		);
+
+		template<> struct Implementor<Any>: AImplementor {
+			using AImplementor::AImplementor;
+
+			constexpr usize hash() const override	{return Makai::hash("any");			}
+			static Any unwrap(Object const& obj)	{return {obj.clone()};				}
+			Storage wrap(Any const& value) const	{return value.value.shallowClone();	}
 		};
 
-		template<> struct Implementor<Data::Value> {
-			constexpr usize hash() const override					{return Makai::hash("any");											}
-			static Any unwrap(Object const& obj) override			{return obj.serialize();											}
-			static Storage wrap(Data::Value const& value) override	{return Object::create(value, types.byNameHash(hash()).front());	}
+		template<> struct Implementor<Data::Value>: AImplementor {
+			using AImplementor::AImplementor;
+
+			constexpr usize hash() const override			{return Makai::hash("any");											}
+			static Any unwrap(Object const& obj)			{return obj.serialize();											}
+			Storage wrap(Data::Value const& value) const	{return Object::create(value, types.byNameHash(hash()).front());	}
 		};
 
-		template<> struct Implementor<nulltype> {
-			constexpr usize hash() const override				{return Makai::hash("nil");	}
-			static nulltype unwrap(Object const& obj) override	{return null;				}
-			static Storage wrap(nulltype const& value) override	{return Store::create();	}
+		template<> struct Implementor<nulltype>: AImplementor {
+			using AImplementor::AImplementor;
+
+			constexpr usize hash() const override		{return Makai::hash("nil");	}
+			static nulltype unwrap(Object const& obj)	{return null;				}
+			Storage wrap(nulltype const& value) const	{return Store::create();	}
 		};
 
 		template <Type::Number T>
-		struct Implementor: AImplementor<T> {
-			constexpr usize hash() const override			{return specialHashOf<T>();										}
-			static T unwrap(Object const& obj) override		{return value.template to<T>();									}
-			static Storage wrap(T const& value) override	{return Object::create(value, types.byName(hash()).front());	}
+		struct Implementor<T>: AImplementor {
+			using AImplementor::AImplementor;
+
+			constexpr usize hash() const override	{return specialHashOf<T>();										}
+			static T unwrap(Object const& obj)		{return value.template to<T>();									}
+			T unwrap(Object const& obj) const		{return Object::create(value, types.byName(hash()).front());	}
 		};
 
 		template<Type::OneOf<char, UTF8Char, UTF32Char> T>
-		struct Implementor: AImplementor<T> {
-			constexpr usize hash() const override			{return Makai::hash("char");								}
-			static T unwrap(Object const& obj) override		{return value.template to<T>();								}
-			static Storage wrap(T const& value) override	{return Object::create(value, types.byName(hash()).front());	}
+		struct Implementor<T>: AImplementor{
+			using AImplementor::AImplementor;
+
+			constexpr usize hash() const override	{return Makai::hash("char");								}
+			static T unwrap(Object const& obj)		{return value.template to<T>();									}
+			T unwrap(Object const& obj) const		{return Object::create(value, types.byName(hash()).front());	}
 		};
 
 		template<Type::OneOf<Bytes<>> T>
-		struct Implementor: AImplementor<Bytes<>> {
-			constexpr usize hash() const override			{return Makai::hash("bin");									}
-			static T unwrap(Object const& obj) override		{return value.template to<T>();								}
-			static Storage wrap(T const& value) override	{return Object::create(value, types.byName(hash()).front());	}
+		struct Implementor: AImplementor {
+			using AImplementor::AImplementor;
+
+			constexpr usize hash() const override	{return Makai::hash("bin");										}
+			static T unwrap(Object const& obj)	{return value.template to<T>();									}
+			T unwrap(Object const& obj) const	{return Object::create(value, types.byName(hash()).front());	}
 		};
 
 		template<Type::OneOf<String, UTF8String, UTF32String> T>
-		struct Implementor: AImplementor<T> {
-			constexpr usize hash() const override			{return Makai::hash("str");										}
-			static T unwrap(Object const& obj) override		{return value.template to<T>();									}
-			static Storage wrap(T const& value) override	{return Object::create(value, types.byName(hash()).front());	}
+		struct Implementor<T>: AImplementor {
+			using AImplementor::AImplementor;
+
+			constexpr usize hash() const override	{return Makai::hash("str");										}
+			static T unwrap(Object const& obj)	{return value.template to<T>();									}
+			T unwrap(Object const& obj) const	{return Object::create(value, types.byName(hash()).front());	}
 		};
 
 		template<Makai::Type::OneOf<Vector2, Vector3, Vector4> T>
-		struct Implementor: AImplementor<T> {
-			constexpr usize hash() const override			{return Makai::hash("vec");										}
-			static T unwrap(Object const& obj) override		{return value.template to<T>();									}
-			static Storage wrap(T const& value) override	{return Object::create(value, types.byName(hash()).front());	}
+		struct Implementor<T>: AImplementor {
+			using AImplementor::AImplementor;
+
+			constexpr usize hash() const override	{return Makai::hash("vec");										}
+			static T unwrap(Object const& obj)	{return value.template to<T>();									}
+			T unwrap(Object const& obj) const	{return Object::create(value, types.byName(hash()).front());	}
 		};
 
 		template<Makai::Type::OneOf<Matrix4x4> T>
-		struct Implementor: AImplementor<T> {
-			constexpr usize hash() const override			{return Makai::hash("mat");										}
-			static T unwrap(Object const& obj) override		{return value.template to<T>();									}
-			static Storage wrap(T const& value) override	{return Object::create(value, types.byName(hash()).front());	}
+		struct Implementor<T>: AImplementor {
+			constexpr usize hash() const override	{return Makai::hash("mat");										}
+			static T unwrap(Object const& obj)	{return value.template to<T>();									}
+			T unwrap(Object const& obj) const	{return Object::create(value, types.byName(hash()).front());	}
 		};
 
 		template<Makai::Type::OneOf<TypeID> T>
-		struct Implementor: AImplementor<T> {
-			constexpr usize hash() const override			{return Makai::hash("type");									}
-			static T unwrap(Object const& obj) override		{return value.template to<T>();									}
-			static Storage wrap(T const& value) override	{return Object::create(value, types.byName(hash()).front());	}
+		struct Implementor<T>: AImplementor {
+			using AImplementor::AImplementor;
+
+			constexpr usize hash() const override	{return Makai::hash("type");									}
+			static T unwrap(Object const& obj)		{return value.template to<T>();									}
+			T unwrap(Object const& obj) const		{return Object::create(value, types.byName(hash()).front());	}
 		};
 
 		template<Makai::Type::OneOf<JumpID> T>
-		struct Implementor: AImplementor<T> {
-			constexpr usize hash() const override			{return Makai::hash("jump");									}
-			static T unwrap(Object const& obj) override		{return value.template to<T>();									}
-			static Storage wrap(T const& value) override	{return Object::create(value, types.byName(hash()).front());	}
+		struct Implementor<T>: AImplementor {
+			using AImplementor::AImplementor;
+
+			constexpr usize hash() const override	{return Makai::hash("jump");									}
+			static T unwrap(Object const& obj)		{return value.template to<T>();									}
+			T unwrap(Object const& obj) const		{return Object::create(value, types.byName(hash()).front());	}
 		};
 
 		template<Makai::Type::OneOf<CallID> T>
-		struct Implementor: AImplementor<T> {
-			constexpr usize hash() const override			{return Makai::hash("call");									}
-			static T unwrap(Object const& obj) override		{return value.template to<T>();									}
-			static Storage wrap(T const& value) override	{return Object::create(value, types.byName(hash()).front());	}
+		struct Implementor<T>: AImplementor {
+			using AImplementor::AImplementor;
+
+			constexpr usize hash() const override	{return Makai::hash("call");									}
+			static T unwrap(Object const& obj)		{return value.template to<T>();									}
+			T unwrap(Object const& obj) const		{return Object::create(value, types.byName(hash()).front());	}
 		};
 
-		template<ARTType T>
-		struct Implementor: AImplementor<T> {
-			constexpr usize hash() const override			{return T::ART_HASH;			}
-			static T unwrap(Object const& obj) override		{return T::fromART(obj);		}
-			static Storage wrap(T const& value) override	{return T::toART(types, obj);	}
+		template<ProxyType T>
+		struct Implementor<T>: AImplementor {
+			using AImplementor::AImplementor;
+
+			constexpr usize hash() const override	{return T::ART_HASH;			}
+			static T unwrap(Object const& obj)		{return T::fromART(obj);		}
+			T unwrap(Object const& obj) const		{return T::toART(types, obj);	}
 		};
 
 		template<class T>
-		struct Implementor: AImplementor<List<T>> {
+		struct Implementor<List<T>>: AImplementor {
+			using AImplementor::AImplementor;
+
 			constexpr usize hash() const override {
 				return 0;
 			}
@@ -173,7 +207,9 @@ namespace Makai::Anima::V2::Core::Meta {
 		};
 
 		template<class T>
-		struct Implementor: AImplementor<Nullable<T>> {
+		struct Implementor<Nullable<T>>: AImplementor {
+			using AImplementor::AImplementor;
+
 			constexpr usize hash() const override {
 				return 0;
 			}
@@ -247,7 +283,8 @@ namespace Makai::Anima::V2::Core::Meta {
 
 			template <usize... N>
 			constexpr static Type make(ObjectTupleType const& tup, IndexTuple<N...>) {
-				return {ARTTI<Makai::Meta::Select<N, AsNormal<Types>...>>::construct(*tup.template get<N>())...};
+				Database<TypeModel> types;
+				return {Implementor<Makai::Meta::Select<N, AsNormal<Types>...>>::wrap(*tup.template get<N>())...};
 			}
 
 			template <class TContext>
@@ -257,7 +294,8 @@ namespace Makai::Anima::V2::Core::Meta {
 
 			template <class TContext, usize... N>
 			constexpr static Tuple<TContext&, AsNormal<Types>...> makeWithContext(TContext& context, ObjectTupleType const& tup, IndexTuple<N...>) {
-				return {context, ARTTI<Makai::Meta::Select<N, AsNormal<Types>...>>::construct(*tup.template get<N>())...};
+				Database<TypeModel> types;
+				return {context, Implementor<Makai::Meta::Select<N, AsNormal<Types>...>>::wrap(*tup.template get<N>())...};
 			}
 		};
 	};
@@ -370,10 +408,12 @@ namespace Makai::Anima::V2::Core::Meta {
 	}
 
 	template <Impl::TriviallyImplementable T>
+	requires (!ProxyType<T>)
 	struct Proxy: Self<T> {
 		constexpr static usize ART_HASH = hash(nameof<T>());
 
 		using T::T;
+		using T::operator=;
 
 		static T fromART(Object const& object) {
 			return *(ref<T const>)object.data();
@@ -385,17 +425,19 @@ namespace Makai::Anima::V2::Core::Meta {
 	};
 
 	namespace Impl {
-		template<TriviallyImplementable T>
-		struct Implementor: AImplementor<Proxy<T>> {
+		template <class T>
+		struct Implementor<Proxy<T>>: AImplementor {
+			using AImplementor::AImplementor;
+
 			constexpr usize hash() const override {
 				return 0;
 			}
 
-			T unwrap(Object const& obj) override {
+			static T unwrap(Object const& obj) {
 				return Proxy<T>::fromART(obj);
 			}
 
-			Storage wrap(T const& value, Database<TypeModel>& types) override {
+			Storage wrap(T const& value) override {
 				return Proxy<T>::toART(obj, types);
 			}
 		};

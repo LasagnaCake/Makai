@@ -2,8 +2,8 @@
 #define MAKAILIB_ANIMA_V2_RUNTIME_MODEL_TYPE_H
 
 #include "allocator.hpp"
-#include "../../core/entry.hpp"
-#include "../../core/flags.hpp"
+#include "forward.hpp"
+#include "../../core/core.hpp"
 
 namespace Makai::Anima::V2::Runtime {
 	using Core::Operator;
@@ -13,6 +13,8 @@ namespace Makai::Anima::V2::Runtime {
 	using Core::Entry;
 
 	struct TypeModel: Entry, Flagged<TypeFlags> {
+		using Source = MemorySlice<byte, Allocator>;
+
 		struct Proxy {
 			using Constructor	= Functor<void(Source&)>;
 			using Destructor	= Functor<void(Source&)>;
@@ -27,11 +29,9 @@ namespace Makai::Anima::V2::Runtime {
 			static AtomicCell<Proxy> implementFor(BasicType const type);
 		};
 
-		using Source = MemorySlice<byte, Allocator>;
-
 		bool canBecome(AtomicCell<TypeModel> const& type) const {
 			if (type == base) return true;
-			AtomicCell<ValueType> current = base;
+			auto current = base;
 			if (!base) return false;
 			do if (current == type) return true;
 			while ((current = current->base));

@@ -71,14 +71,14 @@ void Impl::BlockAllocator::collect() {
 	auto const _ = Makai::lock(lock);
 	usize count = 0;
 	List<usize> cleanup;
-	for (auto const& [section, index]: Range::expand(sections)) {
+	for (auto const& [section, index]: Range::expand(free)) {
 		if (!section.block->refs) {
 			cleanup.pushBack(index - count);
 			++count;
 		}
 	}
 	for (auto& index: cleanup)
-		sections.erase(sections.at(index));
+		free.erase(free.at(index));
 	count = 0;
 	cleanup.clear();
 	for (auto const& [block, index]: Range::expand(blocks)) {

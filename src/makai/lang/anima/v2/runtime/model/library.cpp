@@ -1,7 +1,7 @@
 #include "dynlib.hpp"
 
 using namespace Makai;
-using namespace Makai::Anima::V2::Core;
+using namespace Makai::Anima::V2::Runtime;
 
 pointer ALibrary::operator new(usize sz) noexcept {
 	return MX::malloc(sz);

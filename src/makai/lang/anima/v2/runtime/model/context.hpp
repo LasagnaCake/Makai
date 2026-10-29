@@ -40,7 +40,7 @@ namespace Makai::Anima::V2::Runtime {
 			List<usize>	argTypeHashes;
 		};
 
-		struct NativeCall: Method {
+		struct NativeCall: MethodModel {
 			ExternalInvocation	invoker;
 			usize				argc;
 
@@ -122,7 +122,7 @@ namespace Makai::Anima::V2::Runtime {
 						bridgeCall(f, tup);
 					} else {
 						MAKAILIB_DEBUGLN_FULL("Function returns value");
-						auto const v = Meta::ARTInfo<TReturn>::convert(
+						auto const v = Meta::Implementor<TReturn>(types).unwrap(
 							context.types,
 							bridgeCall(
 								f,
@@ -136,7 +136,7 @@ namespace Makai::Anima::V2::Runtime {
 					f();
 				} else {
 					MAKAILIB_DEBUGLN_FULL("Getter-like function");
-					return Meta::ARTInfo<TReturn>::convert(
+					return Meta::Implementor<TReturn>(types).unwrap(
 						context.types,
 						f()
 					);
@@ -354,8 +354,8 @@ namespace Makai::Anima::V2::Runtime {
 
 		~Context();
 
-		Database<Definition>				types;
-		Database<Method>					methods;
+		Database<TypeModel>					types;
+		Database<MethodModel>				methods;
 		Map<usize, Instance<NativeCall>>	externalMethods;
 		Dictionary<Instance<Library>>		dynlibs;
 		Dictionary<Instance<CPP::Library>>	ffilibs;

@@ -4,13 +4,21 @@
 #include "../../../../../compat/ctl.hpp"
 
 namespace Makai::Anima::V2::Runtime {
-	namspace Impl {
+	namespace Impl {
 		struct BlockAllocator {
 			BlockAllocator(usize const blockSize);
 
 			~BlockAllocator();
 
 			struct Block {
+				Block(usize const size, usize const reserved = 0);
+
+				Block(Block const&)				= delete;
+				Block& operator=(Block const&)	= delete;
+
+				Block(Block&&)				= default;
+				Block& operator=(Block&&)	= default;
+
 				MemorySlice<byte>	memory;
 				usize				used, free;
 				usize				refs;
@@ -35,7 +43,7 @@ namespace Makai::Anima::V2::Runtime {
 		private:
 			void collect();
 
-			pointer newBlock(usize const sz, usize const preused);
+			pointer newBlock(usize const sz, usize const reserved = 0);
 
 			usize const blockSize;
 
@@ -58,11 +66,11 @@ namespace Makai::Anima::V2::Runtime {
 		}
 
 	private:
-		Impl::BlockAllocator alloc(2u << 20);
+		Impl::BlockAllocator alloc{2u << 20};
 	};
 
 	template <class T>
-	using Allocator = GSAllocator<T, BlockAllocator>;
+	using Allocator = GSAllocator<T, void, BlockAllocator>;
 }
 
 #endif
