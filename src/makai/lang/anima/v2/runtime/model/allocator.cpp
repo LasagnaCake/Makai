@@ -79,5 +79,5 @@ void Impl::BlockAllocator::collect() {
 		}
 	}
 	for (auto& index: cleanup)
-		blocks.erase(block.at(index));
+		blocks.erase(index);
 }

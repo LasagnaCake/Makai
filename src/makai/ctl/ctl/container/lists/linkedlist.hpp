@@ -315,6 +315,10 @@ public:
 	constexpr Iterator<true, true>		rbegin() const	{return {tail,		this};	};
 	constexpr Iterator<true, true>		rend() const	{return {nullptr,	this};	};
 
+	constexpr SelfType& erase(IndexType const index) {
+		return erase(at(index));
+	}
+
 	template <bool R, bool C>
 	constexpr SelfType& erase(Iterator<R, C> const& at) {
 		if (&at.list() != this) return *this;
