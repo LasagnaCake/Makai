@@ -372,6 +372,13 @@ public:
 	/// @return Order between `Thrad`s.
 	auto operator<=>(Thread const& other) const	{return id() <=> other.id();	}
 
+	template <class T, class... Args>
+	static Thread from(T const& fn, Args... args) {
+		Thread t;
+		t.invoke(fn, args);
+		return t;
+	}
+
 private:
 	AtomicCell<Impl> thread;
 };
