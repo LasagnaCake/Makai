@@ -39,10 +39,7 @@ pointer Impl::BlockAllocator::allocate(usize const sz) {
 }
 
 pointer Impl::BlockAllocator::newBlock(usize const size, usize const preused) {
-	auto& block = blocks.pushBack(Block()).back();
-	block.memory.invoke(size);
-	block.used = preused;
-	block.free = size - preused;
+	auto& block = blocks.pushBack(Block(size, preused)).back();
 	block.refs = 1;
 	return block.memory.data();
 }
