@@ -24,7 +24,7 @@ namespace Decay {
 	template<class T>
 	using AsPassable = AsArgument<
 		Meta::If<
-	        Type::Equal<T, AsNonReference<T>&>,
+	        (Type::NonVoid<T> && Type::Equal<T, AsNonReference<T>&>),
 			AsPointer<AsNonReference<T>>,
    			T
 	    >

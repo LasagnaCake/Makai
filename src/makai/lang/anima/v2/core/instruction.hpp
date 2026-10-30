@@ -173,6 +173,7 @@ namespace Makai::Anima::V2::Core {
 			uint8	invert:		1;
 			int8	expect:		2;
 			bool	useFlags:	1;
+			bool	async:		1;
 		};
 
 		/// @brief Comparison operator.

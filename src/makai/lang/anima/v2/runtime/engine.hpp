@@ -155,7 +155,8 @@ namespace Makai::Anima::V2::Runtime {
 		);
 
 	private:
-		static Co::Promise<Storage> invoke(
+		static void handleFork(
+			Storage const&		output,
 			Core::Module const&	program,
 			Environment const&	env,
 			usize const			call

@@ -43,7 +43,7 @@ private:
 		struct None {};
 		using Caller	= Function<TReturn(TArgs...)>;
 		using Arguments	= Meta::If<sizeof...(TArgs) != 0, Tuple<TArgs...>, None>;
-		using Result	= Meta::If<Type::NonVoid<TReturn>, Decay::AsPassable<TReturn>, None>;
+		using Result	= Meta::If<Type::Void<TReturn>, None, Decay::AsPassable<TReturn>>;
 
 		#ifdef CTL_ON_WINDOWS
 		using ThreadResponse = DWORD;
@@ -169,7 +169,7 @@ public:
 		/// @brief Returns whether the function is done processing.
 		/// @return Whether the function is done processing.
 		bool ready() {
-			return !thread or thread->hasResult();
+			return !thread;
 		}
 
 		/// @brief Returns whether awaiting is necessary.
@@ -372,10 +372,10 @@ public:
 	/// @return Order between `Thrad`s.
 	auto operator<=>(Thread const& other) const	{return id() <=> other.id();	}
 
-	template <class TReturn, class... TArgs>
-	static Thread spawn(Function<TReturn(TArgs...)> const& fn, TArgs... args) {
+	template <class TFunc, class... TArgs>
+	static Thread spawn(Function<TFunc> const& fn, TArgs... args) {
 		Thread t;
-		t.invoke<TReturn>(fn, args...);
+		t.invoke<typename Function<TFunc>::ReturnType>(fn, args...);
 		return t;
 	}
 

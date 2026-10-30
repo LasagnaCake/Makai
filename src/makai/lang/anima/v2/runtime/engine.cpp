@@ -501,7 +501,9 @@ void Engine::v2Call() {
 				}
 			)
 		;
-	} else jumpByTableIndex(loc, true /*returnable*/);
+	} else if (invocation.async)
+		env->push(forkTo(loc));
+	else jumpByTableIndex(loc, true /*returnable*/);
 }
 
 Runtime::Context::Storage Engine::consumeValue(ValueLocation const from) {
@@ -515,6 +517,7 @@ Runtime::Context::Storage Engine::consumeValue(ValueLocation const from) {
 
 Runtime::Context::Storage Engine::validate(Runtime::Context::Storage const& value, bool const passByCopy) {
 	if (!value) return Object::Storage();
+	auto const _ = value->getPromiseLock();
 	if (auto const type = value->getType())
 		if (passByCopy && !type->flags.isCopyable)
 			return value->shallowClone();
@@ -1467,41 +1470,33 @@ void Engine::load(Module const& prog) {
 
 Runtime::Storage Engine::forkTo(usize const call) {
 	Storage output = output.create();
-	output->noPromise();
-	subs.pushBack(
-		Thread::from(
-			[program=program, env=env, call=call, output=output] () -> void {
-				auto subp = invoke(program, *env, call);
-				output->noPromise();
-				while (subp) {
-					output->noPromise();
-					output->nextPromise(*subp.next());
-				}
-				output->finalPromise(*subp.value());
-			}
-		)
-	);
+	subs.pushBack(Thread::spawn<decltype(handleFork)>(handleFork, output, program, env, call));
 	return output;
 }
 
-Makai::Co::Promise<Runtime::Storage> Engine::invoke(
+void Engine::handleFork(
+	Storage const&		output,
 	Core::Module const&	program,
 	Environment const&	env,
 	usize const			call
-) {
+) try {
+	output->beginPromise();
 	Engine sub;
 	sub.program = program;
-	*sub.env = env;
+	sub.env = sub.env.create(env);
 	sub.art = env.art;
 	sub.engineState = State::AV2_RES_RUNNING;
-	sub.jumpTo(call, true);
+	sub.jumpByTableIndex(call, true /* returnable */);
 	auto const fid = sub.env->pointerStack.size()-1;
 	while (sub.inFunction(fid)) {
+		output->doingPromise();
 		if (sub.delay) --sub.delay;
 		else sub.yieldCycle();
-		co_yield sub.env->top();
+		output->nextPromise(*sub.env->top());
 	}
-	co_return sub.env->top();
+	output->finalPromise(*sub.env->top());
+} catch (...) {
+	output->failedPromise();
 }
 
 void Engine::execute() {
@@ -1673,8 +1668,10 @@ void Engine::v2Jump() {
 			default: break;
 		}
 	}
-	if (shouldJump != leap.invert)
-		jumpByMode(leap.mode, loc, false /*not returnable*/);
+	if (shouldJump != leap.invert) {
+		if (leap.async) forkTo(loc);
+		else jumpByMode(leap.mode, loc, false /*not returnable*/);
+	}
 }
 
 Engine::Error Engine::invalidLocationError(ValueLocation const& loc) {

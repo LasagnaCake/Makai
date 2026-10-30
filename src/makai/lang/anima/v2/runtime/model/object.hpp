@@ -478,6 +478,10 @@ namespace Makai::Anima::V2::Runtime {
 
 		bool resolved() const {return isResolved;}
 
+		auto getPromiseLock() {
+			return Makai::lock(prommy);
+		}
+
 		Storage waitUntilDone() {
 			while (!isResolved)
 				prommy.wait();
@@ -492,9 +496,13 @@ namespace Makai::Anima::V2::Runtime {
 			return clone();
 		}
 
-		void noPromise() {
+		void beginPromise() {
 			isResolved	= false;
 			hasValue	= false;
+			doingPromise();
+		}
+
+		void doingPromise() {
 			prommy.lock();
 		}
 
@@ -503,10 +511,18 @@ namespace Makai::Anima::V2::Runtime {
 			hasValue = true;
 			prommy.unlock();
 		}
+
 		void finalPromise(Object const& object) {
 			isResolved	= true;
 			hasValue	= true;
 			Object::operator=(object);
+			prommy.unlock();
+		}
+
+		void failedPromise() {
+			isResolved	= true;
+			hasValue	= true;
+			unset();
 			prommy.unlock();
 		}
 
