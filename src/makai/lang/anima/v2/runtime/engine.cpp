@@ -1470,11 +1470,11 @@ void Engine::load(Module const& prog) {
 
 Runtime::Storage Engine::forkTo(usize const call) {
 	Storage output = output.create();
-	subs.pushBack(Thread::spawn<decltype(handleFork)>(handleFork, output, program, env, call));
+	subs.pushBack(Thread::spawn(handleFork, output, program, env, call));
 	return output;
 }
 
-void Engine::handleFork(
+bool Engine::handleFork(
 	Storage const&		output,
 	Core::Module const&	program,
 	Environment const&	env,
@@ -1495,8 +1495,10 @@ void Engine::handleFork(
 		output->nextPromise(*sub.env->top());
 	}
 	output->finalPromise(*sub.env->top());
+	return true;
 } catch (...) {
 	output->failedPromise();
+	return false;
 }
 
 void Engine::execute() {

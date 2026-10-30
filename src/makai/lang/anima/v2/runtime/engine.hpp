@@ -155,7 +155,7 @@ namespace Makai::Anima::V2::Runtime {
 		);
 
 	private:
-		static void handleFork(
+		static bool handleFork(
 			Storage const&		output,
 			Core::Module const&	program,
 			Environment const&	env,

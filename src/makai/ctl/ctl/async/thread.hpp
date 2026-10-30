@@ -40,7 +40,7 @@ private:
 
 	template <class TReturn, class... TArgs>
 	struct Executor<TReturn(TArgs...)>: IExecutor {
-		struct None {byte: 0;};
+		struct None {};
 		using Caller	= Function<TReturn(TArgs...)>;
 		using Arguments	= Meta::If<sizeof...(TArgs) != 0, Tuple<TArgs...>, None>;
 		using Result	= Meta::If<Type::NonVoid<TReturn>, Decay::AsPassable<TReturn>, None>;
