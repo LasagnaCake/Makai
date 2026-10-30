@@ -1469,7 +1469,7 @@ Runtime::Storage Engine::forkTo(usize const call) {
 	Storage output = output.create();
 	output->noPromise();
 	subs.pushBack(
-		Function<void()> {
+		Thread::from(
 			[program=program, env=env, call=call, output=output] {
 				auto subp = invoke(program, *env, call);
 				output->noPromise();
@@ -1479,7 +1479,7 @@ Runtime::Storage Engine::forkTo(usize const call) {
 				}
 				output->finalPromise(*subp.value());
 			}
-		}
+		)
 	);
 	return output;
 }
