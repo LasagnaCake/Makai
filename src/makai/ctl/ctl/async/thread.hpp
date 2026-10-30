@@ -40,10 +40,10 @@ private:
 
 	template <class TReturn, class... TArgs>
 	struct Executor<TReturn(TArgs...)>: IExecutor {
-		struct None {};
+		struct None {byte: 0;};
 		using Caller	= Function<TReturn(TArgs...)>;
 		using Arguments	= Meta::If<sizeof...(TArgs) != 0, Tuple<TArgs...>, None>;
-		using Result	= Meta::If<Type::Void<TReturn>, None, Decay::AsPassable<TReturn>>;
+		using Result	= Meta::If<Type::NonVoid<TReturn>, Decay::AsPassable<TReturn>, None>;
 
 		#ifdef CTL_ON_WINDOWS
 		using ThreadResponse = DWORD;
