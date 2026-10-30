@@ -124,13 +124,7 @@ namespace Makai::Anima::V2::Runtime {
 
 		List<Thread> subs;
 
-		Runtime::Storage forkTo(usize const call);
-
-		static Storage invoke(
-			Core::Module const&	program,
-			Environment const&	env,
-			usize const			call
-		);
+		Runtime::Storage forkTo(usize const point);
 
 		Instance<ILibraryLoader> loader = new DefaultLibraryLoader();
 
@@ -161,6 +155,12 @@ namespace Makai::Anima::V2::Runtime {
 		);
 
 	private:
+		static Co::Promise<Storage> invoke(
+			Core::Module const&	program,
+			Environment const&	env,
+			usize const			call
+		);
+
 		Nullable<usize> invokeExposedCall(String const& name, Context::Arguments const& args);
 
 		template <class T> constexpr static Makai::Meta::If<Type::Void<T>, void, nulltype> noResponse() {if constexpr (Type::NonVoid<T>) return null;}

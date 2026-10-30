@@ -5,6 +5,7 @@
 
 namespace Makai::Anima::V2::Runtime {
 	using Core::ContextMode;
+	using Core::Instruction;
 
 	struct Environment {
 		using Storage = Context::Storage;
