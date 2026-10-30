@@ -372,11 +372,16 @@ public:
 	/// @return Order between `Thrad`s.
 	auto operator<=>(Thread const& other) const	{return id() <=> other.id();	}
 
-	template <class T, class... Args>
-	static Thread from(T const& fn, Args... args) {
+	template <class TReturn, class... TArgs>
+	static Thread spawn(Function<TReturn(TArgs...)> const& fn, TArgs... args) {
 		Thread t;
-		t.invoke(fn, args);
+		t.invoke<TReturn>(fn, args...);
 		return t;
+	}
+
+	template <class T, class... TArgs>
+	static Thread from(T const& fn, TArgs... args) {
+		return spawn(fn, args...);
 	}
 
 private:

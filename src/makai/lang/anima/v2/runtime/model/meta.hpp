@@ -62,7 +62,7 @@ namespace Makai::Anima::V2::Runtime::Meta {
 		template<> struct Implementor<Any>: BaseImplementor {
 			using BaseImplementor::BaseImplementor;
 
-			constexpr usize hash() const 			{return Makai::hash("any");				}
+			constexpr static usize hash() 			{return Makai::hash("any");				}
 			static Any unwrap(Object const& obj)	{return {obj.clone()};					}
 			Storage wrap(Any const& value) const	{return value.value->shallowClone();	}
 		};
@@ -70,15 +70,15 @@ namespace Makai::Anima::V2::Runtime::Meta {
 		template<> struct Implementor<Data::Value>: BaseImplementor {
 			using BaseImplementor::BaseImplementor;
 
-			constexpr usize hash() const 					{return Makai::hash("any");											}
-			static Any unwrap(Object const& obj)			{return obj.serialize();											}
+			constexpr static usize hash() 					{return Makai::hash("any");											}
+			static Data::Value unwrap(Object const& obj)	{return obj.serialize();											}
 			Storage wrap(Data::Value const& value) const	{return Object::create(value, types.byNameHash(hash()).front());	}
 		};
 
 		template<> struct Implementor<nulltype>: BaseImplementor {
 			using BaseImplementor::BaseImplementor;
 
-			constexpr usize hash() const 				{return Makai::hash("nil");	}
+			constexpr static usize hash() 				{return Makai::hash("nil");	}
 			static nulltype unwrap(Object const& obj)	{return null;				}
 			Storage wrap(nulltype const& value) const	{return Storage::create();	}
 		};
@@ -87,86 +87,86 @@ namespace Makai::Anima::V2::Runtime::Meta {
 		struct Implementor<T>: BaseImplementor {
 			using BaseImplementor::BaseImplementor;
 
-			constexpr usize hash() const 			{return specialHashOf<T>();									}
-			static T unwrap(Object const& obj)		{return obj.template to<T>();								}
-			Storage wrap(T const& obj) const		{return Object::create(obj, types.byName(hash()).front());	}
+			constexpr static usize hash() 			{return specialHashOf<T>();										}
+			static T unwrap(Object const& obj)		{return obj.template to<T>();									}
+			Storage wrap(T const& obj) const		{return Object::create(obj, types.byNameHash(hash()).front());	}
 		};
 
 		template<Type::OneOf<char, UTF8Char, UTF32Char> T>
 		struct Implementor<T>: BaseImplementor{
 			using BaseImplementor::BaseImplementor;
 
-			constexpr usize hash() const 			{return Makai::hash("char");								}
-			static T unwrap(Object const& obj)		{return obj.template to<T>();								}
-			Storage wrap(T const& obj) const		{return Object::create(obj, types.byName(hash()).front());	}
+			constexpr static usize hash() 			{return Makai::hash("char");									}
+			static T unwrap(Object const& obj)		{return obj.template to<T>();									}
+			Storage wrap(T const& obj) const		{return Object::create(obj, types.byNameHash(hash()).front());	}
 		};
 
 		template<Type::OneOf<Bytes<>> T>
 		struct Implementor<T>: BaseImplementor {
 			using BaseImplementor::BaseImplementor;
 
-			constexpr usize hash() const 			{return Makai::hash("bin");									}
-			static T unwrap(Object const& obj)		{return obj.template to<T>();								}
-			Storage wrap(T const& obj) const		{return Object::create(obj, types.byName(hash()).front());	}
+			constexpr static usize hash() 			{return Makai::hash("bin");										}
+			static T unwrap(Object const& obj)		{return obj.template to<T>();									}
+			Storage wrap(T const& obj) const		{return Object::create(obj, types.byNameHash(hash()).front());	}
 		};
 
 		template<Type::OneOf<String, UTF8String, UTF32String> T>
 		struct Implementor<T>: BaseImplementor {
 			using BaseImplementor::BaseImplementor;
 
-			constexpr usize hash() const 			{return Makai::hash("str");									}
-			static T unwrap(Object const& obj)		{return obj.template to<T>();								}
-			Storage wrap(T const& obj) const		{return Object::create(obj, types.byName(hash()).front());	}
+			constexpr static usize hash() 			{return Makai::hash("str");										}
+			static T unwrap(Object const& obj)		{return obj.template to<T>();									}
+			Storage wrap(T const& obj) const		{return Object::create(obj, types.byNameHash(hash()).front());	}
 		};
 
 		template<Makai::Type::OneOf<Vector2, Vector3, Vector4> T>
 		struct Implementor<T>: BaseImplementor {
 			using BaseImplementor::BaseImplementor;
 
-			constexpr usize hash() const 			{return Makai::hash("vec");									}
-			static T unwrap(Object const& obj)		{return obj.template to<T>();								}
-			Storage wrap(T const& obj) const		{return Object::create(obj, types.byName(hash()).front());	}
+			constexpr static usize hash() 			{return Makai::hash("vec");										}
+			static T unwrap(Object const& obj)		{return obj.template to<T>();									}
+			Storage wrap(T const& obj) const		{return Object::create(obj, types.byNameHash(hash()).front());	}
 		};
 
 		template<Makai::Type::OneOf<Matrix4x4> T>
 		struct Implementor<T>: BaseImplementor {
-			constexpr usize hash() const 			{return Makai::hash("mat");									}
-			static T unwrap(Object const& obj)		{return obj.template to<T>();								}
-			Storage wrap(T const& obj) const		{return Object::create(obj, types.byName(hash()).front());	}
+			constexpr static usize hash() 			{return Makai::hash("mat");										}
+			static T unwrap(Object const& obj)		{return obj.template to<T>();									}
+			Storage wrap(T const& obj) const		{return Object::create(obj, types.byNameHash(hash()).front());	}
 		};
 
 		template<Makai::Type::OneOf<TypeID> T>
 		struct Implementor<T>: BaseImplementor {
 			using BaseImplementor::BaseImplementor;
 
-			constexpr usize hash() const 			{return Makai::hash("type");								}
-			static T unwrap(Object const& obj)		{return obj.template to<T>();								}
-			Storage wrap(T const& obj) const		{return Object::create(obj, types.byName(hash()).front());	}
+			constexpr static usize hash() 			{return Makai::hash("type");									}
+			static T unwrap(Object const& obj)		{return obj.template to<T>();									}
+			Storage wrap(T const& obj) const		{return Object::create(obj, types.byNameHash(hash()).front());	}
 		};
 
 		template<Makai::Type::OneOf<JumpID> T>
 		struct Implementor<T>: BaseImplementor {
 			using BaseImplementor::BaseImplementor;
 
-			constexpr usize hash() const 			{return Makai::hash("jump");								}
-			static T unwrap(Object const& obj)		{return obj.template to<T>();								}
-			Storage wrap(T const& obj) const		{return Object::create(obj, types.byName(hash()).front());	}
+			constexpr static usize hash() 			{return Makai::hash("jump");									}
+			static T unwrap(Object const& obj)		{return obj.template to<T>();									}
+			Storage wrap(T const& obj) const		{return Object::create(obj, types.byNameHash(hash()).front());	}
 		};
 
 		template<Makai::Type::OneOf<CallID> T>
 		struct Implementor<T>: BaseImplementor {
 			using BaseImplementor::BaseImplementor;
 
-			constexpr usize hash() const 			{return Makai::hash("call");								}
-			static T unwrap(Object const& obj)		{return obj.template to<T>();								}
-			Storage wrap(T const& obj) const		{return Object::create(obj, types.byName(hash()).front());	}
+			constexpr static usize hash() 			{return Makai::hash("call");									}
+			static T unwrap(Object const& obj)		{return obj.template to<T>();									}
+			Storage wrap(T const& obj) const		{return Object::create(obj, types.byNameHash(hash()).front());	}
 		};
 
 		template<ProxyType T>
 		struct Implementor<T>: BaseImplementor {
 			using BaseImplementor::BaseImplementor;
 
-			constexpr usize hash() const 			{return T::ART_HASH;			}
+			constexpr static usize hash() 			{return T::ART_HASH;			}
 			static T unwrap(Object const& obj)		{return T::fromART(obj);		}
 			Storage wrap(T const& obj) const		{return T::toART(types, obj);	}
 		};
@@ -175,7 +175,7 @@ namespace Makai::Anima::V2::Runtime::Meta {
 		struct Implementor<List<T>>: BaseImplementor {
 			using BaseImplementor::BaseImplementor;
 
-			constexpr usize hash() const {
+			constexpr static usize hash() {
 				return 0;
 			}
 
@@ -209,7 +209,7 @@ namespace Makai::Anima::V2::Runtime::Meta {
 		struct Implementor<Nullable<T>>: BaseImplementor {
 			using BaseImplementor::BaseImplementor;
 
-			constexpr usize hash() const {
+			constexpr static usize hash() {
 				return 0;
 			}
 
@@ -234,7 +234,7 @@ namespace Makai::Anima::V2::Runtime::Meta {
 
 		template<class T>
 		struct Implementor<Promise<T>>: BaseImplementor {
-			constexpr usize hash() const {
+			constexpr static usize hash() {
 				return 0;
 			}
 
@@ -425,7 +425,7 @@ namespace Makai::Anima::V2::Runtime::Meta {
 		struct Implementor<Proxy<T>>: BaseImplementor {
 			using BaseImplementor::BaseImplementor;
 
-			constexpr usize hash() const {
+			constexpr static usize hash() {
 				return Proxy<T>::ART_HASH;
 			}
 

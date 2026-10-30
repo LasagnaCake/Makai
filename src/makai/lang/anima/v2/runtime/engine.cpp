@@ -1470,7 +1470,7 @@ Runtime::Storage Engine::forkTo(usize const call) {
 	output->noPromise();
 	subs.pushBack(
 		Thread::from(
-			[program=program, env=env, call=call, output=output] {
+			[program=program, env=env, call=call, output=output] () -> void {
 				auto subp = invoke(program, *env, call);
 				output->noPromise();
 				while (subp) {
@@ -1491,14 +1491,14 @@ Makai::Co::Promise<Runtime::Storage> Engine::invoke(
 ) {
 	Engine sub;
 	sub.program = program;
-	sub.env = env;
+	*sub.env = env;
 	sub.art = env.art;
-	engineState = State::AV2_RES_RUNNING;
+	sub.engineState = State::AV2_RES_RUNNING;
 	sub.jumpTo(call, true);
-	auto const fid = env->pointerStack.size()-1;
+	auto const fid = sub.env->pointerStack.size()-1;
 	while (sub.inFunction(fid)) {
-		if (delay) --delay;
-		else Engine::yieldCycle();
+		if (sub.delay) --sub.delay;
+		else sub.yieldCycle();
 		co_yield sub.env->top();
 	}
 	co_return sub.env->top();
@@ -1531,12 +1531,11 @@ void Engine::load() {
 			TypeModel::makeBasic(*dt);
 		context().types.addElement(dt);
 	}
-	else return crash(makeErrorHere("Missing entrypoint!"));
 	if (config.allowDynamicLibraries) {
 		MAKAILIB_DEBUGLN_FULL("<dynlib-open>");
 		if (program.ani && loader)
 			for (auto& lib: program.ani->shared.libraries)
-				loader->loadLibrary(context(). lib + ".andl");
+				loader->loadLibrary(context(), lib + ".andl");
 		MAKAILIB_DEBUGLN_FULL("</dynlib-open>");
 		MAKAILIB_DEBUGLN_FULL("<dynlib-load>");
 		context().loadLibraries();
@@ -1573,6 +1572,7 @@ void Engine::load() {
 				MAKAILIB_DEBUGLN_FULL("> ", type ? toString(type->cleanName()) : toString("NULL"));
 	}
 	if (program.entry != Limit::MAX<uint64>) jumpByTableIndex(program.entry, false /*not returnable*/);
+	else return crash(makeErrorHere("Missing entrypoint!"));
 	engineState = State::AV2_RES_RUNNING;
 }
 
@@ -1776,7 +1776,7 @@ void Engine::v2FieldGet() {
 	MAKAILIB_DEBUGLN_FULL("Source: ", src->getType()->hash);
 	Object::Storage v;
 	auto const _ = v.sync();
-	src->getAtIndex(loc)
+	src->getField(loc)
 		.then([&] (auto const& val) {v = val;})
 		.onError([&] (auto const& err) {
 			switch (err) {
@@ -1815,7 +1815,7 @@ void Engine::v2FieldSet() {
 		return crash(invalidSourceError("Value is not an array or structure!"));
 	MAKAILIB_DEBUGLN_FULL("Field Count: ", dst->count());
 	auto const _s = dst.sync();
-	auto const result = dst->setAtIndex(loc, v);
+	auto const result = dst->setField(loc, v);
 	if (result != Object::SetError::AV2_COSE_OK) [[unlikely]] {
 		switch (result) {
 			using enum Object::SetError;
@@ -1901,7 +1901,7 @@ void Engine::initializeObject(Object::Storage const& object) {
 	MAKAILIB_DEBUGLN_FULL("Fields {");
 	for (auto const& [e, i]: Makai::Range::expand(content)) {
 		if (e) {
-			auto const result = object->setAtIndex(i, e);
+			auto const result = object->setField(i, e);
 			if (result != Object::SetError::AV2_COSE_OK) [[unlikely]] {
 				switch (result) {
 					using enum Object::SetError;
@@ -2028,25 +2028,25 @@ void Engine::v2Cast() {
 		if (!env->top()) return crash(makeErrorHere("Value does not exist!"));
 		if (env->top()->isBasic() && t->basic) {
 			switch (*t->basic) {
-				case BasicType::AV2_BT_BOOL:	env->push(env.newValue(env->pop()->to<bool>()));				break;
-				case BasicType::AV2_BT_INT8:	env->push(env.newValue(env->pop()->to<int8>()));				break;
-				case BasicType::AV2_BT_UINT8:	env->push(env.newValue(env->pop()->to<uint8>()));			break;
-				case BasicType::AV2_BT_INT16:	env->push(env.newValue(env->pop()->to<int16>()));			break;
-				case BasicType::AV2_BT_UINT16:	env->push(env.newValue(env->pop()->to<uint16>()));			break;
-				case BasicType::AV2_BT_INT32:	env->push(env.newValue(env->pop()->to<int32>()));			break;
-				case BasicType::AV2_BT_UINT32:	env->push(env.newValue(env->pop()->to<uint32>()));			break;
-				case BasicType::AV2_BT_INT64:	env->push(env.newValue(env->pop()->to<int64>()));			break;
-				case BasicType::AV2_BT_UINT64:	env->push(env.newValue(env->pop()->to<uint64>()));			break;
-				case BasicType::AV2_BT_REAL32:	env->push(env.newValue(env->pop()->to<float32>()));			break;
-				case BasicType::AV2_BT_REAL64:	env->push(env.newValue(env->pop()->to<float64>()));			break;
-				case BasicType::AV2_BT_REAL128:	env->push(env.newValue(env->pop()->to<float128>()));			break;
-				case BasicType::AV2_BT_VECTOR:	env->push(env.newValue(env->pop()->to<Vector4>()));			break;
-				case BasicType::AV2_BT_MATRIX:	env->push(env.newValue(env->pop()->to<Matrix4x4>()));		break;
-				case BasicType::AV2_BT_TYPEID:	env->push(env.newValue(env->pop()->to<Runtime::TypeID>()));	break;
-				case BasicType::AV2_BT_JUMPID:	env->push(env.newValue(env->pop()->to<Runtime::JumpID>()));	break;
-				case BasicType::AV2_BT_CALLID:	env->push(env.newValue(env->pop()->to<Runtime::CallID>()));	break;
-				case BasicType::AV2_BT_STRING:	env->push(env.newValue(env->pop()->to<UTF8String>()));		break;
-				case BasicType::AV2_BT_BYTES:	env->push(env.newValue(env->pop()->to<Bytes<>>()));			break;
+				case BasicType::AV2_BT_BOOL:	env->push(env->newValue(env->pop()->to<bool>()));				break;
+				case BasicType::AV2_BT_INT8:	env->push(env->newValue(env->pop()->to<int8>()));				break;
+				case BasicType::AV2_BT_UINT8:	env->push(env->newValue(env->pop()->to<uint8>()));			break;
+				case BasicType::AV2_BT_INT16:	env->push(env->newValue(env->pop()->to<int16>()));			break;
+				case BasicType::AV2_BT_UINT16:	env->push(env->newValue(env->pop()->to<uint16>()));			break;
+				case BasicType::AV2_BT_INT32:	env->push(env->newValue(env->pop()->to<int32>()));			break;
+				case BasicType::AV2_BT_UINT32:	env->push(env->newValue(env->pop()->to<uint32>()));			break;
+				case BasicType::AV2_BT_INT64:	env->push(env->newValue(env->pop()->to<int64>()));			break;
+				case BasicType::AV2_BT_UINT64:	env->push(env->newValue(env->pop()->to<uint64>()));			break;
+				case BasicType::AV2_BT_REAL32:	env->push(env->newValue(env->pop()->to<float32>()));			break;
+				case BasicType::AV2_BT_REAL64:	env->push(env->newValue(env->pop()->to<float64>()));			break;
+				case BasicType::AV2_BT_REAL128:	env->push(env->newValue(env->pop()->to<float128>()));			break;
+				case BasicType::AV2_BT_VECTOR:	env->push(env->newValue(env->pop()->to<Vector4>()));			break;
+				case BasicType::AV2_BT_MATRIX:	env->push(env->newValue(env->pop()->to<Matrix4x4>()));		break;
+				case BasicType::AV2_BT_TYPEID:	env->push(env->newValue(env->pop()->to<Runtime::TypeID>()));	break;
+				case BasicType::AV2_BT_JUMPID:	env->push(env->newValue(env->pop()->to<Runtime::JumpID>()));	break;
+				case BasicType::AV2_BT_CALLID:	env->push(env->newValue(env->pop()->to<Runtime::CallID>()));	break;
+				case BasicType::AV2_BT_STRING:	env->push(env->newValue(env->pop()->to<UTF8String>()));		break;
+				case BasicType::AV2_BT_BYTES:	env->push(env->newValue(env->pop()->to<Bytes<>>()));			break;
 				case BasicType::AV2_BT_ANY: {
 					if (!convert(t))
 						return crash(outOfRangeError("[any] conversion failed!"));
@@ -2110,7 +2110,7 @@ void Engine::v2Spread() {
 	else env->locals().expand(count);
 	for (usize i = 0; i < count; ++i) {
 		if (
-			!arr->getAtIndex(i + offset)
+			!arr->getField(i + offset)
 			.then([&] (auto const& v) {if (!spread.local) env->push(v); else env->locals().pushBack(v);})
 			.onError([&] (auto const& err) {
 				switch (err) {
