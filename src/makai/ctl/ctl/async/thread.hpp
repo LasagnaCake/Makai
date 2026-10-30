@@ -43,7 +43,7 @@ private:
 		struct None {};
 		using Caller	= Function<TReturn(TArgs...)>;
 		using Arguments	= Meta::If<sizeof...(TArgs) != 0, Tuple<TArgs...>, None>;
-		using Result	= Meta::If<Type::NonVoid<TReturn>, Decay::AsPassable<TReturn>, None>;
+		using Result	= Meta::If<Type::Void<TReturn>, Decay::AsPassable<TReturn>, None>;
 
 		#ifdef CTL_ON_WINDOWS
 		using ThreadResponse = DWORD;
@@ -375,13 +375,13 @@ public:
 	template <class TFunc, class... TArgs>
 	static Thread spawn(Function<TFunc> const& fn, TArgs... args) {
 		Thread t;
-		t.invoke<typename Function<TFunc>::ReturnType>(fn, args...);
+		t.invoke<typename Function<TFunc>::ReturnType, TArgs...>(fn, args...);
 		return t;
 	}
 
 	template <class T, class... TArgs>
 	static Thread from(T const& fn, TArgs... args) {
-		return spawn(fn, args...);
+		return spawn<T>(fn, args...);
 	}
 
 private:

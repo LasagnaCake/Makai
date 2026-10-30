@@ -1470,7 +1470,7 @@ void Engine::load(Module const& prog) {
 
 Runtime::Storage Engine::forkTo(usize const call) {
 	Storage output = output.create();
-	subs.pushBack(Thread::spawn(handleFork, output, program, env, call));
+	subs.pushBack(Thread::from(handleFork, output, program, *env, call));
 	return output;
 }
 

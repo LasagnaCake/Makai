@@ -3,12 +3,7 @@
 using namespace Makai::Anima::V2::Runtime;
 
 Impl::BlockAllocator::BlockAllocator(usize const blockSize): blockSize(blockSize) {
-	blocks.pushBack({
-		MemorySlice<byte>(blockSize),
-		0,
-		blockSize,
-		1
-	});
+	newBlock(blockSize);
 }
 
 Impl::BlockAllocator::~BlockAllocator() {
@@ -19,7 +14,7 @@ pointer Impl::BlockAllocator::allocate(usize const sz) {
 	lock.wait();
 	auto newBlockSize = blockSize;
 	while (newBlockSize < sz)
-		newBlockSize << 1;
+		newBlockSize <<= 1;
 	if (newBlockSize != blockSize)
 		return newBlock(newBlockSize, sz);
 	for (auto& section: free)
@@ -43,20 +38,19 @@ pointer Impl::BlockAllocator::allocate(usize const sz) {
 	return newBlock(newBlockSize, sz);
 }
 
-void Impl::BlockAllocator::newBlock(usize const size, usize const preused) {
-	blocks.pushBack({
-		MemorySlice<byte>(size),
-		preused,
-		size - preused,
-		1
-	});
-	return blocks.back().memory.data();
+pointer Impl::BlockAllocator::newBlock(usize const size, usize const preused) {
+	auto& block = blocks.pushBack(Block()).back();
+	block.memory.invoke(size);
+	block.used = preused;
+	block.free = size - preused;
+	block.refs = 1;
+	return block.memory.data();
 }
 
 void Impl::BlockAllocator::deallocate(pointer const at, usize const sz) {
 	lock.wait();
 	for (auto& block: blocks)
-		if (block.contains(at)) {
+		if (block.contains((ref<byte const>)at)) {
 			free.pushBack({
 				&block,
 				at,
@@ -88,5 +82,5 @@ void Impl::BlockAllocator::collect() {
 		}
 	}
 	for (auto& index: cleanup)
-		block.erase(block.at(index));
+		blocks.erase(block.at(index));
 }
