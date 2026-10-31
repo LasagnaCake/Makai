@@ -5,10 +5,7 @@
 
 namespace Makai::Anima::V2::Core::Info {
 	using Version = Data::Version;
-	constexpr Version const ART_VER			= {1};
-	constexpr Version const CONCERTO_VER	= {1};
-	constexpr Version const BREVEC_VER		= {1};
-	constexpr Version const MINIMAC_VER		= {1};
+	constexpr Version const ART_VER = {1};
 }
 
 #endif
