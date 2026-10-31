@@ -27,7 +27,6 @@ static void doHelpMessage() {
 	DEBUGLN("Minima Compiler - V" + VER.serialize().get<Makai::String>());
 	DEBUGLN("Usage:");
 	DEBUGLN(R"(minimac (<file> OR -p <code>) [--output <name>] [--link "[<modules> ...]"])");
-	DEBUGLN("init");
 }
 
 int main(int argc, char** argv) try {
