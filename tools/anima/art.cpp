@@ -221,7 +221,7 @@ struct ARTEMain: Makai::AMain {
 			if (!args.fetch("script", false)) {
 				static auto const ext = Makai::StringList::from(".anp", ".anpb");
 				Makai::String fpath = args["__args"][0].getString();
-				if (Makai::OS::FS::exists(fpath + ext[args.fetch("binary-first", false)]))
+				if (!args.fetch("binary-first", false) && Makai::OS::FS::exists(fpath + ext[args.fetch("binary-first", false)]))
 					file = Makai::File::getFLOW(fpath + ext[args.fetch("binary-first", false)]);
 				else Makai::Anima::V2::Core::BinaryFormat::fromBytes(Makai::File::getBinary(fpath + ext[!args.fetch("binary-first", false)]))
 					.then([&] (auto const e) {file = e;})
