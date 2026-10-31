@@ -289,7 +289,7 @@ namespace Makai::Anima::V2::Runtime::Meta {
 
 			template <class TContext>
 			constexpr static Tuple<TContext&, AsNormal<Types>...> makeWithContext(Database<TypeModel>& types, TContext& context, ObjectTupleType const& tup) {
-				return makeWithContext(context, types, tup, IntegerPack<sizeof...(Types)>());
+				return makeWithContext(types, context, tup, IntegerPack<sizeof...(Types)>());
 			}
 
 			template <class TContext, usize... N>
@@ -318,8 +318,8 @@ namespace Makai::Anima::V2::Runtime::Meta {
 	template <class TContext, class... Types>
 	constexpr auto toArgumentsWithContext(Database<TypeModel>& types, List<Object::Storage> const& args, TContext& context) {
 		return Impl::ObjectTupleToArguments<Types...>::makeWithContext(
-			context,
 			types,
+			context,
 			Impl::ListToTuple<Types...>::make(args)
 		);
 	}
