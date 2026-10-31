@@ -269,9 +269,8 @@ struct ConcertoMain: Makai::AMain {
 			Makai::OS::FS::currentDirectory(),
 			Makai::StringList::from(
 				path,
-				"-B",
-				args
-			)
+				"-B"
+			).appendBack(args)
 		);
 	}
 
