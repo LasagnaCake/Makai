@@ -2,7 +2,7 @@
 
 using namespace Makai::Anima::V2::Toolchain;
 
-constexpr auto const VER = Makai::Anima::V2::Core::Module::MINIMAC_VER;
+constexpr auto const VER = Makai::Anima::V2::Core::MINIMAC_VER;
 
 static Makai::Data::Value configBase() {
 	Makai::Data::Value cfg;

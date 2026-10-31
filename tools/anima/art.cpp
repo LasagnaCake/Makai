@@ -1,7 +1,7 @@
 #include <makai/makai.hpp>
 #include <makai/main.hpp>
 
-constexpr auto const VER = Makai::Anima::V2::Core::Module::ART_VER;
+constexpr auto const VER = Makai::Anima::V2::Core::ART_VER;
 
 DEFINE_ERROR_TYPE_EX(EngineError, FailedAction);
 

@@ -6,7 +6,7 @@ using namespace Toolchain::Compiler::Breve;
 
 using namespace Toolchain;
 
-constexpr auto const VER = Makai::Anima::V2::Core::Module::BREVEC_VER;
+constexpr auto const VER = Makai::Anima::V2::Core::BREVEC_VER;
 
 static Makai::Data::Value configBase() {
 	Makai::Data::Value cfg;
