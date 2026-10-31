@@ -91,7 +91,7 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 		#endif
 	}
 
-	using ProcessResult = Makai::Anima::V2::Core::Promise<int64>;
+	using ProcessResult = Makai::Anima::V2::Runtime::Promise<int64>;
 
 	static nulltype handleExec(Makai::AtomicCell<Makai::Thread> self, ProcessResult out, Makai::String command, Makai::StringList args) {
 		out.set(Makai::OS::launch(command, "", args));
@@ -102,7 +102,7 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	}
 
 	static ProcessResult AV2Call exec(Makai::Anima::V2::Core::Context& context, Makai::String const& command, Makai::StringList const& args) {
-		auto output = context.promise<int64>();
+		auto output = env->promise<int64>();
 		auto const thread = Makai::AtomicCell<Makai::Thread>::create();
 		threadEditLock.lock();
 		processes.pushBack(thread);
@@ -119,14 +119,14 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 
 	void onBreakpoint() override {
 		printf("<break>\n");
-		printf("  <instruction id='%Zu' />\n", context.pointers.instruction);
-		printf("  <stack size='%Zu'>\n", context.globalValueStack.size());
-		for (auto& val: context.globalValueStack) {
+		printf("  <instruction id='%Zu' />\n", env->pointers.instruction);
+		printf("  <stack size='%Zu'>\n", env->globalValueStack.size());
+		for (auto& val: env->globalValueStack) {
 			auto const e = val->serialize().toString();
 			printf("    <value>%s</value>\n", e.cstr());
 		}
 		printf("  </stack>\n");
-		printf("  <scope-stack size='%Zu'/>\n", context.scopeStack.size());
+		printf("  <scope-stack size='%Zu'/>\n", env->scopeStack.size());
 		printf("</break>\n");
 		Engine::onBreakpoint();
 	}
