@@ -19,7 +19,7 @@ namespace Makai::Anima::V2::Runtime {
 	private:
 		Mutex mutex;
 		pointer data;
-	}
+	};
 }
 
 #endif
