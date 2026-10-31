@@ -15,7 +15,7 @@ static Makai::Data::Value configBase() {
 	cfg["output"]	= "output/**{{name}}";
 	cfg["src"]		= "[]";
 	cfg["level"]	= "full";
-	cfg["binary"]	= false;
+	cfg["web"]		= false;
 	cfg["pretty"]	= false;
 	return cfg;
 }
@@ -27,14 +27,21 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["s"]	= "src";
 	tl["S"]	= "strip";
 	tl["P"]	= "pretty";
-	tl["B"]	= "binary";
+	tl["W"]	= "web";
 	tl["p"]	= "pipe";
 }
 
 static void doHelpMessage() {
 	DEBUGLN("Breve Compiler - V" + VER.serialize().get<Makai::String>());
 	DEBUGLN("Usage:");
-	DEBUGLN(R"(    brevec <file> [-o <name>] [-l <compilation-level>] [-s "[<source-dirs> ...]"] [-W] [-S] [-B])");
+	DEBUGLN("\n"R"(brevec <file> [-o <name>] [-l <level>] [-s "[<dirs> ...]"] [-S] [-W])");
+	DEBUGLN("\n"R"(Where:)");
+	DEBUGLN(R"#(<file>:               Path to the source file)#");
+	DEBUGLN(R"#([-o <name>]:          Output file name)#");
+	DEBUGLN(R"#([-l <level>]:         Compilation level (bpt|bir|min) (Only use last level, for assembly output))#");
+	DEBUGLN(R"#([-s "[<dirs> ...]"]:  Additional directories to look for source files in)#");
+	DEBUGLN(R"#([-W]"]:               Output web-compatible .anp files)#");
+	DEBUGLN(R"#([-S]"]:               Strip file of superfluous content (symbol names, etc.))#");
 }
 
 int main(int argc, char** argv) try {
@@ -102,7 +109,7 @@ int main(int argc, char** argv) try {
 			if (cfg.fetch("pretty", false))
 				pad = Makai::String("  ");
 			auto const out = compile(outName, cfg.contains("pipe") ? file : Makai::File::getText(file));
-			if (cfg.fetch("binary", false))
+			if (!cfg.fetch("web", false))
 				Core::BinaryFormat::toBytes(out, cfg.fetch("strip", false))
 					.then(
 						[&] (auto const& e) {

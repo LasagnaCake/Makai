@@ -155,24 +155,26 @@ struct ARTEMain: Makai::AMain {
 		Makai::Data::Value cfg;
 		cfg["help"]				= false;
 		cfg["allow-dynlibs"]	= false;
-		cfg["binary-first"]		= false;
+		cfg["web-first"]		= false;
 		cfg["script"]			= false;
 		cfg["add-sources"]		= cfg.array();
 		cfg["bapi:console"]		= false;
 		cfg["bapi:time"]		= false;
 		cfg["bapi:shell"]		= false;
+		cfg["bapi:net"]			= false;
 		return cfg;
 	}
 
 	static void translationBase(Makai::CLI::Parser::Translation& tl) {
 		tl["H"]		= "help";
 		tl["DL"]	= "allow-dynlibs";
-		tl["B"]		= "binary-first";
+		tl["W"]		= "web-first";
 		tl["S"]		= "script";
 		tl["i"]		= "add-sources";
 		tl["BA:C"]	= "bapi:console";
 		tl["BA:T"]	= "bapi:time";
 		tl["BA:S"]	= "bapi:shell";
+		tl["BA:N"]	= "bapi:net";
 	}
 
 	ARTEMain(Makai::CLI::Parser& cli): AMain(cli) {
@@ -194,15 +196,44 @@ struct ARTEMain: Makai::AMain {
 
 	void doHelp(Makai::Data::Value const& args) {
 		writeLine("Anima RunTime - V" + VER.serialize().get<Makai::String>());
-		writeLine("Available commands:");
-		writeLine("\nart <program> [-BA:C] [-BA:T] [-BA:S] [-DL] [-B] [-S]");
+		writeLine("Usage:");
+		writeLine("\nart <program> [-BA:C] [-BA:T] [-BA:S] [-BA:N] [-DL] [-B] [-S]");
 		writeLine("\nWhere:");
-		writeLine("[-BA:C]:  Enable builtin OS console API handler");
-		writeLine("[-BA:T]:  Enable builtin OS time API handler");
-		writeLine("[-BA:S]:  Enable builtin OS shell API handler");
+		writeLine("[-BA:C]:  Enable builtin API console shim");
+		writeLine("[-BA:T]:  Enable builtin API time shim");
+		writeLine("[-BA:S]:  Enable builtin API shell shim");
+		writeLine("[-BA:N]:  Enable builtin API network shim");
 		writeLine("[-DL]:    Enable loading of shared libraries");
-		writeLine("[-B]:     Attempt to search for .anpb files before searching for .anp ones");
+		writeLine("[-W]:     Attempt to search for .anp files before searching for .anpb ones");
 		writeLine("[-S]:     Load, compile and run ART language source file in one go (\"Build-and-Run\" mode)");
+	}
+
+	static bool tryGetBinary(Makai::Anima::V2::Core::Module& file, String const& path, String& error) {
+		if (!Makai::OS::FS::exists(fpath + ".anpb")) return false;
+		String error;
+		Makai::Anima::V2::Core::BinaryFormat::fromBytes(Makai::File::getBinary(fpath + ".anpb"))
+			.then([&] (auto const e) {file = e;})
+			.onError([&] (auto const e) {error = e;})
+		;
+		if (error.size()) {
+			error += "<anpb>\n";
+			error += e.report();
+			error += "<\n/anpb>";
+		}
+		return error.empty();
+	}
+
+	static bool tryGetWeb(Makai::Anima::V2::Core::Module& file, String const& path, String& error) {
+		if (!Makai::OS::FS::exists(fpath + ".anp")) return false;
+		try {
+			file = Makai::File::getFLOW(fpath + ".anp");
+		} catch (Makai::Error::Generic& e) {
+			error += "<anp>\n";
+			error += e.report();
+			error += "<\n/anp>";
+			return false;
+		}
+		return true;
 	}
 
 	void run(Makai::Data::Value const& args) override {
@@ -219,14 +250,23 @@ struct ARTEMain: Makai::AMain {
 			};
 			Makai::Anima::V2::Core::Module file;
 			if (!args.fetch("script", false)) {
-				static auto const ext = Makai::StringList::from(".anp", ".anpb");
+				bool success = false;
+				String emsg;
 				Makai::String fpath = args["__args"][0].getString();
-				if (!args.fetch("binary-first", false) && Makai::OS::FS::exists(fpath + ext[args.fetch("binary-first", false)]))
-					file = Makai::File::getFLOW(fpath + ext[args.fetch("binary-first", false)]);
-				else Makai::Anima::V2::Core::BinaryFormat::fromBytes(Makai::File::getBinary(fpath + ext[!args.fetch("binary-first", false)]))
-					.then([&] (auto const e) {file = e;})
-					.onError([&] (auto const e) {throw Makai::Error::FailedAction(e.message, CTL_CPP_PRETTY_SOURCE);})
-				;
+				if (!args.fetch("web-first", false)) {
+					success = tryGetBinary(file, fpath);
+					if (!success) success = tryGetWeb(file, fpath, emsg);
+				} else {
+					success = tryGetWeb(file, fpath);
+					if (!success) success = tryGetBinary(file, fpath, emsg);
+				}
+				if (!success) {
+					throw Error::FailedAction(
+						"Failed to find file '"+fpath+"'!",
+						emsg,
+						CTL_CPP_PRETTY_SOURCE
+					);
+				}
 			} else {
 				using namespace Makai::Anima::V2::Toolchain;
 				Compiler::Breve::Transformer::Import::importer
@@ -245,7 +285,7 @@ struct ARTEMain: Makai::AMain {
 						for (auto& dir: dirs)
 							if (Makai::OS::FS::exists(dir + "/" + path + ".bv"))
 								return cache[path] = Compiler::Breve::parseFile(dir + "/" + path + ".bv", Makai::File::getText(dir + "/" + path + ".bv"));
-						throw Makai::Error::FailedAction("Failed to find module '" + path + "'");
+						throw Makai::Error::FailedAction("Failed to find module '" + path + "'!", CTL_CPP_PRETTY_SOURCE);
 					}
 				;
 				Makai::String fpath;
