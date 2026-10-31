@@ -179,13 +179,13 @@ namespace Makai::Anima::V2::Runtime::Meta {
 				return 0;
 			}
 
-			List<T> unwrap(Object const& obj) {
+			static List<T> unwrap(Object const& obj) {
 				List<T> result;
 				result.resize(obj.count());
 				for (usize i: range(obj.count())) {
 					auto const v = obj.getField(i);
 					if (!v) return nullptr;
-					result.pushBack(Implementor<T>(types).unwrap(*v.value()));
+					result.pushBack(Implementor<T>::unwrap(*v.value()));
 				}
 				return result;
 			}
@@ -213,7 +213,7 @@ namespace Makai::Anima::V2::Runtime::Meta {
 				return 0;
 			}
 
-			List<T> unwrap(Object const& obj) {
+			static Nullable<T> unwrap(Object const& obj) {
 				if (!obj.exists()) return null;
 				return obj.template to<T>();
 			}
@@ -238,7 +238,7 @@ namespace Makai::Anima::V2::Runtime::Meta {
 				return 0;
 			}
 
-			Promise<T> unwrap(Object const& obj) {
+			static Promise<T> unwrap(Object const& obj) {
 				return {obj};
 			}
 

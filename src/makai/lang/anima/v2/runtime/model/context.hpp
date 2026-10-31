@@ -124,13 +124,8 @@ namespace Makai::Anima::V2::Runtime {
 						bridgeCall(f, tup);
 					} else {
 						MAKAILIB_DEBUGLN_FULL("Function returns value");
-						auto const v = Meta::Implementor<TReturn>(context.types).unwrap(
-							context.types,
-							bridgeCall(
-								f,
-								tup
-							)
-						);
+						auto const v = Meta::Implementor<TReturn>(context.types)
+							.wrap(bridgeCall(f, tup));
 						return v;
 					}
 				} else if constexpr (Type::OneOf<AsNormal<TReturn>, Void, void>) {
@@ -138,10 +133,8 @@ namespace Makai::Anima::V2::Runtime {
 					f();
 				} else {
 					MAKAILIB_DEBUGLN_FULL("Getter-like function");
-					return Meta::Implementor<TReturn>(context.types).unwrap(
-						context.types,
-						f()
-					);
+					return Meta::Implementor<TReturn>(context.types)
+						.wrap(f());
 				}
 				return Object::Storage();
 			}
