@@ -211,13 +211,13 @@ struct ARTEMain: Makai::AMain {
 
 	static bool tryGetBinary(Makai::Anima::V2::Core::Module& file, Makai::String const& path, Makai::String& error) {
 		if (!Makai::OS::FS::exists(path + ".anpb")) return false;
-		Makai::String error;
+		Makai::String ex;
 		Makai::Anima::V2::Core::BinaryFormat::fromBytes(Makai::File::getBinary(path + ".anpb"))
 			.then([&] (auto const e) {file = e;})
-			.onError([&] (auto const e) {error = e;})
+			.onError([&] (auto const e) {ex = e.message;})
 		;
-		if (error.size())
-			error = "<anpb>\n"+error+"<\n/anpb>";
+		if (ex.size())
+			error = "<anpb>\n"+ex+"<\n/anpb>";
 		return error.empty();
 	}
 
@@ -235,7 +235,7 @@ struct ARTEMain: Makai::AMain {
 	}
 
 	void run(Makai::Data::Value const& args) override {
-		if (args.fetch("help", false) or args["__args"].empty() or args["__args"][1] == "help")
+		if (args.fetch("help", false) or args["__args"].empty() or args["__args"][0] == "help")
 			doHelp(args);
 		else {
 			ARTE engine{
@@ -252,10 +252,10 @@ struct ARTEMain: Makai::AMain {
 				Makai::String emsg;
 				Makai::String fpath = args["__args"][0].getString();
 				if (!args.fetch("web-first", false)) {
-					success = tryGetBinary(file, fpath);
+					success = tryGetBinary(file, fpath, emsg);
 					if (!success) success = tryGetWeb(file, fpath, emsg);
 				} else {
-					success = tryGetWeb(file, fpath);
+					success = tryGetWeb(file, fpath, emsg);
 					if (!success) success = tryGetBinary(file, fpath, emsg);
 				}
 				if (!success) {
@@ -366,7 +366,7 @@ struct ARTEMain: Makai::AMain {
 			}
 			engine.load(file);
 			auto const prog = engine.context().program = engine.context().program.create();
-			prog->name = fpath.splitAtLast('/').back();
+			prog->name = args["__args"][0].getString().splitAtLast('/').back();
 			usize const rest = args["__args"].size();
 			for (usize i = 1; i < rest; ++i)
 				if (args["__args"][i].isString())			prog->args.pushBack(args["__args"][i].getString());
@@ -388,8 +388,8 @@ struct ARTEMain: Makai::AMain {
 							else val = argbuf[i];
 						} else if (key == "--")
 							while (i < sz)
-								prog->args.pushBack(args[i++]);
-						else prog->params[key.substring(1)] = "true";
+								prog->params.pushBack(args[i++]);
+						else prog->options[key.substring(1)] = "true";
 					} else prog->args.pushBack(key);
 				}
 			}
