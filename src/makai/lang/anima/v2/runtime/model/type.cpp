@@ -210,10 +210,10 @@ void TypeModel::makeBasic(TypeModel& type) {
 	type.proxy = Proxy::implementFor(*type.basic);
 }
 
-String Definition::cleanName() const {
+String TypeModel::cleanName() const {
 	if (flags.isBasic) return asNameString(*basic);
-	auto const clean = Regex::replace(
-		Regex::replace(
+	auto const clean = Makai::Regex::replace(
+		Makai::Regex::replace(
 			//Regex::findFirst(name, "_[A-Za-z0-9_]+_ID_(u[0-9]+){4}_$"),
 			name,
 			"_([A-Za-z0-9_]+?)_ID_(u[0-9]+){4}_",
