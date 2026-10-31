@@ -101,7 +101,7 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 		return null;
 	}
 
-	static ProcessResult AV2Call exec(Makai::Anima::V2::Core::Context& context, Makai::String const& command, Makai::StringList const& args) {
+	static ProcessResult AV2Call exec(Makai::Anima::V2::Runtime::Context& context, Makai::String const& command, Makai::StringList const& args) {
 		auto output = env->promise<int64>();
 		auto const thread = Makai::AtomicCell<Makai::Thread>::create();
 		threadEditLock.lock();
@@ -187,7 +187,7 @@ struct ARTEMain: Makai::AMain {
 		throw EngineError(Makai::toString(
 			"!!! ERROR !!!",
 			"\n", "At bytecode offset ", e.location,
-			"\n", "At instruction ", Makai::Anima::V2::Core::Instruction::asString(e.instruction.name),
+			"\n", "At instruction ", Makai::Anima::V2::Runtime::Instruction::asString(e.instruction.name),
 			"\n", "Message: [", e.message, "]"
 		));
 	}
