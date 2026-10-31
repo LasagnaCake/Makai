@@ -133,19 +133,19 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 
 	void onLoad() override {
 		if (bapi.console) {
-			context.art.addNativeCall("av2/console/write_string", 		write_string		);
-			context.art.addNativeCall("av2/console/write_any",			write_any			);
-			context.art.addNativeCall("av2/console/writeLine_string",	writeLine_string	);
-			context.art.addNativeCall("av2/console/writeLine_any",		writeLine_any		);
+			context().addNativeCall("av2/console/write_string", 	write_string		);
+			context().addNativeCall("av2/console/write_any",		write_any			);
+			context().addNativeCall("av2/console/writeLine_string",	writeLine_string	);
+			context().addNativeCall("av2/console/writeLine_any",	writeLine_any		);
 		}
 		if (bapi.time) {
-			context.art.addNativeCall("av2/time/localNow",	localNow	);
-			context.art.addNativeCall("av2/time/utcNow",	utcNow		);
-			context.art.addNativeCall("av2/time/procNow",	procNow		);
+			context().addNativeCall("av2/time/localNow",	localNow	);
+			context().addNativeCall("av2/time/utcNow",		utcNow		);
+			context().addNativeCall("av2/time/procNow",		procNow		);
 		}
 		if (bapi.shell) {
-			context.art.addNativeCall("av2/shell/exec",	exec	);
-			context.art.addNativeCall("av2/shell/cd",	cd		);
+			context().addNativeCall("av2/shell/exec",	exec	);
+			context().addNativeCall("av2/shell/cd",		cd		);
 		}
 	}
 };
