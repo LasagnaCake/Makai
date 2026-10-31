@@ -263,8 +263,16 @@ struct ConcertoMain: Makai::AMain {
 	void updateApps() {
 
 	}
-	void runApp(Makai::String const& path, StringList const& args) {
-
+	void runApp(Makai::String const& path, Makai::StringList const& args) {
+		Makai::OS::launch(
+			Makai::OS::FS::sourceLocation() + "/" + Makai::OS::FS::asExecutable("art"),
+			Makai::OS::FS::currentDirectory(),
+			Makai::StringList::from(
+				path,
+				"-B",
+				args
+			)
+		);
 	}
 
 	void doApp(Makai::Data::Value const& args) {

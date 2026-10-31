@@ -197,15 +197,16 @@ struct ARTEMain: Makai::AMain {
 	void doHelp(Makai::Data::Value const& args) {
 		writeLine("Anima RunTime - V" + VER.serialize().get<Makai::String>());
 		writeLine("Usage:");
-		writeLine("\nart <program> [-BA:C] [-BA:T] [-BA:S] [-BA:N] [-DL] [-B] [-S]");
+		writeLine("\nart <program> [-BA:C] [-BA:T] [-BA:S] [-BA:N] [-DL] [-B] [-S] [--: <args> ...]");
 		writeLine("\nWhere:");
-		writeLine("[-BA:C]:  Enable builtin API console shim");
-		writeLine("[-BA:T]:  Enable builtin API time shim");
-		writeLine("[-BA:S]:  Enable builtin API shell shim");
-		writeLine("[-BA:N]:  Enable builtin API network shim");
-		writeLine("[-DL]:    Enable loading of shared libraries");
-		writeLine("[-W]:     Attempt to search for .anp files before searching for .anpb ones");
-		writeLine("[-S]:     Load, compile and run ART language source file in one go (\"Build-and-Run\" mode)");
+		writeLine("[-BA:C]:         Enable builtin API console shim");
+		writeLine("[-BA:T]:         Enable builtin API time shim");
+		writeLine("[-BA:S]:         Enable builtin API shell shim");
+		writeLine("[-BA:N]:         Enable builtin API network shim");
+		writeLine("[-DL]:           Enable loading of shared libraries");
+		writeLine("[-W]:            Attempt to search for .anp files before searching for .anpb ones");
+		writeLine("[-S]:            Load, compile and run ART language source file in one go (\"Build-and-Run\" mode)");
+		writeLine("[-- <args...>]:  Named arguments to pass to the program (like those seen here)");
 	}
 
 	static bool tryGetBinary(Makai::Anima::V2::Core::Module& file, String const& path, String& error) {
@@ -367,26 +368,35 @@ struct ARTEMain: Makai::AMain {
 				);
 			}
 			engine.load(file);
-			engine.execute();
 			auto const prog = engine.context().program = engine.context().program.create();
-			usize sz = args["__args"].size();
-			prog->args.reserve(sz);
-			for (usize i = 1; i < sz; ++i)
-				if (args["__args"].isString())
-					prog->args.pushBack(args["__args"].getString());
-				else if (!args["__args"].isUndefined())
-					prog->args.pushBack(args["__args"].toString());
-			StringList kwa;
 			prog->name = fpath.splitAtLast('/').back();
-			prog->args.eraseIf([&] (auto const& e) {
-				if (!Makai::Regex::matches(e, R"(.+=.+)")) return false;
-				kwa.pushBack(e);
-				return true;
-			});
-			for (auto& ka: kwa) {
-				auto const kk = ka.splitAtFirst('=');
-				prog->kwargs[kk.front()] = kk.back();
+			usize const rest = args["__args"].size();
+			for (usize i = 1; i < rest; ++i)
+				if (args["__args"][i].isString())			prog->args.pushBack(args["__args"][i].getString());
+				else if (!args["__args"][i].isUndefined())	prog->args.pushBack(args["__args"][i].toString());
+			if (args.contains("--")) {
+				decltype(prog->args) argbuf;
+				usize const sz = args["--"].size();
+				for (usize i = 0; i < sz; ++i)
+					if (args["--"][i].isString())			argbuf.pushBack(args["--"][i].getString());
+					else if (!args["--"][i].isUndefined())	argbuf.pushBack(args["--"][i].toString());
+				for (usize i = 0; i < sz; ++i) {
+					String key = argbuf[i];
+					if (key.size() < 2) prog->args.pushBack(opt.key);
+					else if (key.front() == '-') {
+						if (isLowercaseChar(opt.key[1]) || opt.key[1] == '-') {
+							auto& val = prog->kwargs[opt.key.substring(1 + (opt.key[1] == '-'))];
+							++i;
+							if (i >= count) val = "";
+							else val = argbuf[i];
+						} else if (opt.key == "--")
+							while (i < sz)
+								prog->params.pushBack(args[i++]);
+						else prog->kwargs[key.substring(1)] = "true";
+					} else prog->args.pushBack(key);
+				}
 			}
+			engine.execute();
 			DEBUGLN("<art:output>");
 			while (engine.process()) {
 				DEBUGLN("Frame!");

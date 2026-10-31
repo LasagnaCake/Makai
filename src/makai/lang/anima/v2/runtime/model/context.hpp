@@ -354,7 +354,8 @@ namespace Makai::Anima::V2::Runtime {
 		struct Program {
 			UTF8String					name;
 			UTF8StringList				args;
-			UTF8Dictionary<UTF8String>	kwargs;
+			UTF8Dictionary<UTF8String>	options;
+			UTF8StringList				params;
 		};
 
 		AtomicCell<Program> program;
