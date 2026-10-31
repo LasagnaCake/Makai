@@ -102,7 +102,7 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	}
 
 	static ProcessResult AV2Call exec(Makai::Anima::V2::Runtime::Context& context, Makai::String const& command, Makai::StringList const& args) {
-		auto output = env->promise<int64>();
+		auto output = context.promise<int64>();
 		auto const thread = Makai::AtomicCell<Makai::Thread>::create();
 		threadEditLock.lock();
 		processes.pushBack(thread);
