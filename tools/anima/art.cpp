@@ -368,6 +368,25 @@ struct ARTEMain: Makai::AMain {
 			}
 			engine.load(file);
 			engine.execute();
+			auto const prog = engine.context().program = engine.context().program.create();
+			usize sz = args["__args"].size();
+			prog->args.reserve(sz);
+			for (usize i = 1; i < sz; ++i)
+				if (args["__args"].isString())
+					prog->args.pushBack(args["__args"].getString());
+				else if (!args["__args"].isUndefined())
+					prog->args.pushBack(args["__args"].toString());
+			StringList kwa;
+			prog->name = fpath.splitAtLast('/').back();
+			prog->args.eraseIf([&] (auto const& e) {
+				if (!Makai::Regex::matches(e, R"(.+=.+)")) return false;
+				kwa.pushBack(e);
+				return true;
+			});
+			for (auto& ka: kwa) {
+				auto const kk = ka.splitAtFirst('=');
+				prog->kwargs[kk.front()] = kk.back();
+			}
 			DEBUGLN("<art:output>");
 			while (engine.process()) {
 				DEBUGLN("Frame!");

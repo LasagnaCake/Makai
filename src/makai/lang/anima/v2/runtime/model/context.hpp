@@ -351,6 +351,14 @@ namespace Makai::Anima::V2::Runtime {
 
 		~Context();
 
+		struct Program {
+			UTF8String					name;
+			UTF8StringList				args;
+			UTF8Dictionary<UTF8String>	kwargs;
+		};
+
+		AtomicCell<Program> program;
+
 		Database<TypeModel>					types;
 		Database<MethodModel>				methods;
 		Map<usize, Instance<NativeCall>>	externalMethods;

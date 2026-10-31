@@ -263,6 +263,9 @@ struct ConcertoMain: Makai::AMain {
 	void updateApps() {
 
 	}
+	void runApp(Makai::String const& path, StringList const& args) {
+
+	}
 
 	void doApp(Makai::Data::Value const& args) {
 		if (args["__args"].size() < 2)
@@ -273,7 +276,10 @@ struct ConcertoMain: Makai::AMain {
 				error("Missing app source/name!");
 			addApp(args["__args"][2].getString());
 		}
-		if (verb == "update") updateApps();
+		else if (verb == "update") updateApps();
+		else if (verb == "run") {
+			// TODO: App running
+		}
 		else error("Invalid cache action [" + verb + "]!");
 	}
 
