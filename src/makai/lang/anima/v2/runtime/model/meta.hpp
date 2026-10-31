@@ -282,7 +282,7 @@ namespace Makai::Anima::V2::Runtime::Meta {
 
 			template <usize... N>
 			constexpr static Type make(Database<TypeModel>& types, ObjectTupleType const& tup, IndexTuple<N...>) {
-				return {Implementor<Makai::Meta::Select<N, AsNormal<Types>...>>::wrap(*tup.template get<N>())...};
+				return {Implementor<Makai::Meta::Select<N, AsNormal<Types>...>>::unwrap(*tup.template get<N>())...};
 			}
 
 			template <class TContext>
@@ -292,7 +292,7 @@ namespace Makai::Anima::V2::Runtime::Meta {
 
 			template <class TContext, usize... N>
 			constexpr static Tuple<TContext&, AsNormal<Types>...> makeWithContext(Database<TypeModel>& types, TContext& context, ObjectTupleType const& tup, IndexTuple<N...>) {
-				return {context, Implementor<Makai::Meta::Select<N, AsNormal<Types>...>>::wrap(*tup.template get<N>())...};
+				return {context, Implementor<Makai::Meta::Select<N, AsNormal<Types>...>>::unwrap(*tup.template get<N>())...};
 			}
 		};
 	};
