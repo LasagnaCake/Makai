@@ -234,6 +234,8 @@ namespace Makai::Anima::V2::Runtime::Meta {
 
 		template<class T>
 		struct Implementor<Promise<T>>: BaseImplementor {
+			using BaseImplementor::BaseImplementor;
+
 			constexpr static usize hash() {
 				return 0;
 			}
