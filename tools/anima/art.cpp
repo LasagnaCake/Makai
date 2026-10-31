@@ -385,7 +385,7 @@ struct ARTEMain: Makai::AMain {
 					if (key.size() < 2) prog->args.pushBack(opt.key);
 					else if (key.front() == '-') {
 						if (isLowercaseChar(opt.key[1]) || opt.key[1] == '-') {
-							auto& val = prog->kwargs[opt.key.substring(1 + (opt.key[1] == '-'))];
+							auto& val = prog->options[opt.key.substring(1 + (opt.key[1] == '-'))];
 							++i;
 							if (i >= count) val = "";
 							else val = argbuf[i];
