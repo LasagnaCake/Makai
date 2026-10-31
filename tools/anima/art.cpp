@@ -122,7 +122,7 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 		printf("  <instruction id='%Zu' />\n", context.pointers.instruction);
 		printf("  <stack size='%Zu'>\n", context.globalValueStack.size());
 		for (auto& val: context.globalValueStack) {
-			auto const e = val->toDynamicValue().toString();
+			auto const e = val->serialize().toString();
 			printf("    <value>%s</value>\n", e.cstr());
 		}
 		printf("  </stack>\n");

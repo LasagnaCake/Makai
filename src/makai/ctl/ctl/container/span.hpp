@@ -21,7 +21,7 @@ enum class ExtentSize {
 /// @brief Integer value representing dynamic size.
 constexpr usize DYNAMIC_SIZE = -1;
 
-template<class TData, usize S = DYNAMIC_SIZE, Type::Integer TIndex = usize, ExtentSize EXTENT = ExtentSize::CES_AUTO>
+template<Type::NonVoid TData, usize S = DYNAMIC_SIZE, Type::Integer TIndex = usize, ExtentSize EXTENT = ExtentSize::CES_AUTO>
 struct Span;
 
 /// @brief Fixed-size, or variable-size, view of a span of elements.
@@ -30,12 +30,11 @@ struct Span;
 /// @tparam TIndex Index size.
 /// @tparam EXTENT Extent size deduction.
 /// @note Even if `S` is specified, the actual `Span` size is not guaranteed to be `S`.
-template<class TData, usize S, Type::Integer TIndex, ExtentSize EXTENT>
+template<Type::NonVoid TData, usize S, Type::Integer TIndex, ExtentSize EXTENT>
 struct Span:
 	Iteratable<TData, TIndex>,
 	SelfIdentified<Span<TData, S, TIndex, EXTENT>>,
 	Ordered {
-
 	using Iteratable		= ::CTL::Iteratable<TData, TIndex>;
 	using SelfIdentified	= ::CTL::SelfIdentified<Span<TData, S, TIndex, EXTENT>>;
 
@@ -85,7 +84,7 @@ struct Span:
 	/// @brief Constructs a `Span` from a pointer to a range of elements.
 	/// @param data Elements to view.
 	/// @note Becomes explicit if span is dymamic.
-	constexpr explicit(DYNAMIC) Span(PointerType const& data): contents(data)													{}
+	constexpr explicit(DYNAMIC) Span(PointerType const data): contents(data)													{}
 	/// @brief Constructs a `Span` from an iterator to the beginning of a span of elements.
 	/// @param data Elements to view.
 	/// @note Becomes explicit if span is dymamic.
@@ -95,7 +94,7 @@ struct Span:
 	/// @param data Start of span.
 	/// @param size Size of span.
 	/// @note Becomes explicit if span is static.
-	constexpr explicit(STATIC) Span(PointerType const& data, SizeType const size): contents(data), count(size)					{}
+	constexpr explicit(STATIC) Span(PointerType const data, SizeType const size): contents(data), count(size)					{}
 	/// @brief Constructs a `Span` from a span of elements.
 	/// @param begin Iterator to beginning of span.
 	/// @param end Iterator to end of span.
@@ -492,6 +491,11 @@ constexpr Span<T> span(Iterator<T> const& begin, Iterator<T> const& end) {
 	return Span<T>::from(begin, end);
 }
 
+template <class T>
+constexpr Span<T> span(ref<T> const data, usize const size) {
+	return Span<T>(data, size);
+}
+
 template<class T>
 constexpr auto span(T& value)
 requires requires (T t) {
@@ -513,6 +517,39 @@ constexpr auto span(T& value)
 	}
 ) {
 	return span(value.data(), value.size());
+}
+
+template <class T>
+constexpr Span<T const> rospan(Iterator<T> const& begin, Iterator<T> const& end) {
+	return Span<T const>::from(begin, end);
+}
+
+template <class T>
+constexpr Span<T const> rospan(ref<T> const data, usize const size) {
+	return Span<T const>(data, size);
+}
+
+template<class T>
+constexpr auto rospan(T& value)
+requires requires (T t) {
+	{t.begin()};
+	{t.end()};
+} {
+	return rospan(value.begin(), value.end());
+}
+
+template<class T>
+constexpr auto rospan(T& value)
+	requires (requires (T t) {
+		{t.data()};
+		{t.size()};
+	}
+	and !requires (T t) {
+		{t.begin()};
+		{t.end()};
+	}
+) {
+	return rospan(value.data(), value.size());
 }
 
 CTL_NAMESPACE_END

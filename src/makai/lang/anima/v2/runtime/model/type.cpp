@@ -1,5 +1,7 @@
 #include "type.hpp"
 
+using namespace Makai;
+
 using namespace Makai::Anima::V2::Runtime;
 
 template <class T>
@@ -8,16 +10,16 @@ static void castAndConstructImpl(TypeModel::Source& a) {
 	MX::construct<T>(Cast::rewrite<ref<T>>(a.data()));
 }
 
-static TypeModel::Constructor doNotConstruct() {
+static TypeModel::Proxy::Constructor doNotConstruct() {
 	return {};
 }
 
 template <class T>
-static TypeModel::Destructor castAndConstruct() {
+static TypeModel::Proxy::Destructor castAndConstruct() {
 	return {castAndConstructImpl<T>};
 }
 
-static TypeModel::ProxyTypeImpl::Constructor constructorOf(BasicType const type) {
+static TypeModel::Proxy::Constructor constructorOf(BasicType const type) {
 	switch (type) {
 		case BasicType::AV2_BT_MATRIX:	return castAndConstruct<Matrix4x4>();
 		case BasicType::AV2_BT_VECTOR:	return castAndConstruct<Vector4>();
@@ -32,15 +34,15 @@ static void castAndDestructImpl(TypeModel::Source& a) {
 }
 
 template <class T>
-static TypeModel::Destructor castAndDestruct() {
+static TypeModel::Proxy::Destructor castAndDestruct() {
 	return {castAndDestructImpl<T>};
 }
 
-static TypeModel::Destructor doNotDestruct() {
+static TypeModel::Proxy::Destructor doNotDestruct() {
 	return {};
 }
 
-static TypeModel::ProxyTypeImpl::Destructor destructorOf(BasicType const type) {
+static TypeModel::Proxy::Destructor destructorOf(BasicType const type) {
 	switch (type) {
 		case BasicType::AV2_BT_MATRIX:	return castAndDestruct<Matrix4x4>();
 		case BasicType::AV2_BT_VECTOR:	return castAndDestruct<Vector4>();
@@ -49,34 +51,34 @@ static TypeModel::ProxyTypeImpl::Destructor destructorOf(BasicType const type) {
 }
 
 template <class T>
-static void castAndCloneImpl(TypeModel::Source& a, TypeModel::Source const& b) {
+static void castAndCloneImpl(TypeModel::Source& a, ConstByteSpan<> const& b) {
 	if (a.empty()) return;
 	if (b.empty()) throw Makai::Error::NonexistentValue("Oops, hehe :3");
 	violate<T>(a.data()) = violate<T>(b.data());
 }
 
 template <class T>
-static void proxyCloneImpl(TypeModel::Source& a, TypeModel::Source const& b) {
+static void proxyCloneImpl(TypeModel::Source& a, ConstByteSpan<> const& b) {
 	if (b.size())
 		MX::memmove(a.resize(b.size()).data(), b.data(), b.size());
 	else a.free();
 }
 
 template <class T>
-static TypeModel::Cloner castAndClone() {
+static TypeModel::Proxy::Cloner castAndClone() {
 	return {castAndCloneImpl<T>};
 }
 
 template <class T>
-static TypeModel::Cloner proxyClone() {
+static TypeModel::Proxy::Cloner proxyClone() {
 	return {proxyCloneImpl<T>};
 }
 
-static TypeModel::Cloner doNotClone() {
+static TypeModel::Proxy::Cloner doNotClone() {
 	return {};
 }
 
-static TypeModel::ProxyTypeImpl::Cloner clonerOf(BasicType const type) {
+static TypeModel::Proxy::Cloner clonerOf(BasicType const type) {
 	switch (type) {
 		case BasicType::AV2_BT_BOOL:	return castAndClone<bool>();
 		case BasicType::AV2_BT_INT8:	return castAndClone<int8>();
@@ -101,7 +103,7 @@ static TypeModel::ProxyTypeImpl::Cloner clonerOf(BasicType const type) {
 }
 
 template <class T>
-static int64 castAndCompareImpl(TypeModel::Source const& a, TypeModel::Source const& b) {
+static int64 castAndCompareImpl(ConstByteSpan<> const& a, ConstByteSpan<> const& b) {
 	MAKAILIB_DEBUGLN_FULL("Comparing values...");
 	if (a.empty()) return b.empty() ? 0: -1;
 	MAKAILIB_DEBUGLN_FULL("A exists!");
@@ -111,23 +113,23 @@ static int64 castAndCompareImpl(TypeModel::Source const& a, TypeModel::Source co
 }
 
 template <class T>
-static TypeModel::Comparator castAndCompare() {
+static TypeModel::Proxy::Comparator castAndCompare() {
 	return {castAndCompareImpl<T>};
 }
 
 template <class T>
-static int64 primitiveCompareImpl(TypeModel::Source const& a, TypeModel::Source const& b) {
+static int64 primitiveCompareImpl(ConstByteSpan<> const& a, ConstByteSpan<> const& b) {
 	MAKAILIB_DEBUGLN_FULL("Comparing [", violate<T>(a.data()), "] <=> [", violate<T>(b.data()), "]...");
 	return castAndCompareImpl<T>(a, b);
 }
 
 template <class T>
-static TypeModel::Comparator primitiveCompare() {
+static TypeModel::Proxy::Comparator primitiveCompare() {
 	return {primitiveCompareImpl<T>};
 }
 
 template <class T>
-static int64 proxyCompareImpl(TypeModel::Source const& a, TypeModel::Source const& b) {
+static int64 proxyCompareImpl(ConstByteSpan<> const& a, ConstByteSpan<> const& b) {
 	if (a.empty()) return b.empty() ? 0: -1;
 	if (b.empty()) return a.empty() ? 0: +1;
 	if (a.size() != b.size()) return a.size() < b.size() ? -1 : +1;
@@ -135,15 +137,15 @@ static int64 proxyCompareImpl(TypeModel::Source const& a, TypeModel::Source cons
 }
 
 template <class T>
-static TypeModel::Comparator proxyCompare() {
+static TypeModel::Proxy::Comparator proxyCompare() {
 	return {proxyCompareImpl<T>};
 }
 
-static TypeModel::Comparator doNotCompare() {
+static TypeModel::Proxy::Comparator doNotCompare() {
 	return {};
 }
 
-static TypeModel::ProxyTypeImpl::Comparator comparatorOf(BasicType const type) {
+static TypeModel::Proxy::Comparator comparatorOf(BasicType const type) {
 	switch (type) {
 		case BasicType::AV2_BT_BOOL:	return primitiveCompare<bool>();
 		case BasicType::AV2_BT_INT8:	return primitiveCompare<int8>();
@@ -166,13 +168,15 @@ static TypeModel::ProxyTypeImpl::Comparator comparatorOf(BasicType const type) {
 	}
 }
 
-TypeModel::ProxyTypeImpl TypeModel::ProxyTypeImpl::implementFor(BasicType const type) {
-	return {
-		constructorOf(type),
-		destructorOf(type),
-		clonerOf(type),
-		comparatorOf(type)
-	};
+AtomicCell<TypeModel::Proxy> TypeModel::Proxy::implementFor(BasicType const type) {
+	return AtomicCell<TypeModel::Proxy>::create(
+		Proxy{
+			constructorOf(type),
+			destructorOf(type),
+			clonerOf(type),
+			comparatorOf(type)
+		}
+	);
 }
 
 
@@ -203,5 +207,5 @@ void TypeModel::makeBasic(TypeModel& type) {
 		case AV2_BT_NULL:		type.alignment = 0;							break;
 		default: break;
 	}
-	type.proxy = ProxyTypeImpl::implementFor(*type.basic);
+	type.proxy = Proxy::implementFor(*type.basic);
 }

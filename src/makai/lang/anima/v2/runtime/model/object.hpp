@@ -343,7 +343,7 @@ namespace Makai::Anima::V2::Runtime {
 			if (!type->proxy)
 				return (!other->type->proxy) ? Ordered::Order::EQUAL : Ordered::Order::LESS;
 			if ((type == other->type) || type->canBecome(other->type))
-				return StandardOrder(type->proxy->compare(content, other->content).orElse(0));
+				return StandardOrder(type->proxy->compare(rospan(content), rospan(other->content)).orElse(0));
 			return Ordered::Order::UNORDERED;
 		}
 
@@ -578,7 +578,8 @@ namespace Makai::Anima::V2::Runtime {
 			AtomicCell<TypeModel> const& origin
 		): type(type), origin(origin) {}
 
-		pointer addressAt(usize index) const;
+		ref<byte> addressAt(usize index);
+		ref<byte const> addressAt(usize index) const;
 
 		template <class T>
 		T fromBasicNumber() const {

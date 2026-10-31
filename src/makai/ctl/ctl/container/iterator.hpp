@@ -271,7 +271,7 @@ static_assert(Type::Container::Iterator<Iterator<int>>);
 /// @brief Tags the deriving class as iteratable.
 /// @tparam TData Element type.
 /// @tparam TIndex Index type.
-template<class TData, Type::Integer TIndex>
+template<Type::NonVoid TData, Type::Integer TIndex>
 struct Iteratable: Typed<TData>, Indexed<TIndex> {
 	using Indexed	= ::CTL::Indexed<TIndex>;
 	using Typed		= ::CTL::Typed<TData>;
@@ -280,7 +280,10 @@ struct Iteratable: Typed<TData>, Indexed<TIndex> {
 		typename Typed::DataType,
 		typename Typed::ConstantType,
 		typename Typed::PointerType,
-		typename Typed::ConstPointerType
+		typename Typed::ConstPointerType,
+		typename Typed::ReferenceType,
+		typename Typed::ConstReferenceType,
+		typename Typed::TemporaryType
 	;
 
 	using

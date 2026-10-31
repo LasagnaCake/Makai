@@ -1,5 +1,4 @@
 #include "minima.hpp"
-#include "../../core/method.hpp"
 
 using namespace Makai::Anima::V2::Core;
 
@@ -9,8 +8,6 @@ using Context = Minima::Context;
 
 using Type = Context::Tokenizer::Token::Type;
 using enum Type;
-
-using CoreMethod = Method;
 
 using enum ValueLocation::Source;
 
@@ -1466,7 +1463,9 @@ static void declareType(Context& context) {
 				case Makai::hash("vec"):	type->basic = BasicType::AV2_BT_VECTOR;		type->byteSize = sizeof(Makai::Vector4);	break;
 				case Makai::hash("mat"):	type->basic = BasicType::AV2_BT_MATRIX;		type->byteSize = sizeof(Makai::Matrix4x4);	break;
 				case Makai::hash("bin"):	type->basic = BasicType::AV2_BT_BYTES;		type->byteSize = sizeof(Makai::Bytes<>);	break;
-				case Makai::hash("type"):	type->basic = BasicType::AV2_BT_TYPEID;		type->byteSize = sizeof(TypeID);			break;
+				case Makai::hash("type"):	type->basic = BasicType::AV2_BT_TYPEID;		type->byteSize = sizeof(u64);				break;
+				case Makai::hash("jump"):	type->basic = BasicType::AV2_BT_JUMPID;		type->byteSize = sizeof(u64);				break;
+				case Makai::hash("call"):	type->basic = BasicType::AV2_BT_CALLID;		type->byteSize = sizeof(u64);				break;
 				case Makai::hash("void"):	type->basic = BasicType::AV2_BT_VOID;		type->alignment = 0;						break;
 				case Makai::hash("any"):	type->basic = BasicType::AV2_BT_ANY;		type->alignment = 0;						break;
 				case Makai::hash("nil"):	type->basic = BasicType::AV2_BT_NULL;		type->alignment = 0;						break;

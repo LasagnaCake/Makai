@@ -18,8 +18,8 @@ namespace Makai::Anima::V2::Runtime {
 		struct Proxy {
 			using Constructor	= Functor<void(Source&)>;
 			using Destructor	= Functor<void(Source&)>;
-			using Cloner		= Functor<void(Source&, Source const&)>;
-			using Comparator	= Functor<int64(Source const&, Source const&)>;
+			using Cloner		= Functor<void(Source&, ConstByteSpan<> const&)>;
+			using Comparator	= Functor<int64(ConstByteSpan<> const&, ConstByteSpan<> const&)>;
 
 			Constructor	construct;
 			Destructor	destruct;

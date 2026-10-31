@@ -11,8 +11,9 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Intermediate;
 
 	struct Labeled {
-		UTF8String name;
-		UTF8String pureName;
+		UTF8String	name;
+		UTF8String	pureName;
+		u64			hash;
 	};
 
 	struct Positioned {

@@ -24,7 +24,7 @@ void Context::debugArgs(List<Object::Storage> const& args) {
 	//CPP::Debug::breakpoint();
 	writer->writeLine("Argc: ", args.size());
 	for (auto& arg: args)
-	 	writer->writeLine("Argument: ", arg->toDynamicValue().toFLOWString());
+	 	writer->writeLine("Argument: ", arg->serialize().toFLOWString());
 	//CPP::Debug::breakpoint();
 }
 

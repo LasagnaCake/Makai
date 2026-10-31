@@ -8,7 +8,7 @@ struct ToStringLib: ALibrary {
 	static UTF8String AV2Call toString(T const& val) {
 		if constexpr (Makai::Type::Equal<T, Any>) {
 			if (!val.value) return "";
-			auto const vv = val.value->toDynamicValue();
+			auto const vv = val.value->serialize();
 			if (vv.isString()) return vv.getString();
 			else return vv.toFLOWString();
 		}
