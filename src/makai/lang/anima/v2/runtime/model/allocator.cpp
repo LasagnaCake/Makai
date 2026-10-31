@@ -50,7 +50,7 @@ void Impl::BlockAllocator::deallocate(pointer const at, usize const sz) {
 		if (block.contains((ref<byte const>)at)) {
 			free.pushBack({
 				&block,
-				at,
+				(ref<byte>)at,
 				sz
 			});
 			--block.refs;

@@ -1,7 +1,7 @@
 #ifndef MAKAILIB_ANIMA_V2_RUNTIME_MODULE_H
 #define MAKAILIB_ANIMA_V2_RUNTIME_MODULE_H
 
-#include "context.hpp"
+#include "model/context.hpp"
 
 namespace Makai::Anima::V2::Runtime::ARTModule {
 	constexpr auto const BUILDER_FN_NAME = "AV2_ART_builder";
