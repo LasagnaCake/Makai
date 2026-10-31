@@ -209,25 +209,22 @@ struct ARTEMain: Makai::AMain {
 		writeLine("[-- <args...>]:  Named arguments to pass to the program (like those seen here)");
 	}
 
-	static bool tryGetBinary(Makai::Anima::V2::Core::Module& file, String const& path, String& error) {
-		if (!Makai::OS::FS::exists(fpath + ".anpb")) return false;
-		String error;
-		Makai::Anima::V2::Core::BinaryFormat::fromBytes(Makai::File::getBinary(fpath + ".anpb"))
+	static bool tryGetBinary(Makai::Anima::V2::Core::Module& file, Makai::String const& path, Makai::String& error) {
+		if (!Makai::OS::FS::exists(path + ".anpb")) return false;
+		Makai::String error;
+		Makai::Anima::V2::Core::BinaryFormat::fromBytes(Makai::File::getBinary(path + ".anpb"))
 			.then([&] (auto const e) {file = e;})
 			.onError([&] (auto const e) {error = e;})
 		;
-		if (error.size()) {
-			error += "<anpb>\n";
-			error += e.report();
-			error += "<\n/anpb>";
-		}
+		if (error.size())
+			error = "<anpb>\n"+error+"<\n/anpb>";
 		return error.empty();
 	}
 
-	static bool tryGetWeb(Makai::Anima::V2::Core::Module& file, String const& path, String& error) {
-		if (!Makai::OS::FS::exists(fpath + ".anp")) return false;
+	static bool tryGetWeb(Makai::Anima::V2::Core::Module& file, Makai::String const& path, Makai::String& error) {
+		if (!Makai::OS::FS::exists(path + ".anp")) return false;
 		try {
-			file = Makai::File::getFLOW(fpath + ".anp");
+			file = Makai::File::getFLOW(path + ".anp");
 		} catch (Makai::Error::Generic& e) {
 			error += "<anp>\n";
 			error += e.report();
@@ -252,7 +249,7 @@ struct ARTEMain: Makai::AMain {
 			Makai::Anima::V2::Core::Module file;
 			if (!args.fetch("script", false)) {
 				bool success = false;
-				String emsg;
+				Makai::String emsg;
 				Makai::String fpath = args["__args"][0].getString();
 				if (!args.fetch("web-first", false)) {
 					success = tryGetBinary(file, fpath);
@@ -262,7 +259,7 @@ struct ARTEMain: Makai::AMain {
 					if (!success) success = tryGetBinary(file, fpath, emsg);
 				}
 				if (!success) {
-					throw Error::FailedAction(
+					throw Makai::Error::FailedAction(
 						"Failed to find file '"+fpath+"'!",
 						emsg,
 						CTL_CPP_PRETTY_SOURCE
@@ -381,18 +378,18 @@ struct ARTEMain: Makai::AMain {
 					if (args["--"][i].isString())			argbuf.pushBack(args["--"][i].getString());
 					else if (!args["--"][i].isUndefined())	argbuf.pushBack(args["--"][i].toString());
 				for (usize i = 0; i < sz; ++i) {
-					String key = argbuf[i];
-					if (key.size() < 2) prog->args.pushBack(opt.key);
+					Makai::String key = argbuf[i];
+					if (key.size() < 2) prog->args.pushBack(key);
 					else if (key.front() == '-') {
-						if (isLowercaseChar(opt.key[1]) || opt.key[1] == '-') {
-							auto& val = prog->options[opt.key.substring(1 + (opt.key[1] == '-'))];
+						if (Makai::isLowercaseChar(key[1]) || key[1] == '-') {
+							auto& val = prog->options[key.substring(1 + (key[1] == '-'))];
 							++i;
-							if (i >= count) val = "";
+							if (i >= sz) val = "";
 							else val = argbuf[i];
-						} else if (opt.key == "--")
+						} else if (key == "--")
 							while (i < sz)
-								prog->params.pushBack(args[i++]);
-						else prog->kwargs[key.substring(1)] = "true";
+								prog->args.pushBack(args[i++]);
+						else prog->params[key.substring(1)] = "true";
 					} else prog->args.pushBack(key);
 				}
 			}
