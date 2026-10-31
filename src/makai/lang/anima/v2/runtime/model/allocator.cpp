@@ -2,6 +2,13 @@
 
 using namespace Makai::Anima::V2::Runtime;
 
+Impl::BlockAllocator::Block::Block(usize const size, usize const reserved) {
+	memory.invoke(size);
+	used = reserved;
+	free = size - reserved;
+	refs = 1;
+}
+
 Impl::BlockAllocator::BlockAllocator(usize const blockSize): blockSize(blockSize) {
 	newBlock(blockSize);
 }

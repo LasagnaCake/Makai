@@ -70,7 +70,7 @@ namespace Makai::Anima::V2::Runtime {
 	};
 
 	template <class T>
-	using Allocator = GSAllocator<T, void, BlockAllocator>;
+	using Allocator = GSAllocator<T, void>;
 }
 
 #endif

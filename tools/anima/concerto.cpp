@@ -8,7 +8,7 @@ using namespace Makai::Anima::V2;
 
 using namespace Toolchain;
 
-constexpr auto const VER = Makai::Anima::V2::Core::CONCERTO_VER;
+constexpr auto const VER = Makai::Anima::V2::Core::Info::CONCERTO_VER;
 
 constinit auto const METAPASS = Makai::obfuscate("Moriarty and the Unnamed Catharsis ~ Microcosm Genesis of Ars Poetica");
 
