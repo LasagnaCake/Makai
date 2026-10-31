@@ -29,7 +29,7 @@ namespace Makai::Anima::V2::Runtime {
 
 			struct Section {
 				ref<Block>	block;
-				pointer		start;
+				ref<byte>	start;
 				usize		size;
 				Mutex		lock;
 			};
