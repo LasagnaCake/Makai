@@ -50,7 +50,7 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual void freeAll()		= 0;
 		/// @brief Despawns all active objects, if applicable. Must be implemented.
 		virtual void despawnAll()	= 0;
-		
+
 		/// @brief Returns the amount of remaining free objects.
 		/// @return Free object count.
 		virtual usize freeCount()	{return free.size();}
@@ -64,7 +64,7 @@ namespace Makai::Ex::Game::Danmaku {
 		virtual ObjectQueryType getInArea(C2D::IBound2D const& bound)		= 0;
 		/// @brief Returns all active objects not in a given area. Must be implemented.
 		virtual ObjectQueryType getNotInArea(C2D::IBound2D const& bound)	= 0;
-		
+
 		/// @brief Returns all active objects.
 		/// @return All active objects.
 		virtual ObjectQueryType getActive() {
@@ -122,7 +122,7 @@ namespace Makai::Ex::Game::Danmaku {
 			SOS_ACTIVE,
 			SOS_DESPAWNING
 		};
-		
+
 		/// @brief Server object action.
 		enum class Action {
 			SOA_SPAWN_BEGIN,
@@ -138,7 +138,7 @@ namespace Makai::Ex::Game::Danmaku {
 		Property<Vector2>	scale;
 
 		/// @brief Color property.
-		Property<Vector4>	color = {Graph::Color::WHITE};
+		Property<Vector4>	color = {Color::WHITE};
 
 		/// @brief Whether the object can be discarded.
 		bool discardable	= true;
@@ -150,7 +150,7 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @return Reference to self.
 		virtual AServerObject& clear() {
 			trans		= Transform2D::identity();
-			color		= {Graph::Color::WHITE};
+			color		= {Color::WHITE};
 			scale		= {1};
 			discardable	= true;
 			pause		= {};
@@ -223,7 +223,7 @@ namespace Makai::Ex::Game::Danmaku {
 		/// @brief Returns the object's current state.
 		/// @return Current object state.
 		State state() {return objectState;};
-		
+
 		/// @brief Executes every update cycle.
 		void onUpdate(float delta) override {
 			if (objectState == State::SOS_FREE) return;

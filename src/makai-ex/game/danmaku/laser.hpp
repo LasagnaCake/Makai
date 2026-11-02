@@ -23,7 +23,7 @@ namespace Makai::Ex::Game::Danmaku {
 			CollisionMask const player = Danmaku::Collision::Tag::FOR_PLAYER_1;
 		} const mask;
 	};
-	
+
 	/// @brief Laser server laser.
 	struct Laser: AServerObject, ThreePatchContainer, AttackObject, Circular, Long, IToggleable {
 		/// @brief Constructs the laser.
@@ -49,7 +49,7 @@ namespace Makai::Ex::Game::Danmaku {
 			autoDecay		= false;
 			fakeOut			= false;
 			toggleState		= IToggleable::State::TS_UNTOGGLED;
-			animColor		= Graph::Color::WHITE;
+			animColor		= Color::WHITE;
 			counter			= 0;
 			toggleCounter	= 0;
 			toggleColor		= 0.5;
@@ -126,7 +126,7 @@ namespace Makai::Ex::Game::Danmaku {
 		void onCollision(Collider const& collider, CollisionDirection const direction) override {
 			if (isFree()) return;
 		}
-		
+
 		/// @brief Discards the object, if applicable.
 		/// @param immediately Whether to despawn first, or discard directly. By default, it is `false`.
 		/// @param force Whether to force discard. By default, it is `false`.
@@ -181,7 +181,7 @@ namespace Makai::Ex::Game::Danmaku {
 
 		/// @brief Whether to fake being toggled when untoggled.
 		bool fakeOut = false;
-		
+
 		/// @brief Collision mask associated with the laser.
 		LaserConfig::Collision const mask;
 
@@ -193,7 +193,7 @@ namespace Makai::Ex::Game::Danmaku {
 		usize toggleCounter	= 0;
 		/// @brief Counter used for spawn/despawn timing purposes.
 		usize counter		= 0;
-		
+
 		/// @brief Next toggle state.
 		IToggleable::State nextState = IToggleable::State::TS_TOGGLED;
 
@@ -201,7 +201,7 @@ namespace Makai::Ex::Game::Danmaku {
 		ThreePatchHolder sprite	= ThreePatchHolder(nullptr);
 
 		/// @brief Current animation color.
-		Vector4 animColor = Graph::Color::WHITE;
+		Vector4 animColor = Color::WHITE;
 
 		/// @brief Current toggle color factor.
 		float toggleColor = 1.0f;
@@ -223,7 +223,7 @@ namespace Makai::Ex::Game::Danmaku {
 			sprite->local.rotation.z	= trans.rotation;
 			sprite->local.position		= Vec3(trans.position, sprite->local.position.z);
 			sprite->local.scale			= trans.scale;
-			Vector4 const spriteColor = color.value * animColor * (fakeOut ? 1 : Graph::Color::alpha(toggleColor));
+			Vector4 const spriteColor = color.value * animColor * (fakeOut ? 1 : Color::alpha(toggleColor));
 			for (usize i: {0, 2, 4}) {
 				sprite->shape.colors[i][0]		= spriteColor;
 				sprite->shape.colors[i][1]		= spriteColor;
@@ -308,7 +308,7 @@ namespace Makai::Ex::Game::Danmaku {
 			}
 		}
 	};
-	
+
 	/// @brief Laser collision configuration.
 	struct LaserCollisionConfig: CollisionObjectConfig<
 		ColliderConfig{
@@ -394,7 +394,7 @@ namespace Makai::Ex::Game::Danmaku {
 				laser.discard();
 			};
 		}
-		
+
 		/// @brief Frees all active lasers.
 		void freeAll() override {
 			auto const uc = used;
@@ -456,7 +456,7 @@ namespace Makai::Ex::Game::Danmaku {
 		bool contains(HandleType const& object) override {
 			return (used.find(object) != -1);
 		}
-		
+
 		/// @brief Frees up an laser from use.
 		/// @param object Laser to free.
 		/// @return Reference to self.

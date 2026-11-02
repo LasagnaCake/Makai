@@ -53,7 +53,7 @@ namespace Makai::Ex::Game::Danmaku {
 			glow				= {};
 			id					= 0;
 			value				= 1;
-			animColor			= Graph::Color::WHITE;
+			animColor			= Color::WHITE;
 			counter				= 0;
 			spawnglow			= 0;
 			acceleration		= 0;
@@ -191,10 +191,10 @@ namespace Makai::Ex::Game::Danmaku {
 			}
 			return *this;
 		}
-		
+
 		/// @brief Collision mask associated with the item.
 		ItemConfig::Collision const mask;
-		
+
 		/// @brief The item's ID.
 		usize id	= 0;
 		/// @brief The item's value.
@@ -224,7 +224,7 @@ namespace Makai::Ex::Game::Danmaku {
 		float spawnglow	= 0;
 
 		/// @brief Current animation color.
-		Vector4 animColor = Graph::Color::WHITE;
+		Vector4 animColor = Color::WHITE;
 
 		/// @brief Collision shape.
 		Instance<C2D::Circle> shape = new C2D::Circle(0);
@@ -232,20 +232,20 @@ namespace Makai::Ex::Game::Danmaku {
 		template <class, class> friend class ItemServer;
 
 		void setSpriteVisibility(bool const setGlowSprite, bool const state) {
-			if (glowSprite && setGlowSprite)	glowSprite->visible	= state; 
+			if (glowSprite && setGlowSprite)	glowSprite->visible	= state;
 			else if (mainSprite)				mainSprite->visible	= state;
 		}
 
 		void hideSprites() {
-			if (glowSprite)	glowSprite->visible	= false; 
+			if (glowSprite)	glowSprite->visible	= false;
 			if (mainSprite)	mainSprite->visible	= false;
 		}
 
 		void showSprites() {
-			if (glowSprite)	glowSprite->visible	= true; 
+			if (glowSprite)	glowSprite->visible	= true;
 			if (mainSprite)	mainSprite->visible	= true;
 		}
-		
+
 		void initSprites() {
 			if (mainSprite) mainSprite->local.scale = 0;
 			if (glowSprite) glowSprite->local.scale = 0;
@@ -261,7 +261,7 @@ namespace Makai::Ex::Game::Danmaku {
 			sprite->local.position			= Vec3(trans.position, sprite->local.position.z);
 			sprite->local.scale				= trans.scale;
 			float const iglow = glowOnSpawn ? Math::lerp<float>(1, glow.value, spawnglow) : glow.value;
-			auto const glowFX = Graph::Color::alpha(glowSprite ? iglow : 1 - iglow);
+			auto const glowFX = Color::alpha(glowSprite ? iglow : 1 - iglow);
 			sprite->setColor(animColor * color.value * glowFX);
 		}
 
@@ -359,7 +359,7 @@ namespace Makai::Ex::Game::Danmaku {
 		ReferencesGameBounds {
 		/// @brief Collision mask type.
 		using CollisionMask = AGameObject::CollisionMask;
-		
+
 		/// @brief Item type.
 		using ItemType		= TItem;
 		/// @brief Item configuration type.
@@ -420,7 +420,7 @@ namespace Makai::Ex::Game::Danmaku {
 				item.discard();
 			};
 		}
-		
+
 		/// @brief Frees all active items.
 		void freeAll() override {
 			auto const uc = used;
@@ -482,7 +482,7 @@ namespace Makai::Ex::Game::Danmaku {
 		bool contains(HandleType const& object) override {
 			return (used.find(object) != -1);
 		}
-		
+
 		/// @brief Frees up an item from use.
 		/// @param object Item to free.
 		/// @return Reference to self.

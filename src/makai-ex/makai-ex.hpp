@@ -3,7 +3,7 @@
 
 #include "nsdoc.hpp"
 #include "game/game.hpp"
-#include "anima/anima.hpp"
+#include "menu/menu.hpp"
 
 namespace MkEx = Makai::Ex;
 

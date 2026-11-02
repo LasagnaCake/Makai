@@ -27,7 +27,7 @@ namespace Makai::Ex::Game::Danmaku {
 			CollisionMask const player	= Danmaku::Collision::Tag::FOR_PLAYER_1;
 		} const mask = {};
 	};
-	
+
 	/// @brief Bullet server bullet.
 	struct Bullet: AServerObject, ASpriteContainer, AttackObject, Circular, Glowing, Dope, RotatesSprite {
 		/// @brief Constructs the bullet.
@@ -57,7 +57,7 @@ namespace Makai::Ex::Game::Danmaku {
 			bouncy			= false;
 			loopy			= false;
 			grazed			= false;
-			animColor		= Graph::Color::WHITE;
+			animColor		= Color::WHITE;
 			spawnglow		= 0;
 			spawnsize		= 0;
 			counter			= 0;
@@ -185,7 +185,7 @@ namespace Makai::Ex::Game::Danmaku {
 			}
 			return *this;
 		}
-		
+
 		/// @brief Whether the bullet should bounce when touching the edge of the board. Only bounces once.
 		bool bouncy	= false;
 		/// @brief Whether the bullet should wrap around when leaving one edge of the board. Only loops once.
@@ -217,7 +217,7 @@ namespace Makai::Ex::Game::Danmaku {
 		constexpr static float SPAWN_GROWTH = .5;
 
 		/// @brief Current animation color.
-		Vector4 animColor = Graph::Color::WHITE;
+		Vector4 animColor = Color::WHITE;
 
 		/// @brief Collision shape.
 		Instance<C2D::Circle> shape = new C2D::Circle(0);
@@ -259,17 +259,17 @@ namespace Makai::Ex::Game::Danmaku {
 		}
 
 		void setSpriteVisibility(bool const setGlowSprite, bool const state) {
-			if (glowSprite && setGlowSprite)	glowSprite->visible	= state; 
+			if (glowSprite && setGlowSprite)	glowSprite->visible	= state;
 			else if (mainSprite)				mainSprite->visible	= state;
 		}
 
 		void hideSprites() {
-			if (glowSprite)	glowSprite->visible	= false; 
+			if (glowSprite)	glowSprite->visible	= false;
 			if (mainSprite)	mainSprite->visible	= false;
 		}
 
 		void showSprites() {
-			if (glowSprite)	glowSprite->visible	= true; 
+			if (glowSprite)	glowSprite->visible	= true;
 			if (mainSprite)	mainSprite->visible	= true;
 		}
 
@@ -288,7 +288,7 @@ namespace Makai::Ex::Game::Danmaku {
 			sprite->local.position			= Vec3(trans.position, sprite->local.position.z);
 			sprite->local.scale				= trans.scale * spawnsize;
 			float const iglow = glowOnSpawn ? Math::lerp<float>(1, glow.value, spawnglow) : glow.value;
-			auto const glowFX = Graph::Color::alpha(glowSprite ? iglow : 1 - iglow);
+			auto const glowFX = Color::alpha(glowSprite ? iglow : 1 - iglow);
 			sprite->setColor(animColor * color.value * glowFX);
 		}
 
@@ -412,7 +412,7 @@ namespace Makai::Ex::Game::Danmaku {
 				free.pushBack(&all.back());
 			}
 		}
-		
+
 		/// @brief Tries to acquire a bullet.
 		/// @return Reference to bullet, or `nullptr`.
 		HandleType acquire() override {
@@ -441,7 +441,7 @@ namespace Makai::Ex::Game::Danmaku {
 				bullet.discard();
 			};
 		}
-		
+
 		/// @brief Frees all active bullets.
 		void freeAll() override {
 			auto const uc = used;

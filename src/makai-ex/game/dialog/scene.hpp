@@ -215,9 +215,9 @@ namespace Makai::Ex::Game::Dialog {
 				"makai/ex/game/dialog/scene/mode/userStepped/v1",
 				[&] {config.mode = Configuration::Mode::GDCM_USER_STEPPED;}
 			);
-			context.art.addNativeCall<void(usize)>("makai/ex/game/dialog/scene/wait/v1",		memberCall(*this, wait));
-			context.art.addNativeCall<void(usize)>("makai/ex/game/dialog/scene/addWait/v1",		memberCall(*this, addWait));
-			context.art.addNativeCall<void(usize)>("makai/ex/game/dialog/scene/setDelay/v1",	memberCall(*this, setDelay));
+			context.art.addNativeCall<void(usize)>("makai/ex/game/dialog/scene/wait/v1",		memberCall(*this, &ARTScene::wait));
+			context.art.addNativeCall<void(usize)>("makai/ex/game/dialog/scene/addWait/v1",		memberCall(*this, &ARTScene::addWait));
+			context.art.addNativeCall<void(usize)>("makai/ex/game/dialog/scene/setDelay/v1",	memberCall(*this, &ARTScene::setDelay));
 			context.art.addNativeCall<void(ssize)>(
 				"makai/ex/game/dialog/scene/timeout/v1",
 				[&] (ssize const timeout) {config.timeout = timeout;}
@@ -252,7 +252,7 @@ namespace Makai::Ex::Game::Dialog {
 		void onLoad() override {
 			context.art.addNativeCall<String(String)>(
 				"makai/ex/game/dialog/scene/loadActor/v1",
-				memberCall(*this, loadActor)
+				memberCall(*this, &ARTScene::loadActor)
 			);
 		}
 	};
