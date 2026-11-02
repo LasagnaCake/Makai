@@ -94,7 +94,7 @@ namespace Command {
 			sz
 			,">(\""
 		);
-		CTL::String const passhash = Makai::Tool::Arch::hashPassword(cfg["password"]);
+		CTL::String const passhash = Makai::Tool::Arch::hashPassword(cfg["pass"]);
 		DEBUGLN("Password hash size: ", passhash.size());
 		if (cfg["type"].getString() == "embed") {
 			for (char const c: passhash) {

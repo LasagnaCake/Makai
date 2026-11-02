@@ -11,18 +11,35 @@ namespace Makai::Ex::Menu {
 
 	template <usize I = DEFAULT_SERVER_ID>
 	struct Server: AUpdateable, ANotifiable<I>, EventHandler {
-		using CollisionHandler = Collision::C2D::Server<I>;
+		using CollisionHandler = Collision::C2D::CollisionServer<I>;
 		using NotificationHandler = ANotifiable<I>;
+
 		CollisionHandler	collisions;
 		Input::Manager		input;
+
+		using typename NotificationHandler::MessageHandleType;
+
+		using
+			NotificationHandler::broadcast,
+			NotificationHandler::subscribeTo
+		;
 
 		struct EventMessage: NotificationHandler::IMessage {
 			Server&	server;
 			Data::Value value;
 		};
 
-		struct Component: ID::Identifiable<uint64 const>, AUpdateable, NotificationHandler, NotificationHandler::IMessage {
+		struct Component: ID::Identifiable<Component const, uint64>, AUpdateable, NotificationHandler, NotificationHandler::IMessage {
 			using Server = Server<I>;
+
+			using typename NotificationHandler::MessageHandleType;
+
+			using ID::Identifiable<Component const, uint64>::id;
+
+			using
+				NotificationHandler::broadcast,
+				NotificationHandler::subscribeTo
+			;
 
 			virtual ~Component() {}
 
@@ -33,8 +50,7 @@ namespace Makai::Ex::Menu {
 
 			Component(String const& type, String const& name):
 				type(type),
-				name(name),
-				server(server) {
+				name(name) {
 				mouseClickBounds->onCollision = [&] (auto, auto) {
 					if (updating) NotificationHandler::broadcast("mk/ex/menu/events/mouse/v1", this);
 				};
@@ -43,7 +59,7 @@ namespace Makai::Ex::Menu {
 				};
 				auto const base = "mk/ex/menu/events/component/" + toString(id()) + "/v1";
 				subscribeTo(
-					StringList::(
+					StringList::from(
 						eventPath("/transform/position"),
 						eventPath("/transform/rotation"),
 						eventPath("/transform/scale")
@@ -54,18 +70,19 @@ namespace Makai::Ex::Menu {
 
 			void onUpdate(float delta, App& app) override {}
 
-			Collision::C2D::Area& area() {return *bounds;}
+			Collision::C2D::Area& hoverArea() const {return *mouseHoverBounds;}
+			Collision::C2D::Area& clickArea() const {return *mouseClickBounds;}
 
-			bool enable()	{updating = false; bounds->canCollide = false;}
-			bool disable()	{updating = false; bounds->canCollide = false;}
+			void enable()	{updating = false; mouseClickBounds->canCollide = false; mouseHoverBounds->canCollide = false;}
+			void disable()	{updating = false; mouseClickBounds->canCollide = false; mouseHoverBounds->canCollide = false;}
 
-			void onMessage(String const& message, MessageHandleType const& message) {
-				EventMessage& m = *message.morph<EventMessage::SetTransform const>();
-				if (message == eventPath("/transform/position"))		trans.position	= tc.value.getVector();
-				else if (message == eventPath("/transform/rotation"))	trans.rotation	= tc.value.getVector();
-				else if (message == eventPath("/transform/scale"))		trans.scale		= tc.value.getVector();
-				else if (message == eventPath("/enable"))	enable();
-				else if (message == eventPath("/disable"))	disable();
+			void onMessage(String const& signal, MessageHandleType const message) override {
+				EventMessage& m = *message.template morph<As<EventMessage const>>();
+				if (signal == eventPath("/transform/position"))			trans.position	= m.value.getVector();
+				else if (signal == eventPath("/transform/rotation"))	trans.rotation	= m.value.getVector();
+				else if (signal == eventPath("/transform/scale"))		trans.scale		= m.value.getVector();
+				else if (signal == eventPath("/enable"))	enable();
+				else if (signal == eventPath("/disable"))	disable();
 			}
 
 			String eventPath(String const& name) {
@@ -73,8 +90,8 @@ namespace Makai::Ex::Menu {
 			}
 
 		private:
-			Unique<CollisionHandler::Collider> const mouseClickBounds = CollisionHandler::createCollider(1);
-			Unique<CollisionHandler::Collider> const mouseHoverBounds = CollisionHandler::createCollider(2);
+			Unique<typename CollisionHandler::Collider> const mouseClickBounds = CollisionHandler::createCollider(1);
+			Unique<typename CollisionHandler::Collider> const mouseHoverBounds = CollisionHandler::createCollider(2);
 		};
 
 		struct Callbacks {
@@ -85,18 +102,18 @@ namespace Makai::Ex::Menu {
 			Callback const onUnfocus;
 			Callback const onInit;
 
-			Events(EventHandler& events, Component& component):
+			Callbacks(EventHandler& events, Component& component):
 				onMouseDown(events.template expose<void(uint64)>(component.type + ":" + component.name + ":onMouseDown")),
 				onMouseUp(events.template expose<void(uint64)>(component.type + ":" + component.name + ":onMouseUp")),
 				onFocus(events.template expose<void(uint64)>(component.type + ":" + component.name + ":onFocus")),
 				onUnfocus(events.template expose<void(uint64)>(component.type + ":" + component.name + ":onUnfocus")),
 				onInit(events.template expose<void(uint64)>(component.type + ":" + component.name + ":onInit"))
 		 	{}
-		}
+		};
 
-		void onMessage(String const& signal, MessageHandleType const& message) override {
+		void onMessage(String const& signal, MessageHandleType const message) override {
 			if (!message) return;
-			auto const& component = *message.template morph<AComponent const>();
+			auto const& component = *message.template morph<Component const>();
 			Callbacks callbacks{*this, *component};
 			if (signal == "mk/ex/menu/events/mouse/v1") {
 				if (input.isButtonDown(Input::MouseCode::MC_LEFT))
@@ -133,23 +150,23 @@ namespace Makai::Ex::Menu {
 		}
 
 	private:
-		auto const mouse			= Instance<Collision::C2D::Point>::create();
+		Instance<Collision::C2D::Point> const mouse						= Instance<Collision::C2D::Point>::create();
 
-		auto const mouseCollider	= CollisionHandler::createCollider(0, Collision::C2D::Area{mousePos});
+		Unique<typename CollisionHandler::Collider> const mouseCollider	= CollisionHandler::createCollider(0, Collision::C2D::Area{mouse});
 
-		static broadcastToComponent(u64 const id, String const& event, Data::Value value) {
-			Component::EventMessage message{this};
+		broadcastToComponent(u64 const id, String const& event, Data::Value value) {
+			typename Component::EventMessage message{*this};
 			message.value = value;
 			broadcast("mk/ex/menu/component/" + toString(id) + "/" + event + "/v1", &value);
 		}
 
-		static broadcastGlobally(String const& event, Data::Value value) {
-			static Component::EventMessage message;
+		broadcastGlobally(String const& event, Data::Value value) {
+			static typename Component::EventMessage message;
 			message.value = value;
 			broadcast(event, &value);
 		}
 
-		Server(): callbacks(events) {
+		Server() {
 			CollisionHandler::layers[0].affects		= 0b110;
 			CollisionHandler::layers[1].affectedBy	= 0b001;
 			CollisionHandler::layers[2].affectedBy	= 0b001;
@@ -161,8 +178,11 @@ namespace Makai::Ex::Menu {
 					"mk/ex/menu/events/initComponent/v1"
 				)
 			);
-			context.addNativeCall("mk/ex/menu/broadcastToComponent/v1", broadcastToComponent);
-			context.addNativeCall("mk/ex/menu/broadcastGlobally/v1", broadcastGlobally);
+		}
+
+		void onLoad() override {
+			context().addNativeCall("mk/ex/menu/broadcastToComponent/v1", memberCall(*this, &AsNormal<decltype(*this)>::broadcastToComponent));
+			context().addNativeCall("mk/ex/menu/broadcastGlobally/v1", memberCall(*this, &AsNormal<decltype(*this)>::broadcastGlobally));
 		}
 	};
 }

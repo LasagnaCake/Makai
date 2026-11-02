@@ -21,7 +21,9 @@ namespace Makai::Ex::Menu {
 		Graph::UTF8Label	text;
 		Graph::Renderable	body;
 
-		Component(String const& type, String const& name): Base("Visual" + type, name) {}
+		Transform3D trans;
+
+		VisualComponent(String const& type, String const& name): Base("Visual" + type, name) {}
 
 		void onUpdate(float delta, App& app) override {
 			Base::onUpdate(delta, app);

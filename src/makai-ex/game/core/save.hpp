@@ -12,22 +12,12 @@ namespace Makai::Ex::Game {
 
 		/// @brief Loads a save file from disk.
 		/// @param path Path to save file.
-		Save(String const& path)						{load(path);		}
-		/// @brief Loads a save file from disk.
-		/// @param path Path to save file.
-		/// @param pass File password.
-		Save(String const& path, String const& pass)	{load(path, pass);	}
+		Save(String const& path) {load(path);}
 
 		/// @brief Saves a file to disk, then clears the object's contents.
 		/// @param path Path to save file.
 		/// @return Reference to self.
-		Save& close(String const& path)						{return save(path).clear();}
-		/// @brief Saves a file to disk, then clears the object's contents.
-		/// @param path Path to save file.
-		/// @return Reference to self.
-		/// @param pass File password.
-		/// @return Reference to self.
-		Save& close(String const& path, String const& pass)	{return save(path).clear();}
+		Save& close(String const& path) {return save(path).clear();}
 
 		/// @brief Clears the object's contents.
 		/// @return Reference to self.
@@ -47,28 +37,8 @@ namespace Makai::Ex::Game {
 		/// @brief Saves a file to disk.
 		/// @param path Path to save file.
 		/// @return Reference to self.
-		/// @param pass File password.
-		/// @return Const reference to self.
-		Save const& save(String const& path, String const& pass) const {
-			saveToFile(path, pass);
-			return *this;
-		}
-
-		/// @brief Saves a file to disk.
-		/// @param path Path to save file.
-		/// @return Reference to self.
 		Save& save(String const& path) {
 			saveToFile(path);
-			return *this;
-		}
-
-		/// @brief Saves a file to disk.
-		/// @param path Path to save file.
-		/// @return Reference to self.
-		/// @param pass File password.
-		/// @return Reference to self.
-		Save& save(String const& path, String const& pass) {
-			saveToFile(path, pass);
 			return *this;
 		}
 
@@ -77,15 +47,6 @@ namespace Makai::Ex::Game {
 		/// @return Reference to self.
 		Save& load(String const& path) {
 			operator=(File::getJSON(path));
-			return *this;
-		}
-
-		/// @brief Loads a save file from disk.
-		/// @param path Path to save file.
-		/// @param pass File password.
-		/// @return Reference to self.
-		Save& load(String const& path, String const& pass) {
-			operator=(JSON::parse(path));
 			return *this;
 		}
 
@@ -137,7 +98,7 @@ namespace Makai::Ex::Game {
 
 		/// @brief Returns the save as a JSON object.
 		/// @return View to contents.
-		JSON::Value	value()	const	{return *Cast::as<ref<JSON::Value const>>(this);	}
+		JSON::Value	value()	const {return *Cast::as<ref<JSON::Value const>>(this);}
 
 		/// @brief Assignment operator.
 		/// @param value Value to assign.
@@ -160,10 +121,6 @@ namespace Makai::Ex::Game {
 	private:
 		void saveToFile(String const& path) const {
 			if (exists()) File::saveText(path, toString());
-		}
-
-		void saveToFile(String const& path, String const& pass) const {
-			if (exists()) Tool::Arch::saveEncryptedTextFile(path, toString(), pass);
 		}
 	};
 }
