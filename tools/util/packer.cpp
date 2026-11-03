@@ -119,7 +119,7 @@ int main(int argc, char** argv) try {
 	Makai::CLI::Parser cli(argc, argv);
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());
-	if (cfg["help"])
+	if (cfg["help"] or cfg["__args"].empty())
 		Command::doHelpMessage();
 	else {
 		if (cfg["__args"].empty())
