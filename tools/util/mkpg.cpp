@@ -225,10 +225,11 @@ struct MakePageMain: AMain {
 	}
 
 	void run(Makai::Data::Value const& args) override {
-		if (args.fetch("help", false)) {
+		if (args.fetch("help", false) or args["__args"].empty()) {
 			writeLine("MakePage - V" + VER.serialize().get<Makai::String>());
 			writeLine("Available commands:");
-			writeLine("mkpg <action>");
+			writeLine("mkpg build    Builds the MakePage project located in the current folder");
+			writeLine("mkpg new      Creates a Makepage project");
 		} else {
 			if (args["__args"].size() < 1)
 				throw Error::FailedAction("Expected action to follow 'mkpg'!");
