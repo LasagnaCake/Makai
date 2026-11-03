@@ -32,7 +32,7 @@ struct Property {
 		if (!(interpolate && speed != 0))
 			return value;
 		factor = CTL::Math::clamp<float>(factor, 0, 1);
-		value = interpolate(start, stop, factor);
+		value = ease(start, stop, factor);
 		factor += speed;
 		return value;
 	}

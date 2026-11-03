@@ -154,13 +154,13 @@ namespace Makai::Ex::Menu {
 
 		Unique<typename CollisionHandler::Collider> const mouseCollider	= CollisionHandler::createCollider(0, Collision::C2D::Area{mouse});
 
-		broadcastToComponent(u64 const id, String const& event, Data::Value value) {
+		void broadcastToComponent(u64 const id, String const& event, Data::Value value) {
 			typename Component::EventMessage message{*this};
 			message.value = value;
 			broadcast("mk/ex/menu/component/" + toString(id) + "/" + event + "/v1", &value);
 		}
 
-		broadcastGlobally(String const& event, Data::Value value) {
+		void broadcastGlobally(String const& event, Data::Value value) {
 			static typename Component::EventMessage message;
 			message.value = value;
 			broadcast(event, &value);
