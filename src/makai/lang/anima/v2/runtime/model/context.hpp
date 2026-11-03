@@ -155,7 +155,7 @@ namespace Makai::Anima::V2::Runtime {
 
 			template <Type::Functional<TReturn(TArgs...)> TFunc>
 			[[gnu::noinline]]
-			static ExternalInvocation invoker(TFunc& f) {
+			static ExternalInvocation invoker(TFunc const& f) {
 				return new Invoker<TFunc>(f);
 			}
 		};
