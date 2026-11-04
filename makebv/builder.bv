@@ -66,7 +66,7 @@ extend struct Toolchain {
 			"clang"			=> tc.builder = new Builder {"clang", lang, flags}
 			"mingw-win"		=> tc.builder = new Builder {"mingw32-gcc", lang, flags}
 			"mingw-linux"	=> tc.builder = new Builder {"x86_64-mingw32-gcc", lang, flags}
-			else => null
+			else => return null
 		}
 		return tc
 	}
