@@ -154,6 +154,7 @@ private:
 template<typename... Args>
 struct Notification {
 	typedef Signal<Args...>	SignalType;
+	using Wrapper = AtomicCell<SignalType>;
 
 	/// @brief Default constructor.
 	Notification() {}
@@ -164,7 +165,7 @@ struct Notification {
 	/// @brief Subscribes an action to a signal.
 	/// @param name Signal name.
 	/// @param action Action to perform for the signal.
-	Notification(String const& name, SignalType const& action): Notification(name)		{db[id] = (func = action);}
+	Notification(String const& name, SignalType const& action): Notification(name)		{db[id] = (func = Wrapper::create(action));}
 	/// @brief Copy constructor.
 	/// @param other `Notification` to get the name from.
 	/// @return Reference to self.
@@ -193,41 +194,41 @@ struct Notification {
 	/// @brief Emits a signal.
 	/// @param ...args Values to pass for the signal.
 	/// @return Reference to self.
-	Notification const& emit(Args... args) const		{db[id](args...); return *this;	}
+	Notification const& emit(Args... args) const		{if (db.contains(id)) db[id]->invoke(args...); return *this;	}
 	/// @brief Emits a signal.
 	/// @param ...args Values to pass for the signal.
 	/// @return Reference to self.
-	Notification& emit(Args... args)					{db[id](args...); return *this;	}
+	Notification& emit(Args... args)					{if (db.contains(id)) db[id]->invoke(args...); return *this;	}
 	/// @brief Emits a signal.
 	/// @param ...args Values to pass for the signal.
 	/// @return Reference to self.
-	Notification const& operator()(Args... args) const	{return emit(args...);			}
+	Notification const& operator()(Args... args) const	{return emit(args...);	}
 	/// @brief Emits a signal.
 	/// @param ...args Values to pass for the signal.
 	/// @return Reference to self.
-	Notification& operator()(Args... args)				{return emit(args...);			}
+	Notification& operator()(Args... args)				{return emit(args...);	}
 
 private:
 	void clear() {
-		if (db[id] == func) db[id] = SignalType();
+		if (db[id] == func) db[id] = null;
 	}
 
 	void moveFunction(SignalType& f) {
 		if (f) {
 			db[id] = (func = f);
-			f = SignalType();
+			f = null;
 		}
 	}
 
 	Notification(String const& name, SignalType& action): Notification(name) {moveFunction(action);}
 
 	/// @brief Registered signal, if owner.
-	SignalType	func;
+	Wrapper	func;
 	/// @brief Signal name.
-	String		id;
+	String	id;
 
 	/// @brief All registered signals.
-	inline static Dictionary<SignalType> db;
+	inline static Dictionary<AtomicCell<SignalType>> db;
 };
 
 CTL_EX_NAMESPACE_END
