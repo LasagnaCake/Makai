@@ -57,7 +57,13 @@ namespace Makai::Anima::V2::Runtime {
 
 		template <class TReturn, class... TArgs>
 		struct NativeCallResolver<TReturn(TArgs...)> {
-			constexpr static bool const CONTEXTUAL = Type::OneOf<AsNonVolatile<Makai::Meta::First<TArgs...>>, Context&, Context const&>;
+			consteval static bool isContextualCall() {
+				if  (sizeof...(TArgs) > 0)
+					return false;
+				return Type::OneOf<AsNonVolatile<Any<Makai::Meta::First<TArgs...>, void>>, Context&, Context const&>;
+			}
+
+			constexpr static bool const CONTEXTUAL = isContextualCall();
 
 			constexpr static usize const ARG_COUNT = sizeof...(TArgs) + CONTEXTUAL;
 
@@ -139,9 +145,8 @@ namespace Makai::Anima::V2::Runtime {
 				return Object::Storage();
 			}
 
-			template <Type::Functional<TReturn(TArgs...)> TFunc>
 			struct Invoker: ICallable {
-				Function<TFunc> f;
+				Function<TReturn(TArgs...)> f;
 
 				virtual ~Invoker() {debugExternalFunction(true);}
 
@@ -156,7 +161,7 @@ namespace Makai::Anima::V2::Runtime {
 			template <Type::Functional<TReturn(TArgs...)> TFunc>
 			[[gnu::noinline]]
 			static ExternalInvocation invoker(TFunc const& f) {
-				return new Invoker<TFunc>(f);
+				return new Invoker(f);
 			}
 		};
 
@@ -164,9 +169,17 @@ namespace Makai::Anima::V2::Runtime {
 			template <class TFunc>
 			bool add(String const& name, TFunc const& f) const {
 				auto const hash = ConstHasher::hash(name);
-				using FuncResolver = NativeCallResolver<TFunc>;
+				constexpr static NativeCallResolver<TFunc> const frlg;
 				if (context.hasNativeCall(hash)) return false;
-				return add(hash, FuncResolver::ARG_COUNT, FuncResolver::invoker(f));
+				return add(hash, frlg.ARG_COUNT, frlg.invoker(f));
+			}
+
+			template <class TReturn, class... TArgs>
+			bool wrap(String const& name, Function<TReturn(TArgs...)> const& f) const {
+				auto const hash = ConstHasher::hash(name);
+				constexpr static NativeCallResolver<TReturn(TArgs...)> const frlg;
+				if (context.hasNativeCall(hash)) return false;
+				return add(hash, frlg.ARG_COUNT, frlg.invoker(f));
 			}
 
 			constexpr MethodAdder(Context& context): context(context) {}
@@ -236,6 +249,25 @@ namespace Makai::Anima::V2::Runtime {
 			return addNativeCall(ConstHasher::hash(name), f);
 		}
 
+		template <class TFunc>
+		bool addNativeCall(usize const& hash, TFunc const& f) {
+			if (hasNativeCall(hash)) return false;
+			constexpr static NativeCallResolver<TFunc> const frlg;
+			return addNativeCall(hash, frlg.ARG_COUNT, frlg.invoker(f));
+		}
+
+		template <class TReturn, class... TArgs>
+		bool wrapNativeCall(String const& name, Function<TReturn(TArgs...)> const& f) {
+			return wrapNativeCall<TReturn, TArgs...>(ConstHasher::hash(name), f);
+		}
+
+		template <class TReturn, class... TArgs>
+		bool wrapNativeCall(usize const& hash, Function<TReturn(TArgs...)> const& f) {
+			if (hasNativeCall(hash)) return false;
+			constexpr static NativeCallResolver<TReturn(TArgs...)> const frlg;
+			return addNativeCall(hash, frlg.ARG_COUNT, frlg.invoker(f));
+		}
+
 		void removeNativeCall(String const& name) {
 			removeNativeCall(ConstHasher::hash(name));
 		}
@@ -249,13 +281,6 @@ namespace Makai::Anima::V2::Runtime {
 			List<Object::Storage> const& args
 		) {
 			return callNative(ConstHasher::hash(name), args);
-		}
-
-		template <class TFunc>
-		bool addNativeCall(usize const& hash, TFunc const& f) {
-			using FuncResolver = NativeCallResolver<TFunc>;
-			if (hasNativeCall(hash)) return false;
-			return addNativeCall(hash, FuncResolver::ARG_COUNT, FuncResolver::invoker(f));
 		}
 
 		bool addNativeCall(usize const hash, usize const argc, ExternalInvocation const& invoker);

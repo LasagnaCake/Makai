@@ -14,10 +14,16 @@ namespace Meta {
 		template <usize N, typename... T>
 		struct NthInPack;
 
+		template <usize N>
+		struct NthInPack<N> {
+			using Type = Invalid;
+		};
+
 		template <typename T, typename... Types>
 		struct NthInPack<0, T, Types...> {
 			using Type = T;
 		};
+
 		template <usize N, typename T, typename... Types>
 		struct NthInPack<N, T, Types...> {
 			using Type = TypeOf<NthInPack<N-1, Types...>>;
