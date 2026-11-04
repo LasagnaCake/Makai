@@ -252,7 +252,6 @@ constexpr usize const ONE_MIBIBYTE = usize(1) << 20;
 constexpr usize const ONE_GIBIBYTE = usize(1) << 40;
 
 CTL_DIAGBLOCK_BEGIN;
-_Pragma("GCC diagnostic ignored \"-Wpointer-arith\"");
 namespace Impl::Memory {
 	struct Page {
 		inline ref<Page> top() {
@@ -264,19 +263,19 @@ namespace Impl::Memory {
 			if (!next) next = tail;
 		}
 
-		bool contains(pointer const addr) const {
+		bool contains(ref<byte const> const addr) const {
 			return memory <= addr && addr <= (memory + free + used);
 		}
 
 		owner<Page>	next;
-		pointer		memory;
+		ref<byte>	memory;
 		usize		free;
 		usize		used;
 
 		static owner<Page> create(usize const sz) {
 			owner<Page> page = owner<Page>(MX::malloc(sizeof(Page)));
 			MX::memzero(page);
-			page->memory = MX::malloc(sz);
+			page->memory = (ref<byte>)MX::malloc(sz);
 			MX::memzero(page->memory, sz);
 			page->free = sz;
 			return page;
@@ -310,7 +309,7 @@ namespace Impl::Memory {
 
 		owner<Section>	prev;
 		ref<Page>		page;
-		pointer			start;
+		ref<byte>		start;
 		usize			size;
 	};
 
@@ -350,8 +349,8 @@ namespace Impl::Memory {
 			mutex.unlock();
 		}
 
-		[[nodiscard, gnu::malloc, gnu::noinline, gnu::nonnull(1)]]
-		pointer allocate(usize const sz) {
+		[[nodiscard, gnu::malloc, gnu::noinline]]
+		ref<byte> allocate(usize const sz) {
 			mutex.lock();
 			if (!sz) return nullptr;
 			auto pageSize = PAGE_SIZE;
@@ -397,7 +396,7 @@ namespace Impl::Memory {
 		}
 
 		[[gnu::noinline, gnu::nonnull(2)]]
-		void deallocate(pointer const mem, usize const sz) {
+		void deallocate(ref<byte> const mem, usize const sz) {
 			mutex.lock();
 			auto page = pages;
 			auto nextPage = page;
@@ -462,14 +461,14 @@ template<
 struct PagedAllocator {
 	using DataType = TData;
 
-	[[nodiscard, gnu::malloc, gnu::noinline, gnu::nonnull(1)]]
+	[[nodiscard, gnu::malloc, gnu::noinline]]
 	owner<DataType> allocate(usize const sz) {
 		return (owner<DataType>)alloc.allocate(sz * sizeof(DataType));
 	}
 
 	[[gnu::noinline, gnu::nonnull(2)]]
 	void deallocate(owner<DataType> const mem, usize const sz) {
-		return alloc.deallocate((pointer)mem, sz * sizeof(DataType));
+		return alloc.deallocate((ref<byte>)mem, sz * sizeof(DataType));
 	}
 
 private:
