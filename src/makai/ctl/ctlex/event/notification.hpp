@@ -154,7 +154,8 @@ private:
 template<typename... Args>
 struct Notification {
 	typedef Signal<Args...>	SignalType;
-	using Wrapper = AtomicCell<SignalType>;
+
+	using Wrapper = Instance<SignalType, SignalType>;
 
 	/// @brief Default constructor.
 	Notification() {}
@@ -194,11 +195,19 @@ struct Notification {
 	/// @brief Emits a signal.
 	/// @param ...args Values to pass for the signal.
 	/// @return Reference to self.
-	Notification const& emit(Args... args) const		{if (db.contains(id)) db[id]->invoke(args...); return *this;	}
+	Notification const& emit(Args... args) const {
+		if (db.contains(id))
+			db[id]->invoke(args...);
+		return *this;
+	}
 	/// @brief Emits a signal.
 	/// @param ...args Values to pass for the signal.
 	/// @return Reference to self.
-	Notification& emit(Args... args)					{if (db.contains(id)) db[id]->invoke(args...); return *this;	}
+	Notification& emit(Args... args) {
+		if (db.contains(id))
+			db[id]->invoke(args...);
+		return *this;
+	}
 	/// @brief Emits a signal.
 	/// @param ...args Values to pass for the signal.
 	/// @return Reference to self.
@@ -213,14 +222,14 @@ private:
 		if (db[id] == func) db[id] = null;
 	}
 
-	void moveFunction(SignalType& f) {
+	void moveFunction(Wrapper& f) {
 		if (f) {
 			db[id] = (func = f);
 			f = null;
 		}
 	}
 
-	Notification(String const& name, SignalType& action): Notification(name) {moveFunction(action);}
+	Notification(String const& name, Wrapper& action): Notification(name) {moveFunction(action);}
 
 	/// @brief Registered signal, if owner.
 	Wrapper	func;
@@ -228,7 +237,7 @@ private:
 	String	id;
 
 	/// @brief All registered signals.
-	inline static Dictionary<AtomicCell<SignalType>> db;
+	inline static Dictionary<Wrapper> db;
 };
 
 CTL_EX_NAMESPACE_END
