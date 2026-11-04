@@ -58,6 +58,8 @@ export compiler
 endif
 
 define HELP_MESSAGE
+!!! IF YOU ARE HERE JUST TO BUILD IT, SKIP TO THE END OF THIS MESSAGE !!!
+
 Supported compilation targets:
 > it      : Debug Library + Release Library + Tooling
 > all     : Debug Library + Release Library
@@ -113,7 +115,15 @@ Examples:
 	graph.gl.renderer.renderable
 	embed.shader
 	audio.*
+
+!!! IF YOU ARE HERE JUST TO BUILD IT !!!
+
+FOR WINDOWS:  make it os=win
+FOR LINUX:    sudo make it os=linux
+
+Results will be located in the [output/] folder.
 endef
+
 export HELP_MESSAGE
 
 MAKAISRC:=src/makai
