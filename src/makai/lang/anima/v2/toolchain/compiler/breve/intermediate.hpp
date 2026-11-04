@@ -492,6 +492,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 	struct Trait: Labeled, Positioned, Scoped, ISerializable, Reifiable {
 		Makai::Data::Value serialize() const override;
 
+		Namespace::TypeRef facade;
+
 		Trait(UTF8String const& name = "");
 		virtual ~Trait();
 	};

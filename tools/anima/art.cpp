@@ -6,6 +6,9 @@ constexpr auto const VER = Makai::Anima::V2::Core::Info::ART_VER;
 DEFINE_ERROR_TYPE_EX(EngineError, FailedAction);
 
 struct ARTE: Makai::Anima::V2::Runtime::Engine {
+	using Any = Makai::Data::Value;
+	using String = Makai::String;
+
 	struct BuiltinAPI {
 		bool console	= false;
 		bool time		= false;
@@ -25,19 +28,19 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 	}
 
 	AV2Call
-	static Makai::String toString(Makai::Data::Value const& val) {
+	static Makai::String toString(Any const& val) {
 		if (val.isUndefined()) return "";
 		if (val.isString()) return val.getString();
 		return val.toFLOWString();
 	}
 
 	AV2Call
-	static void write_any(Makai::Data::Value const& what) {
+	static void write_any(Any const& what) {
 		write_string(toString(what));
 	}
 
 	AV2Call
-	static void writeLine_any(Makai::Data::Value const& what) {
+	static void writeLine_any(Any const& what) {
 		writeLine_string(toString(what));
 	}
 
@@ -133,19 +136,19 @@ struct ARTE: Makai::Anima::V2::Runtime::Engine {
 
 	void onLoad() override {
 		if (bapi.console) {
-			context().addNativeCall("av2/console/write_string", 	write_string		);
-			context().addNativeCall("av2/console/write_any",		write_any			);
-			context().addNativeCall("av2/console/writeLine_string",	writeLine_string	);
-			context().addNativeCall("av2/console/writeLine_any",	writeLine_any		);
+			context().addNativeCall<void(String)>("av2/console/write_string", 	write_string		);
+			context().addNativeCall<void(Any)>("av2/console/write_any",			write_any			);
+			context().addNativeCall<void(String)>("av2/console/writeLine_string",	writeLine_string	);
+			context().addNativeCall<void(Any)>("av2/console/writeLine_any",			writeLine_any		);
 		}
 		if (bapi.time) {
-			context().addNativeCall("av2/time/localNow",	localNow	);
-			context().addNativeCall("av2/time/utcNow",		utcNow		);
-			context().addNativeCall("av2/time/procNow",		procNow		);
+			context().addNativeCall<decltype(localNow)>("av2/time/localNow",	localNow	);
+			context().addNativeCall<decltype(utcNow)>("av2/time/utcNow",		utcNow		);
+			context().addNativeCall<decltype(procNow)>("av2/time/procNow",		procNow		);
 		}
 		if (bapi.shell) {
-			context().addNativeCall("av2/shell/exec",	exec	);
-			context().addNativeCall("av2/shell/cd",		cd		);
+		//	context().addNativeCall<decltype(exec)>("av2/shell/exec",	exec	);
+			context().addNativeCall<decltype(cd)>("av2/shell/cd",		cd		);
 		}
 	}
 };

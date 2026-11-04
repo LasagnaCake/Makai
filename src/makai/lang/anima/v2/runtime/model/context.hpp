@@ -60,7 +60,7 @@ namespace Makai::Anima::V2::Runtime {
 			consteval static bool isContextualCall() {
 				if  (sizeof...(TArgs) > 0)
 					return false;
-				return Type::OneOf<AsNonVolatile<Makai::Meta::Any<Makai::Meta::First<TArgs...>, void>>, Context&, Context const&>;
+				return Type::OneOf<AsNonVolatile<Makai::Meta::First<TArgs...>>, Context&, Context const&>;
 			}
 
 			constexpr static bool const CONTEXTUAL = isContextualCall();
@@ -167,19 +167,8 @@ namespace Makai::Anima::V2::Runtime {
 
 		struct MethodAdder {
 			template <class TFunc>
-			bool add(String const& name, TFunc const& f) const {
-				auto const hash = ConstHasher::hash(name);
-				constexpr static NativeCallResolver<TFunc> const frlg;
-				if (context.hasNativeCall(hash)) return false;
-				return add(hash, frlg.ARG_COUNT, frlg.invoker(f));
-			}
-
-			template <class TReturn, class... TArgs>
-			bool wrap(String const& name, Function<TReturn(TArgs...)> const& f) const {
-				auto const hash = ConstHasher::hash(name);
-				constexpr static NativeCallResolver<TReturn(TArgs...)> const frlg;
-				if (context.hasNativeCall(hash)) return false;
-				return add(hash, frlg.ARG_COUNT, frlg.invoker(f));
+			bool add(String const& name, Function<TFunc> const& f) const {
+				return addImpl(name, f);
 			}
 
 			constexpr MethodAdder(Context& context): context(context) {}
@@ -187,6 +176,14 @@ namespace Makai::Anima::V2::Runtime {
 			virtual ~MethodAdder();
 
 		private:
+			template <class TReturn, class... TArgs>
+			bool addImpl(String const& name, Function<TReturn(TArgs...)> const& f) const {
+				auto const hash = ConstHasher::hash(name);
+				constexpr static NativeCallResolver<TReturn(TArgs...)> const frlg;
+				if (context.hasNativeCall(hash)) return false;
+				return add(hash, frlg.ARG_COUNT, frlg.invoker(f));
+			}
+
 			virtual bool add(usize const hash, usize const argc, ExternalInvocation const& invoker) const;
 
 			Context& context;
@@ -244,29 +241,24 @@ namespace Makai::Anima::V2::Runtime {
 		using Adder		= ContextHandler<MethodAdder, TypeAdder>;
 		using Remover	= ContextHandler<MethodRemover, TypeRemover>;
 
-		template <class TFunc>
-		bool addNativeCall(String const& name, TFunc const& f) {
-			return addNativeCall(ConstHasher::hash(name), f);
+		template <class TFunction>
+		bool addNativeCall(String const& name, Function<TFunction> const& f) {
+			return addNativeCallImpl(ConstHasher::hash(name), Function<TFunction>(f));
 		}
 
-		template <class TFunc>
-		bool addNativeCall(usize const& hash, TFunc const& f) {
-			if (hasNativeCall(hash)) return false;
-			constexpr static NativeCallResolver<TFunc> const frlg;
-			return addNativeCall(hash, frlg.ARG_COUNT, frlg.invoker(f));
+		template <class TFunction>
+		bool addNativeCall(usize const& hash, Function<TFunction> const& f) {
+			return addNativeCallImpl(hash, Function<TFunction>(f));
 		}
 
+	private:
 		template <class TReturn, class... TArgs>
-		bool wrapNativeCall(String const& name, Function<TReturn(TArgs...)> const& f) {
-			return wrapNativeCall<TReturn, TArgs...>(ConstHasher::hash(name), f);
-		}
-
-		template <class TReturn, class... TArgs>
-		bool wrapNativeCall(usize const& hash, Function<TReturn(TArgs...)> const& f) {
+		bool addNativeCallImpl(usize const& hash, Function<TReturn(TArgs...)> const& f) {
 			if (hasNativeCall(hash)) return false;
 			constexpr static NativeCallResolver<TReturn(TArgs...)> const frlg;
 			return addNativeCall(hash, frlg.ARG_COUNT, frlg.invoker(f));
 		}
+	public:
 
 		void removeNativeCall(String const& name) {
 			removeNativeCall(ConstHasher::hash(name));
