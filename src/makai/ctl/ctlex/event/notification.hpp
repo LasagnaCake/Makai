@@ -103,7 +103,7 @@ public:
 	template <typename... Args>
 	ANotifiable& unsubscribeFrom(Args const&... signals)
 	requires (... && Type::CanBecome<Args, String>) {
-		(..., unsubscribe(signals));
+		(..., unsubscribeFrom(signals));
 		return *this;
 	}
 
