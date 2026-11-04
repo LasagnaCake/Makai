@@ -60,7 +60,7 @@ namespace Makai::Anima::V2::Runtime {
 			consteval static bool isContextualCall() {
 				if  (sizeof...(TArgs) > 0)
 					return false;
-				return Type::OneOf<AsNonVolatile<Any<Makai::Meta::First<TArgs...>, void>>, Context&, Context const&>;
+				return Type::OneOf<AsNonVolatile<Makai::Meta::Any<Makai::Meta::First<TArgs...>, void>>, Context&, Context const&>;
 			}
 
 			constexpr static bool const CONTEXTUAL = isContextualCall();

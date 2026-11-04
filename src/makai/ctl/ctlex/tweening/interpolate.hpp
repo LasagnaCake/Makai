@@ -20,8 +20,8 @@ using Interpolator = Function<T(T const&, T const&, float const)>;
 
 template<Type::Ex::Tween::Tweenable T>
 constexpr Interpolator<T> interpolator(Math::Ease::Mode const& mode = Math::Ease::linear) {
-	return [mode] (T const& from, T const& to, float const factor) {
-		interpolate<T>(from, to, factor, mode);
+	return [mode] (T const& from, T const& to, float const factor) -> T {
+		return interpolate<T>(from, to, factor, mode);
 	};
 }
 
