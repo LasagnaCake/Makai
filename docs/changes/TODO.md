@@ -24,7 +24,7 @@
 - [ ] Generate documentation
 - - Code is documented via doxygen comments, so must figure out how to generate docs from that
 - [x] Fix core library CI
-- [ ] Add HSL (Hue-Saturation-Luminosity) & BC (Brightness-Contrast) to buffer mask effect
+- [x] Add HSL (Hue-Saturation-Luminosity) & BC (Brightness-Contrast) to buffer mask effect
 - [x] Embedded language
 - [ ] Bugs & Errors (see [Issues.txt](../../Issues.txt))
 
@@ -36,8 +36,8 @@
 
 - [ ] Replace SDL2 with SDL3 (perhaps?)
 - [ ] See [ideas.md](ideas.md)
-- [ ] Multi-platform support:
-- - [ ] Linux
+- [-] Multi-platform support:
+- - [-] Linux
 - [ ] Add [QOI](https://github.com/phoboslab/qoi/blob/master/qoi.h) support
 - [ ] Add [QOA](https://github.com/phoboslab/qoa/blob/master/qoa.h) support
 - [ ] Create `Label` class for fancy text support

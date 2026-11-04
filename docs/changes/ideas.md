@@ -1,10 +1,6 @@
 # Ideas
 
-For libraries: [`cute`](https://github.com/RandyGaul/cute_headers) & [stb](https://github.com/nothings/stb).
-
-- For audio: [`cute_audio`](https://github.com/RandyGaul/cute_headers/blob/master/cute_sound.h) or [miniaudio](https://miniaud.io/).
-
-- For future reference: [`stb_c_lexer`](https://github.com/nothings/stb/blob/master/stb_c_lexer.h).
+Compiler Backends: [QBE](https://c9x.me/compile/)
 
 ## Graphical Pipeline Options
 
