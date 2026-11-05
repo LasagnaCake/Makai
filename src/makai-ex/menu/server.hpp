@@ -59,11 +59,9 @@ namespace Makai::Ex::Menu {
 				};
 				auto const base = "mk/ex/menu/events/component/" + toString(id()) + "/v1";
 				subscribeTo(
-					StringList::from(
-						eventPath("/transform/position"),
-						eventPath("/transform/rotation"),
-						eventPath("/transform/scale")
-					)
+					eventPath("/transform/position"),
+					eventPath("/transform/rotation"),
+					eventPath("/transform/scale")
 				);
 				broadcast("mk/ex/menu/events/initComponent/v1");
 			}
