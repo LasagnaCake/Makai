@@ -29,7 +29,12 @@ namespace Impl {
 		constexpr Callable(TFunction&& func):		func(move(func))	{}
 		constexpr Callable(TFunction const& func):	func(func)			{}
 
-		constexpr virtual ~Callable() {}
+		// Don't you just LOVE when your compiler has a bug? (https://bugs.launchpad.net/ubuntu/+source/gcc-13/+bug/2172889)
+		// Anyways, this is until all of this gets fixed
+		#if !(CTL_ON_UNIX && CTL_ON_GCC && (__GNUG__ < 15))
+		constexpr
+		#endif
+		virtual ~Callable() {}
 	};
 }
 
