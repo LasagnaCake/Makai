@@ -88,15 +88,6 @@ public:
 	}
 
 	/// @brief Unsubscribes this object from a series of signals.
-	/// @param signals Signals to unsubscribe.
-	/// @return Reference to self.
-	ANotifiable& unsubscribeFrom(StringList const& signals) {
-		for (String const& s: signals)
-			unsubscribeFrom(s);
-		return *this;
-	}
-
-	/// @brief Unsubscribes this object from a series of signals.
 	/// @tparam ...Args Argument types.
 	/// @param ...signals Signals to unsubscribe.
 	/// @return Reference to self.
