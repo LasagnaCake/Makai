@@ -31,6 +31,7 @@ namespace MX {
 	/// @param size Size in bytes.
 	/// @return Pointer to destination.
 	constexpr ref<void> memcpy(ref<void> const& dst, ref<void const> const src, usize size) {
+		if (!size) return dst;
 		#ifdef CTL_DO_NOT_USE_BUILTINS
 		Address s = (Address)src, d = (Address)dst;
 		if (size == 1) *d = *s;
@@ -70,6 +71,7 @@ namespace MX {
 	/// @param size Size in bytes.
 	/// @return Pointer to destination.
 	constexpr ref<void> memmove(ref<void> const& dst, ref<void const> const src, usize size) {
+		if (!size) return dst;
 		#ifdef CTL_DO_NOT_USE_BUILTINS
 		Address d = (Address)dst, s = (Address)src;
 		if (d < s)
@@ -116,6 +118,7 @@ namespace MX {
 	/// @param size Size in bytes.
 	/// @return Order between both spans of data.
 	constexpr int memcmp(ref<void const> const a, ref<void const> const b, usize size) {
+		if (!size) return 0;
 		#ifdef CTL_DO_NOT_USE_BUILTINS
 		Address s1 = (Address)a, s2 = (Address)b;
 		while (size-- > 0)
@@ -157,6 +160,7 @@ namespace MX {
 	/// @param size Size in bytes.
 	/// @return Pointer to data.
 	constexpr pointer memset(ref<void> const dst, int const val, usize size) {
+		if (!size) return dst;
 		#ifdef CTL_DO_NOT_USE_BUILTINS
 		Address d = (Address)dst;
 		while (size-- > 0)

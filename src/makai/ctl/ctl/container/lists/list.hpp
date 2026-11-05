@@ -1365,7 +1365,9 @@ private:
 	constexpr SelfType& squashRange(SizeType const start, SizeType const amount) {
 		CTL_DEVMODE_FN_DECL;
 		if (!count) return *this;
-		if (count > 1 && start <= (count-amount)) {
+		if (count == amount && !start)
+			dump();
+		else if (count > 1 && start <= (count-amount)) {
 			auto const end = (start + amount);
 			StorageType buffer;
 			buffer.invoke(contents.size());
