@@ -1372,7 +1372,7 @@ private:
 			StorageType buffer;
 			buffer.invoke(contents.size());
 			safeMove(contents.data(), buffer.data(), start);
-			safeMove(contents.data() + end, buffer.data() + start, count - end);
+			safeMove(contents.data() + end, buffer.data() + start, count - amount);
 			MX::objclear(contents.data() + start, amount);
 			swap(contents, buffer);
 		} else if (start < count) {
