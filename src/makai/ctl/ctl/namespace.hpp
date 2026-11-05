@@ -1,6 +1,14 @@
 #ifndef CTL_NAMESPACE_H
 #define CTL_NAMESPACE_H
 
+#if (__cplusplus < 202002L)
+#error "This library expects at least C++20!"
+#endif
+
+#if (defined(__GNUC__) && __GNUC__ < 13)
+#error "This library expects at least GCC-13!"
+#endif
+
 #ifdef CTL_DEVMODE_DEBUG
 #include <iostream>
 #define CTL_DEVMODE_FN_BEGIN		std::cout << "<" <<  __builtin_FUNCTION() << ">\n"
