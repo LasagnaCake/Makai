@@ -564,10 +564,9 @@ public:
 		if (empty()) return 0;
 		SizeType removed = 0;
 		SizeType const ocount = count;
-		auto const start = begin();
-		for(auto i = begin(); i < end();)
-			if (ComparatorType::equals(*i, value)) {
-				squash(i-start);
+		for(SizeType i = 0; i < count;)
+			if (ComparatorType::equals(*(contents.data()+i), value)) {
+				squash(i);
 				++removed;
 				--count;
 			} else ++i;
@@ -586,10 +585,9 @@ public:
 		if (empty()) return 0;
 		SizeType removed = 0;
 		SizeType const ocount = count;
-		auto const start = begin();
-		for(auto i = begin(); i < end();)
-			if (!ComparatorType::equals(*i, value)) {
-				squash(i-start);
+		for(SizeType i = 0; i < count;)
+			if (!ComparatorType::equals(*(contents.data()+i), value)) {
+				squash(i);
 				++removed;
 				--count;
 			} else ++i;
@@ -609,10 +607,9 @@ public:
 		if (empty()) return 0;
 		SizeType removed = 0;
 		SizeType const ocount = count;
-		auto const start = begin();
-		for(auto i = begin(); i < end();)
-			if (predicate(*i)) {
-				squash(i-start);
+		for(SizeType i = 0; i < count;)
+			if (predicate(*(contents.data()+i))) {
+				squash(i);
 				++removed;
 				--count;
 			} else ++i;
@@ -632,10 +629,9 @@ public:
 		if (empty()) return 0;
 		SizeType removed = 0;
 		SizeType const ocount = count;
-		auto const start = begin();
-		for(auto i = start; i < end();)
-			if (!predicate(*i)) {
-				squash(i-start);
+		for(SizeType i = 0; i < count;)
+			if (!predicate(*(contents.data()+i))) {
+				squash(i);
 				++removed;
 				--count;
 			} else ++i;
@@ -1365,14 +1361,12 @@ private:
 	constexpr SelfType& squashRange(SizeType const start, SizeType const amount) {
 		CTL_DEVMODE_FN_DECL;
 		if (!count) return *this;
-		if (count == amount && !start)
-			dump();
-		else if (count > 1 && start <= (count-amount)) {
+		if (count > 1 && start <= (count-amount)) {
 			auto const end = (start + amount);
 			StorageType buffer;
 			buffer.invoke(contents.size());
 			safeMove(contents.data(), buffer.data(), start);
-			safeMove(contents.data() + end, buffer.data() + start, count - amount);
+			safeMove(contents.data() + end, buffer.data() + start, count - end);
 			MX::objclear(contents.data() + start, amount);
 			swap(contents, buffer);
 		} else if (start < count) {
