@@ -169,12 +169,10 @@ namespace Makai::Ex::Menu {
 			CollisionHandler::layers[1].affectedBy	= 0b001;
 			CollisionHandler::layers[2].affectedBy	= 0b001;
 			subscribeTo(
-				StringList::from(
-					"mk/ex/menu/events/mouse/v1",
-					"mk/ex/menu/events/focus/v1",
-					"mk/ex/menu/events/unfocus/v1",
-					"mk/ex/menu/events/initComponent/v1"
-				)
+				"mk/ex/menu/events/mouse/v1",
+				"mk/ex/menu/events/focus/v1",
+				"mk/ex/menu/events/unfocus/v1",
+				"mk/ex/menu/events/initComponent/v1"
 			);
 		}
 
