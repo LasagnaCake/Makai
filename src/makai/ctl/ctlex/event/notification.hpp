@@ -59,21 +59,23 @@ public:
 
 	/// @brief Subscribes this object to a signal.
 	/// @param signal Signal name.
-	/// @param action Action for the signal.
 	/// @return Reference to self.
 	ANotifiable& subscribeTo(String const& signal) {
-		db[signal].pushBack(this);
+		if (!db.contains(signal))
+			db[signal] = ReceiverList::from(this);
+		else db[signal].pushBack(this);
 		added[signal] = true;
 		return *this;
 	}
 
 	/// @brief Subscribes this object to a series of signals.
-	/// @param signals Signals to attach to.
-	/// @param action Action for the signal.
+	/// @tparam ...Args Argument types.
+	/// @param ...signals Signals to subscribe to.
 	/// @return Reference to self.
-	ANotifiable& subscribeTo(StringList const& signals) {
-		for (auto& signal: signals)
-			subscribeTo(signal, this);
+	template <typename... Args>
+	ANotifiable& subscribeTo(Args const&... signals)
+	requires (... && Type::CanBecome<Args, String>) {
+		(..., subscribeTo(signals));
 		return *this;
 	}
 
