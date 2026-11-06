@@ -8,7 +8,7 @@ kind Value[T] => prove with (t: T) {
 	try v := t.value {}
 }
 
-kind Error[T] => prove (t: T) {
+kind Error[T] => prove with (t: T) {
 	try v := t.fail {}
 }
 
