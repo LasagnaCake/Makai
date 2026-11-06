@@ -77,7 +77,7 @@ struct ConcertoMain: Makai::AMain {
 		);
 	}
 
-	void write(Makai::String const& what) const override {DEBUGLN(what);}
+	void write(Makai::String const& what) const override {printf("%s", what.cstr());}
 
 	void doHelp(Makai::Data::Value const& args) {
 		if (args["__args"].size() < 2 or args["__args"][0].getString() != "help") {

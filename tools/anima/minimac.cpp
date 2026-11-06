@@ -36,7 +36,7 @@ int main(int argc, char** argv) try {
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());
 	if (cfg.fetch("help", false) or cfg["__args"].empty() or cfg["__args"][0] == "help")
-		doHelp(args);
+		doHelpMessage();
 	if (cfg["help"])
 		doHelpMessage();
 	else {

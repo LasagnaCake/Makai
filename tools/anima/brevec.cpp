@@ -65,7 +65,7 @@ int main(int argc, char** argv) try {
 		throw Makai::Error::FailedAction("Failed to find module '" + path + "'");
 	};
 	if (cfg.fetch("help", false) or cfg["__args"].empty() or cfg["__args"][0] == "help")
-		doHelp(args);
+		doHelpMessage();
 	else {
 		DEBUGLN("Here!");
 		if (cfg["__args"].empty() and !cfg.contains("pipe"))

@@ -208,7 +208,7 @@ BinaryData<> Arch::decrypt(
 BinaryData<> Arch::compress(
 	BinaryData<>	const&		data,
 	CompressionMethod const&	method,
-	uint8 const				level
+	uint8 const					level
 ) {
 	return flate<Deflator>(data, method, level);
 }
@@ -216,7 +216,7 @@ BinaryData<> Arch::compress(
 BinaryData<> Arch::decompress(
 	BinaryData<>	const&		data,
 	CompressionMethod const&	method,
-	uint8 const				level
+	uint8 const					level
 ) {
 	return flate<Inflator>(data, method, level);
 }
@@ -296,9 +296,8 @@ void Arch::pack(
 		List<uint64> locations;
 		locations.resize(files.size(), 0);
 		// Open file
-		std::ofstream file;
-		file.exceptions(std::ofstream::badbit | std::ofstream::failbit);
-		file.open(archivePath.cstr(), std::ios::binary | std::ios::trunc);
+		OutputFileStream<Bytes<>> file;
+		file.open(archivePath.cstr());
 		// Populate header
 		MAKAILIB_DEBUGLN_FULL("Creating header...\n");
 		// Headers
@@ -310,7 +309,8 @@ void Arch::pack(
 		header.compression	= (uint16)comp;					// compression mode
 		header.level		= complvl;						// compression level
 		header.flags = {
-			.shouldCheckCRC = true
+			.shouldCheckCRC	= true,
+			.flowHeader		= true
 		};
 		MAKAILIB_DEBUGLN_FULL("             HEADER SIZE: ", (uint64)header.headerSize,		"B"	);
 		MAKAILIB_DEBUGLN_FULL("        FILE HEADER SIZE: ", (uint64)header.fileHeaderSize,	"B"	);
@@ -323,13 +323,13 @@ void Arch::pack(
 		MAKAILIB_DEBUGLN_FULL("\nDirectory structure layout:");
 		MAKAILIB_DEBUGLN_FULL("       FILE COUNT: ", files.size()			);
 		// Write main header first pass
-		file.write((char*)&header, header.headerSize);
+		file.write(makeBytes(header));
 		// Write file info
 		MAKAILIB_DEBUGLN_FULL("\nWriting files...\n");
 		usize i = 0;
 		for (auto const& f: files) {
 			// Get current stream position as file location
-			locations[i] = file.tellp();
+			locations[i] = file.position();
 			// Read file
 			String const loc = Makai::Regex::replace(f, "^(.*?)[\\\\\\/]", "");
 			MAKAILIB_DEBUGLN_FULL("Clean path: '", loc, "'");
@@ -368,8 +368,8 @@ void Arch::pack(
 			MAKAILIB_DEBUGLN_FULL("     COMPRESSED SIZE: ", fheader.compSize,	"B"		);
 			MAKAILIB_DEBUGLN_FULL("               CRC32: ", fheader.crc,		"\n"	);
 			// Copy header & file data
-			file.write((char*)&fheader, header.fileHeaderSize);
-			file.write((char*)contents.data(), contents.size());
+			file.write(makeBytes(fheader));
+			file.write(contents);
 			++i;
 		}
 		// Populate file tree
@@ -395,20 +395,19 @@ void Arch::pack(
 			dheader.compSize	= pdi.size();
 			dheader.uncSize		= dirInfo.size();
 			// Get directory header location
-			header.dirHeaderLoc = file.tellp();
+			header.dirHeaderLoc = file.position();
 			// Debug info
 			MAKAILIB_DEBUGLN_FULL("  DIRECTORY INFO LOCATION: ", header.dirHeaderLoc		);
 			MAKAILIB_DEBUGLN_FULL("        UNCOMPRESSED SIZE: ", dheader.uncSize,		"B"	);
-			MAKAILIB_DEBUGLN_FULL("          COMPRESSED SIZE: ", dheader.compSize,	"B"	);
+			MAKAILIB_DEBUGLN_FULL("          COMPRESSED SIZE: ", dheader.compSize,		"B"	);
 			// Write header & directory info
-			file.write((char*)&dheader, header.dirHeaderSize);
-			file.write((char*)pdi.data(), pdi.size());
+			file.write(makeBytes(dheader));
+			file.write(pdi);
 			// Write main header second pass
-			file.seekp(0);
-			file.write((char*)&header, header.headerSize);
+			file.go(0);
+			file.write(makeBytes(header));
 		}
 		// Close file
-		file.flush();
 		file.close();
 		MAKAILIB_DEBUGLN_FULL("\nDone!");
 	} catch (std::exception const& e) {

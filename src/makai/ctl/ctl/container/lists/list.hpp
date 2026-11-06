@@ -1546,6 +1546,12 @@ using Binary = BinaryData<TIndex, TAlloc, TConstAlloc>;
 template <Type::Integer TIndex = usize, template <class> class TAlloc = DefaultAllocator, template <class> class TConstAlloc = ConstantAllocator>
 using Bytes = BinaryData<TIndex, TAlloc, TConstAlloc>;
 
+template <class T, Type::Integer TIndex = usize, template <class> class TAlloc = DefaultAllocator, template <class> class TConstAlloc = ConstantAllocator>
+constexpr Bytes<TIndex, TAlloc, TConstAlloc>
+makeBytes(T const& val) {
+	return Bytes<TIndex, TAlloc, TConstAlloc>((ref<byte>)&val, sizeof(val));
+}
+
 static_assert(Type::Container::List<List<int>>);
 CTL_NAMESPACE_END
 
