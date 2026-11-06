@@ -4,15 +4,15 @@ using import core.meta.spoof
 
 with module Is.Op
 
-kind Add[A, B = A] => prove (Meta.spoof[A]! + Meta.spoof[B]!)
+kind Add[A, B = A] => prove with (a: A, b: B) a + b
 
-kind Sub[A, B = A] => prove (Meta.spoof[A]! - Meta.spoof[B]!)
+kind Sub[A, B = A] => prove with (a: A, b: B) a - b
 
-kind Mul[A, B = A] => prove (Meta.spoof[A]! * Meta.spoof[B]!)
+kind Mul[A, B = A] => prove with (a: A, b: B) a * b
 
-kind Div[A, B = A] => prove (Meta.spoof[A]! / Meta.spoof[B]!)
+kind Div[A, B = A] => prove with (a: A, b: B) a / b
 
-kind Mod[A, B = A] => prove (Meta.spoof[A]! % Meta.spoof[B]!)
+kind Mod[A, B = A] => prove with (a: A, b: B) a % b
 
 kind ASM[A, B = A] => Add[A, B] and Sub[A, B] and Mul[A, B]
 

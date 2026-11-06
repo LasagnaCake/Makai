@@ -1020,6 +1020,10 @@ Node::Instance ProofResolver::resolve(Parser& parser, Node::Instance const& left
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_PROOF;
+	if (parser.context.peek().text == "with") {
+		parser.context.next();
+		result->middle = parser.nextExpression();
+	}
 	result->leftSide = parser.nextExpression();
 	return result;
 }
