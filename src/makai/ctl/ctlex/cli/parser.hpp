@@ -47,7 +47,6 @@ namespace CLI {
 						opt.value = true;
 					}
 				} else if (opt.key.front() == '+') {
-					opt.value = opt.value.array();
 					++current;
 					StringList argx;
 					if (current < count) while (!(
