@@ -49,14 +49,16 @@ namespace CLI {
 				} else if (opt.key.front() == '+') {
 					opt.value = opt.value.array();
 					++current;
+					StringList argx;
 					if (current < count) while (!(
 						args[current][0] == '+'
 					or	args[current][0] == '-'
 					)) {
-						opt.value[opt.value.size()] = Data::Value::StringType(args[current]);
-						++current;
+						if (current >= count) break;
+						argx.pushBack(args[current++]);
 					}
 					opt.key = opt.key.substring(1);
+					opt.value = argx.toList<Data::Value>();
 				}
 				return opt;
 			}
