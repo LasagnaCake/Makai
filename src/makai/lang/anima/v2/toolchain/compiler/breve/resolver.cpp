@@ -1022,7 +1022,16 @@ Node::Instance ProofResolver::resolve(Parser& parser, Node::Instance const& left
 	result->content = Node::Content::AV2_TANC_PROOF;
 	if (parser.context.peek().text == "with") {
 		parser.context.next();
+		if (!(
+			parser.context.peek().type == LTS_TT_OPEN_PAREN
+		or	parser.context.peek().type == LTS_TT_OPEN_BRACKET
+		))
+			parser.context.error("Expected '(' or '{' to follow after [with]!");
 		result->middle = parser.nextExpression();
+		for (auto& child: result->middle->children)
+			if (child->content != Node::Content::AV2_TANC_DECLARATION)
+				parser.context.error("[with] blocks can only have declarations!");
+
 	}
 	result->leftSide = parser.nextExpression();
 	return result;
