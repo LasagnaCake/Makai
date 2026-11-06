@@ -46,6 +46,17 @@ namespace CLI {
 						opt.key = opt.key.substring(1);
 						opt.value = true;
 					}
+				} else if (opt.key.front() == '+') {
+					opt.value = opt.value.array();
+					++current;
+					if (current < count) while (!(
+						args[current][0] == '+'
+					or	args[current][0] == '-'
+					)) {
+						opt.value[opt.value.size()] = Data::Value::StringType(args[current]);
+						++current;
+					}
+					opt.key = opt.key.substring(1);
 				}
 				return opt;
 			}
