@@ -26,7 +26,7 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 static void doHelpMessage() {
 	DEBUGLN("Minima Compiler - V" + VER.serialize().get<Makai::String>());
 	DEBUGLN("Usage:");
-	DEBUGLN(R"(minimac (<file> OR -p <code>) [--output <name>] [--link "[<modules> ...]"])");
+	DEBUGLN(R"(minimac <file> [--output <name>])");
 }
 
 int main(int argc, char** argv) try {
@@ -35,6 +35,8 @@ int main(int argc, char** argv) try {
 	Makai::CLI::Parser cli(argc, argv);
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());
+	if (cfg.fetch("help", false) or cfg["__args"].empty() or cfg["__args"][0] == "help")
+		doHelp(args);
 	if (cfg["help"])
 		doHelpMessage();
 	else {

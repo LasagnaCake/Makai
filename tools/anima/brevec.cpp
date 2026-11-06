@@ -40,8 +40,8 @@ static void doHelpMessage() {
 	DEBUGLN(R"#([-o <name>]:          Output file name)#");
 	DEBUGLN(R"#([-l <level>]:         Compilation level (bpt|bir|min) (Only use last level, for assembly output))#");
 	DEBUGLN(R"#([-s "[<dirs> ...]"]:  Additional directories to look for source files in)#");
-	DEBUGLN(R"#([-W]"]:               Output web-compatible .anp files)#");
-	DEBUGLN(R"#([-S]"]:               Strip file of superfluous content (symbol names, etc.))#");
+	DEBUGLN(R"#([-W]:                 Output web-compatible .anp files)#");
+	DEBUGLN(R"#([-S]:                 Strip file of superfluous content (symbol names, etc.))#");
 }
 
 int main(int argc, char** argv) try {
@@ -64,8 +64,8 @@ int main(int argc, char** argv) try {
 				return cache[path] = parseFile(dir + "/" + path + ".bv", Makai::File::getText(dir + "/" + path + ".bv"));
 		throw Makai::Error::FailedAction("Failed to find module '" + path + "'");
 	};
-	if (cfg["help"])
-		doHelpMessage();
+	if (cfg.fetch("help", false) or cfg["__args"].empty() or cfg["__args"][0] == "help")
+		doHelp(args);
 	else {
 		DEBUGLN("Here!");
 		if (cfg["__args"].empty() and !cfg.contains("pipe"))

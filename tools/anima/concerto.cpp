@@ -81,7 +81,7 @@ struct ConcertoMain: Makai::AMain {
 
 	void doHelp(Makai::Data::Value const& args) {
 		if (args["__args"].size() < 2 or args["__args"][0].getString() != "help") {
-			writeLine("Concerto - V" + VER.serialize().get<Makai::String>());
+			writeLine("Concerto Project Manager - V" + VER.serialize().get<Makai::String>());
 			writeLine("Available commands:");
 			writeLine("concerto create    Creates a concerto project");
 			writeLine("concerto add       Adds a library to the project");
@@ -89,7 +89,7 @@ struct ConcertoMain: Makai::AMain {
 			writeLine("concerto cache     Manage the build cache");
 			writeLine("concerto app       Manage installed concerto apps");
 			writeLine("concerto source    Adds a library source");
-			writeLine("concerto hub       Adds a hub to the library lookup registry");
+			writeLine("concerto hub       Adds a hub to the global library lookup registry");
 			writeLine("concerto init      Initializes a concerto project");
 			writeLine("concerto run       Runs a concerto project");
 			writeLine("concerto help      Displays information for a specific command");
@@ -131,7 +131,7 @@ struct ConcertoMain: Makai::AMain {
 			} else if (verb == "hub") {
 				writeLine("concerto hub <repo>");
 				writeLine("");
-				writeLine("Adds a library hub <repo> globally");
+				writeLine("Adds a library hub <repo> to the global library lookup registry");
 			} else if (verb == "init") {
 				writeLine("concerto init");
 				writeLine("");
@@ -173,7 +173,10 @@ struct ConcertoMain: Makai::AMain {
 		auto const type = args.fetch<Makai::String>("type", "program");
 		if (type == "prog")		project.type = args.fetch("binary", true) ? Project::Type::AV2_TCPT_BIN_PROGRAM : Project::Type::AV2_TCPT_WEB_PROGRAM;
 		else if (type == "lib") project.type = Project::Type::AV2_TCPT_LIBRARY;
-		else if (type == "exe")	project.type = Project::Type::AV2_TCPT_EXECUTABLE;
+		else if (type == "exe")	{
+			error("Native executables are currently unsupported!");
+			project.type = Project::Type::AV2_TCPT_EXECUTABLE;
+		}
 		else error("Invalid/unsupported project type!");
 		Makai::File::saveText(projName + "/project.flow", project.serialize().toFLOWString("  "));
 		Makai::File::saveText(projName + "/.gitignore", PROJ_GITIGNORE);
