@@ -13,7 +13,7 @@ static Makai::Data::Value configBase() {
 	cfg["help"]		= false;
 	cfg["strip"]	= false;
 	cfg["output"]	= "output/**{{name}}";
-	cfg["src"]		= "[]";
+	cfg["src"]		= Makai::Data::Value::array();
 	cfg["level"]	= "full";
 	cfg["web"]		= false;
 	cfg["pretty"]	= false;
@@ -34,14 +34,14 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 static void doHelpMessage() {
 	DEBUGLN("Breve Compiler - V" + VER.serialize().get<Makai::String>());
 	DEBUGLN("Usage:\n");
-	DEBUGLN(R"(brevec <file> [-o <name>] [-l <level>] [-s "[<dirs> ...]"] [-S] [-W])");
+	DEBUGLN(R"(brevec <file> [-o <name>] [-l <level>] [+s <dirs> ...] [-S] [-W])");
 	DEBUGLN("\nWhere:");
-	DEBUGLN(R"#(<file>:               Path to the source file)#");
-	DEBUGLN(R"#([-o <name>]:          Output file name)#");
-	DEBUGLN(R"#([-l <level>]:         Compilation level (bpt|bir|min) (Only use last level, for assembly output))#");
-	DEBUGLN(R"#([-s "[<dirs> ...]"]:  Additional directories to look for source files in)#");
-	DEBUGLN(R"#([-W]:                 Output web-compatible .anp files)#");
-	DEBUGLN(R"#([-S]:                 Strip file of superfluous content (symbol names, etc.))#");
+	DEBUGLN(R"#(<file>:           Path to the source file)#");
+	DEBUGLN(R"#([-o <name>]:      Output file name)#");
+	DEBUGLN(R"#([-l <level>]:     Compilation level (bpt|bir|min) (Only use last level, for assembly output))#");
+	DEBUGLN(R"#([+s <dirs> ...]:  Additional directories to look for source files in)#");
+	DEBUGLN(R"#([-W]:             Output web-compatible .anp files)#");
+	DEBUGLN(R"#([-S]:             Strip file of superfluous content (symbol names, etc.))#");
 }
 
 int main(int argc, char** argv) try {
@@ -50,7 +50,8 @@ int main(int argc, char** argv) try {
 	Makai::CLI::Parser cli(argc, argv);
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());
-	Transformer::Import::importer = [dirs = Makai::FLOW::parse(cfg["src"].getString()).getArray().toList<Makai::String>()] (auto const path) -> File {
+	auto const flx = cfg["src"].getArray().toList<Makai::String>();
+	Transformer::Import::importer = [dirs = flx] (auto const path) -> File {
 		static Makai::Dictionary<File> cache;
 		if (path.empty()) throw Makai::Error::FailedAction("Module name is empty!");
 		if (cache.contains(path)) return cache[path];
@@ -89,6 +90,7 @@ int main(int argc, char** argv) try {
 		);
 		auto const outPath = Makai::OS::FS::currentDirectory() + "/" + outName;
 		DEBUGLN("Level: ", level);
+		DEBUGLN("Additional Sources: [\"", flx.join("\", \""), "\"]");
 		if (level == "parse-tree" || level == "parse") {
 			Makai::File::saveText(
 				outPath + ".bpt",
