@@ -35,15 +35,17 @@ namespace Makai::Pack {
 	};
 
 	struct [[CTL_PACKED_STRUCT]] Directory: PackedEntry {
-		StringTable<UTF8String>	names;
-		HeaderTable<File>		files;
+		StringTable<String>	names;
+		HeaderTable<File>	files;
 	};
+
+	constexpr BF::Version const FILE_FORMAT_VERSION = {1};
 
 	struct [[CTL_PACKED_STRUCT]] PackInfo {
 		/// @brief Size of file token identifier.
-		constexpr usize FILE_TOKEN_SIZE = 20;
+		constexpr usize FILE_TOKEN_SIZE = 32;
 		/// @brief File token type.
-		using FileToken = As<char const[FILE_TOKEN_SIZE]>;
+		using FileToken = As<char[FILE_TOKEN_SIZE]>;
 
 
 		/// @brief File archive header flags.
@@ -51,13 +53,13 @@ namespace Makai::Pack {
 			uint64: 0;
 		};
 
-		FileToken			token		= "Makai::FAV2::Pack";
-		BF::Version			version;
+		FileToken			token		= "Makai::NewFileArchive::Pack";
+		BF::Version			version		= FILE_FORMAT_VERSION;
 		Flags				flags;
 		Header<Directory>	directory;
 	};
 
-	struct Pack {
+	struct Archive {
 		struct FileEntry {
 			Bytes<>				data;
 			PackedEntry::Mode	mode;
@@ -69,7 +71,7 @@ namespace Makai::Pack {
 			PLE_BROKEN_DIR_HEADER,
 			PLE_BROKEN_DIR_STRUCTURE,
 			PLE_NOT_A_PACK,
-			PLE_NO_HEADER,
+			PLE_NO_HEADER
 		};
 
 		enum class GetError: u16 {
@@ -77,25 +79,25 @@ namespace Makai::Pack {
 			PGE_WRITE_ONLY,
 			PGE_NO_FILE,
 			PGE_BROKEN_FILE_HEADER,
-			PGE_BROKEN_FILE,
+			PGE_BROKEN_FILE
 		};
 
 		enum class AddError: u16 {
 			PAE_NOT_OPEN,
-			PAE_READ_ONLY,
+			PAE_READ_ONLY
 		};
 
 		using Source = Unique<BF::Reader>;
 
 		using Destination = Unique<BF::Writer>;
 
-		Pack();
+		Archive();
 
-		Pack(String const& passHash, Source&& in, Destination&& out, Nullable<PackInfo> const& info = null);
-		Pack(String const& passHash, Source&& in);
-		Pack(String const& passHash, Destination&& out, PackInfo const& info = {});
+		Archive(String const& passHash, Source&& in, Destination&& out, Nullable<PackInfo> const& info = null);
+		Archive(String const& passHash, Source&& in);
+		Archive(String const& passHash, Destination&& out, PackInfo const& info = {});
 
-		~Pack();
+		~Archive();
 
 		Nullable<LoadError> open(String const& passHash, Source&& in, Destination&& out, Nullable<PackInfo> const& info = null);
 		Nullable<LoadError> open(String const& passHash, Source&& in);
@@ -104,12 +106,12 @@ namespace Makai::Pack {
 		Result<FileEntry, GetError> tryGet(UTF8String const& path) const;
 		Nullable<AddError> tryAdd(UTF8String const& path, FileEntry const& file);
 
-		Pack&	remove(UTF8String const& path);
+		Archive&	remove(UTF8String const& path);
 		bool	contains(UTF8String const& path) const;
 
-		StringList files() const;
+		UTF8StringList files() const;
 
-		Pack& close();
+		Archive& close();
 
 	private:
 		bool							isOpen = false;

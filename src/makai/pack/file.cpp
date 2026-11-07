@@ -1,16 +1,30 @@
-#include "core.hpp"
+#include "file.hpp"
 
 using namespace Makai::Pack;
 
 using namespace Makai;
 
-Pack::Pack() {}
+Archive::Archive() {}
 
-Pack::~Pack() {
+Archive::~Archive() {
 	close();
 }
 
-Nullable<Pack::LoadError> Pack::open(String const& passHash, Source&& inx, Destination&& outx, PackInfo const& info) {
+String Block::createFor(Encryption const mode) {
+	switch (mode) {
+		case Encryption::PE_NONE: return "";
+		case Encryption::PE_AES256: {
+			String str;
+			str.resize(16, 0);
+			for (auto& c: str)
+				c = rng().next() % 0xFF;
+			return str;
+		};
+	}
+	return "";
+}
+
+Nullable<Archive::LoadError> Archive::open(String const& passHash, Source&& inx, Destination&& outx, PackInfo const& info) {
 	if (isOpen) return LoadError::PLE_ALREADY_OPEN;
 	inBuf.clear();
 	outBuf.clear();
@@ -21,6 +35,7 @@ Nullable<Pack::LoadError> Pack::open(String const& passHash, Source&& inx, Desti
 		auto const pp = Header<PackInfo>::build(*in);
 		if (!pp) return LoadError::PLE_BROKEN_HEADER;
 		if (pack = Header<PackInfo>(*pp).fromBytes(*in)) {
+			if (FILE_FORMAT_VERSION.major < pack->version.major)
 			if (auto const dir = unpack(pack->directory)) {
 				auto const files = unpack(dir->files);
 				auto const names = unpack<Bytes<>>(dir->names);
@@ -44,40 +59,38 @@ Nullable<Pack::LoadError> Pack::open(String const& passHash, Source&& inx, Desti
 	return null;
 }
 
-Result<Pack::FileEntry, Pack::GetError> Pack::tryGet(UTF8String const& path) {
+Result<Archive::FileEntry, Archive::GetError> Archive::tryGet(UTF8String const& path) {
 	if (!isOpen) return GetError::PGE_NOT_OPEN;
 	if (!in) return GetError::PGE_WRITE_ONLY;
 	if (outBuf.contains(path))
 		return inBuf[path].data;
-	else if (inBuf.contains(path)) {
-		if (auto const fhp = inBuf[path]) {
-			auto const fheader = *fhp;
-			auto const bbx = fheader.block.fromBytes(*in);
-			if (!bbx) return GetError::PGE_BROKEN_FILE;
-			auto const block + *bbx;
-			if (auto const fdat = fheader.contents.fromBytes(*in)) {
-				if (fdat->size() != fheader.compressed) return GetError::PGE_BROKEN_FILE;
-				Nullable<Bytes<>> fout;
-				fdat.then([&] (auto const& fe) {
-					decrypt(fe, block, hash, fheader.mode.encryption).then([&] (auto const& ce) {
-						decompress(ce, fheader.mode.compression, fheader.mode.level).then([&] (auto const& xe) {
-							fout = xe;
-						});
+	else if (inBuf.contains(path) && inBuf[path]) {
+		auto const fheader = *inBuf[path];
+		auto const bbx = fheader.block.fromBytes(*in);
+		if (!bbx) return GetError::PGE_BROKEN_FILE_HEADER;
+		auto const block + *bbx;
+		if (auto const fdat = fheader.contents.fromBytes(*in)) {
+			if (fdat->size() != fheader.compressed) return GetError::PGE_BROKEN_FILE;
+			Nullable<Bytes<>> fout;
+			fdat.then([&] (auto const& fe) {
+				decrypt(fe, block, hash, fheader.mode.encryption).then([&] (auto const& ce) {
+					decompress(ce, fheader.mode.compression, fheader.mode.level).then([&] (auto const& xe) {
+						fout = xe;
 					});
 				});
-				if (!fout) return GetError::PGE_BROKEN_FILE;
-				if (fout->size() != fheader.uncompressed)
-					return GetError::PGE_BROKEN_FILE;
-				return {*fout, fheader.mode};
-			} else return GetError::PGE_BROKEN_FILE;
-		} else return GetError::PGE_BROKEN_FILE_HEADER;
+			});
+			if (!fout) return GetError::PGE_BROKEN_FILE;
+			if (fout->size() != fheader.uncompressed)
+				return GetError::PGE_BROKEN_FILE;
+			return {*fout, fheader.mode};
+		} else return GetError::PGE_BROKEN_FILE;
 	} else return GetError::PGE_NO_FILE;
 }
 
-Nullable<Pack::AddError> Pack::tryAdd(UTF8String const& path, Pack::FileEntry const& file) {
+Nullable<Archive::AddError> Archive::tryAdd(UTF8String const& path, Archive::FileEntry const& file) {
 	if (!isOpen) return GetError::PAE_NOT_OPEN;
 	if (!out) return GetError::PAE_READ_ONLY;
-	inBuf.erase(path);
+	inBuf[path] = null;
 	outBuf[path] = file;
 	return null;
 }
@@ -94,6 +107,15 @@ bool contains(UTF8String const& path) const {
 	return (inBuf.contains(path) or outBuf.contains(path));
 }
 
+UTF8StringList Archive::files() const {
+	UTF8Dictionary<bool> checked;
+	for (auto const& [file, x]: inBuf)
+		if (x) checked[file] = true;
+	for (auto const& [file, _]: outBuf)
+		checked[file] = true;
+	return checked.keys();
+}
+
 Pack& close() {
 	if (!isOpen) return *this;
 	if (out) {
@@ -102,6 +124,11 @@ Pack& close() {
 			.begin()
 			.run([&] (BF::Encoder<PackInfo>& builder) {
 				builder.file = pack;
+				Directory dd;
+				List<Entry> files;
+				List<Byte<>> names;
+				auto const dblk = Block::createFor(fd.mode.encryption);
+				dd.block = builder.append(dblk);
 				for (auto const file: files()) {
 					tryGet(file).then([&] (auto const& fd) {
 						File fzx {.uncompressed = fd.data.size(), .mode = fd.mode};
@@ -110,11 +137,21 @@ Pack& close() {
 							auto const blk = Block::createFor(fd.mode.encryption);
 							encrypt(cd, blk, pass, fd.mode.encryption).then([&] (auto const& ed) {
 								fzx.block = builder.append(blk);
+								fzx.data = builder.append(ed);
 							});
 						});
-						builder.append();
+						files.pushBack(builder.put(fzx));
+						compress(fd.name.toString().toBytes(), dd.mode.compression, dd.mode.level).then([&] (auto const cd) {
+							fzx.compressed = cd.size();
+							encrypt(cd, blk, pass, fd.mode.encryption).then([&] (auto const& ed) {
+								names.pushBack(ed);
+							});
+						});
 					})
 				}
+				dd.files = builder.embed(files);
+				dd.names = builder.embed(names);
+				builder.file.directory = builder.put(dd);
 			})
 			.end();
 	}

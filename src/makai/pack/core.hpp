@@ -1,17 +1,19 @@
 #ifndef MAKAILIB_PACK_CORE_H
 #define MAKAILIB_PACK_CORE_H
 
+#include "../compat/ctl.hpp"
+
 namespace Makai::Pack {
 	/// @brief Encryption method.
 	enum class Encryption: u16 {
 		PE_NONE,
-		PE_AES256,
+		PE_AES256
 	};
 
 	/// @brief Compression method.
 	enum class Compression: u16 {
 		PC_NONE,
-		PC_ZIP,
+		PC_ZIP
 	};
 
 	/// @brief Encrypts data.
@@ -24,7 +26,7 @@ namespace Makai::Pack {
 		ConstByteSpan<> const&	data,
 		String const&			block,
 		String const&			password	= "",
-		Encryption const		method		= Encryption::PE_AES256,
+		Encryption const		method		= Encryption::PE_AES256
 	);
 
 	/// @brief Decrypts data.
@@ -37,7 +39,7 @@ namespace Makai::Pack {
 		ConstByteSpan<> const&	data,
 		String const&			block,
 		String const&			password	= "",
-		Encryption const		method		= Encryption::PE_AES256,
+		Encryption const		method		= Encryption::PE_AES256
 	);
 
 	/// @brief Compresses data.
@@ -65,7 +67,7 @@ namespace Makai::Pack {
 	/// @brief Gets the hash for some data.
 	/// @param data Data to get hash for.
 	/// @return Hash of data.
-	Nullable<u64> hashOf(ConstByteSpan<> const& data);
+	u64 hashOf(ConstByteSpan<> const& data);
 }
 
 #endif
