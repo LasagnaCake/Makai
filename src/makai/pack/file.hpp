@@ -8,7 +8,7 @@ namespace Makai::Pack {
 	using namespace BF;
 
 	/// @brief Hash IV block.
-	struct Block: Text<String> {
+	struct Block: Text {
 		/// @brief Creates an IV block with a cryptographically-secure random number generator operation.
 		/// @return IV block.
 		static String createFor(Encryption const method);
@@ -21,11 +21,11 @@ namespace Makai::Pack {
 			u8				level		= 9;
 		};
 
-		u64				uncompressed;
-		u64				compressed;
-		Mode			mode;
-		u64				hash;
-		Text<String>	block;
+		u64		uncompressed;
+		u64		compressed;
+		Mode	mode;
+		u64		hash;
+		Text	block;
 	};
 
 	struct [[CTL_PACKED_STRUCT]] File: PackedEntry {
