@@ -103,11 +103,6 @@ public:
 	/// @brief Whether data type is a reference to another type.
 	constexpr static auto const REFERENCE = Type::Equal<DataType, AsNonReference<DataType>&>;
 
-	/// @brief Operation type.
-	using OperationType	= Decay::AsFunction<DataType(DataType const&)>;
-	/// @brief Procedure type.
-	using ProcedureType	= Decay::AsFunction<void(DataType const&)>;
-
 	/// @brief Default constructor.
 	constexpr Nullable() noexcept			{}
 	/// @brief Null constructor.
@@ -147,14 +142,14 @@ public:
 	/// @tparam TFunction Operation type.
 	/// @param op Operation to apply.
 	/// @return Reference to self.
-	template<Type::Functional<OperationType> TFunction>
+	template<Type::Functional<DataType(DataType const&)> TFunction>
 	constexpr SelfType& then(TFunction const& op) {if (isSet) content.data = op(content.data); return *this;	}
 
 	/// @brief Applies an operation to the stored value, if it exists.
 	/// @tparam TFunction Operation type.
 	/// @param op Operation to apply.
 	/// @return Reference to self.
-	template<Type::Functional<ProcedureType> TFunction>
+	template<Type::Functional<void(DataType const&)> TFunction>
 	constexpr SelfType& then(TFunction const& op) {if (isSet) op(content.data); return *this;					}
 
 	/// @brief Returns whether there is a stored value.
@@ -166,13 +161,6 @@ public:
 	/// @brief Returns whether there is a stored value.
 	/// @return Whether there is a stored value.
 	constexpr bool operator()()	const {return exists();	}
-
-	/// @brief Applies an operation to the stored value, if it exists.
-	/// @tparam TFunction Operation type.
-	/// @param op Operation to apply.
-	/// @return Reference to self.
-	template<Type::Functional<OperationType> TFunction>
-	constexpr SelfType& operator()(TFunction const& op) {return then(op);}
 
 	/// @brief Copy assignment operator (value).
 	/// @param value Value to copy.

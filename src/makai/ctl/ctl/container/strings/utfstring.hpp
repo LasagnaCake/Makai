@@ -1634,7 +1634,7 @@ namespace UTF {
 		/// @brief Returns the string as a standard string.
 		constexpr operator String() const {return toString();}
 
-		constexpr static auto from(Bytes<> const& bytes) {
+		constexpr static auto fromBytes(Bytes<> const& bytes) {
 			return SelfType(String::fromBytes(bytes));
 		}
 

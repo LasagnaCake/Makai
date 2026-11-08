@@ -21,10 +21,10 @@ namespace Makai::Pack {
 			u8				level		= 9;
 		};
 
-		u64		unpacked;
-		u64		packed;
+		u64		unpacked	= 0;
+		u64		packed		= 0;
 		Mode	mode;
-		u64		hash;
+		u64		hash		= 0;
 		Text	block;
 	};
 
@@ -88,9 +88,9 @@ namespace Makai::Pack {
 			PAE_READ_ONLY
 		};
 
-		using Source = Unique<BF::Reader>;
+		using Source = Unique<BF::IReadable>;
 
-		using Destination = Unique<BF::Writer>;
+		using Destination = Unique<BF::IWritable>;
 
 		Archive();
 
@@ -104,7 +104,7 @@ namespace Makai::Pack {
 		Nullable<LoadError> open(String const& passkey, Source&& in);
 		Nullable<LoadError> open(String const& passkey, Destination&& out, PackInfo const& info = {});
 
-		Result<FileEntry, GetError> tryGet(UTF8String const& path) const;
+		Result<FileEntry, GetError> tryGet(UTF8String const& path);
 		Nullable<AddError> tryAdd(UTF8String const& path, FileEntry const& file);
 
 		Archive&	remove(UTF8String const& path);
@@ -113,6 +113,11 @@ namespace Makai::Pack {
 		Nullable<UTF8StringList> files() const;
 
 		Archive& close();
+
+		bool cacheLoadedFiles = false;
+
+		constexpr bool exists() const	{return isOpen;		}
+		constexpr operator bool() const	{return exists();	}
 
 	private:
 		bool							isOpen = false;

@@ -1491,7 +1491,7 @@ ATransformer::Result TypeRequest::transform(Context& context, Node::Instance con
 static void resolveEmptyAttribute(
 	ATransformer::Context& context,
 	Node::Instance const& node,
-	Makai::Dictionary<Metadata::Instance>& attribs,
+	Makai::UTF8Dictionary<Metadata::Instance>& attribs,
 	Namespace::Instance const& ns
 ) {
 	auto const [path, scope] = ATransformer::resolve(context, node, true);
@@ -1520,7 +1520,7 @@ static Makai::UTF8StringList resolveAttribute(
 	ATransformer::Context& context,
 	Node::Instance const& node,
 	Namespace::Instance const& ns,
-	Makai::Dictionary<Metadata::Instance>& attribs
+	Makai::UTF8Dictionary<Metadata::Instance>& attribs
 ) {
 	Makai::UTF8StringList newAttrs;
 	if (node->isPathOrName()) {
@@ -1588,7 +1588,7 @@ ATransformer::Result AttributeExpression::transform(Context& context, Node::Inst
 	MAKAILIB_DEBUGLN_FULL("<attrib-expr>");
 	auto const expr = context.getExpression(node->rightSide);
 	if (!expr.scope) context.error("Expected scope here!", node->rightSide);
-	Makai::Dictionary<Metadata::Instance> attributes;
+	Makai::UTF8Dictionary<Metadata::Instance> attributes;
 	MAKAILIB_DEBUGLN_FULL("Resolving attributes for expression '", expr.scope->name, "'...");
 	resolveAttribute(context, node->leftSide, expr.scope, attributes);
 	Makai::StringList repeat;

@@ -115,6 +115,7 @@ Graph::DrawBuffer& Graph::DrawBuffer::create(uint32 const width, uint32 const he
 	makeColorTexture(buffer.screen, width, height, GL_COLOR_ATTACHMENT0);
 	makeColorTexture(buffer.normal, width, height, GL_COLOR_ATTACHMENT1);
 	makeColorTexture(buffer.position, width, height, GL_COLOR_ATTACHMENT2);
+	makeColorTexture(buffer.emission, width, height, GL_COLOR_ATTACHMENT3);
 	buffer.depth.create(
 		width,
 		height,

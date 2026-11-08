@@ -53,7 +53,7 @@ using TreeUTF8Dictionary	= TreeMap<UTF8String, TValue, TIndex>;
 /// @tparam TValue Value type.
 /// @tparam TIndex Index type.
 template<class TValue, Type::Integer TIndex = usize>
-using UTF8Dictionary		= ListDictionary<TValue, TIndex>;
+using UTF8Dictionary		= ListUTF8Dictionary<TValue, TIndex>;
 
 CTL_NAMESPACE_END
 

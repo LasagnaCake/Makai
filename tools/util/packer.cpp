@@ -60,7 +60,27 @@ namespace Command {
 				.splitAtLast('/')
 				.back()
 		);
-		Makai::Tool::Arch::pack(packName, cfg["__args"][1], cfg["password"]);
+		auto const source = f["__args"][1].getString();
+		auto const packRoot = packName.get<Makai::String>()
+			.replace('\\', '/')
+			.splitAtLast('/')
+			.back()
+		;
+		Makai::Pack::Archive pa;
+		pa.open(
+			Makai::Data::hashed(cfg["pass"].getString()),
+			Makai::Pack::Archive::Destination::create<Makai::OutputFileStream<Makai::Bytes<>>>(packName)
+		);
+		for (auto const& f: Makai::OS::FS::walkFiles(source)) {
+			auto const destPath = Makai::OS::FS::concat(
+				Makai::OS::FS::fileName(packName, true),
+				f.sliced(source.size())
+			);
+			if (auto const e = pa.tryAdd(f, {.data = Makai::File::loadBinary(f)})) {
+				// TODO: Error handling
+			}
+		}
+		pa.close();
 		DEBUGLN("Done!");
 	}
 
@@ -68,12 +88,23 @@ namespace Command {
 		DEBUGLN("Unpacking archive...");
 		if (cfg["__args"].size() < 2)
 			throw Makai::Error::NonexistentValue("Missing archive name!");
-		auto const packName = Makai::Regex::replace(
+		auto const outFolder = Makai::Regex::replace(
 			cfg["output"],
 			"\\$\\{name\\}(\\.pack)?",
 			Makai::OS::FS::fileName(cfg["__args"][1], true)
 		);
-		Makai::Tool::Arch::unpack(packName, cfg["output"], cfg["password"]);
+		Makai::Pack::Archive pa;
+		pa.open(
+			Makai::Data::hashed(cfg["pass"].getString()),
+			Makai::Pack::Archive::Source::create<Makai::InputFileStream<Makai::Bytes<>>>(cfg["__args"][1].getString())
+		);
+		for (auto const& f: pa.files()) {
+			pa.tryGet(f).then([] (auto const& fe) {
+				Makai::File::saveText(Makai::OS::FS::concatenate(outFolder, fe));
+			}).onError([] (auto const& e) {
+				// TODO: Error handling
+			});
+		}
 		DEBUGLN("Done!");
 	}
 

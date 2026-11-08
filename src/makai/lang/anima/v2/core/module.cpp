@@ -1,5 +1,5 @@
 #include "module.hpp"
-#include "../../../../tool/archive/archive.hpp"
+#include "../../../../pack/pack.hpp"
 
 using namespace Makai;
 using namespace Makai::Anima::V2::Core;
@@ -20,11 +20,11 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 			for (auto& str: mod.strings)
 				MAKAILIB_DEBUGLN_FULL("Text: `", str, "`");
 	}
-	auto const code = Makai::Tool::Arch::decompress(v["code"].getBytes());
+	auto const code = Makai::Pack::decompress(v["code"].getBytes()).value();
 	MAKAILIB_DEBUGLN_FULL("Bytecode Section: ", code.size());
 	mod.code = decltype(mod.code){ref<Instruction>(code.data()), ref<Instruction>(code.data()) + (code.size() / sizeof(Instruction))};
 	if (v.contains("jumps")) {
-		auto const jumps = Makai::Tool::Arch::decompress(v["jumps"].getBytes());
+		auto const jumps = Makai::Pack::decompress(v["jumps"].getBytes()).value();
 		MAKAILIB_DEBUGLN_FULL("Jump Table Section: ", jumps.size());
 		mod.jumpTable = decltype(mod.jumpTable){ref<uint64>(jumps.data()), ref<uint64>(jumps.data()) + (jumps.size() / sizeof(uint64))};
 		if (mod.jumpTable.empty()) throw Error::FailedAction(
@@ -34,7 +34,7 @@ static void deserializeV1(Module& mod, Makai::Data::Value const& v) {
 		);
 	}
 	if (v.contains("rel")) {
-		auto const relocations = Makai::Tool::Arch::decompress(v["rel"].getBytes());
+		auto const relocations = Makai::Pack::decompress(v["rel"].getBytes()).value();
 		MAKAILIB_DEBUGLN_FULL("Relocation Section: ", relocations.size());
 		mod.relocations = decltype(mod.relocations){ref<uint64>(relocations.data()), ref<uint64>(relocations.data()) + (relocations.size() / sizeof(uint64))};
 		if (mod.relocations.empty()) throw Error::FailedAction(
@@ -93,10 +93,10 @@ Makai::Data::Value Module::serialize(bool forceSymbolsToBeKept) const {
 	out["strings"]	= strings.toList<Makai::Data::Value>();
 	MAKAILIB_DEBUGLN_FULL("Binary: ", code.size());
 	if (jumpTable.size())
-		out["jumps"] = Makai::Tool::Arch::compress(jumpTable.toBytes());
+		out["jumps"] = Makai::Pack::compress(jumpTable.toBytes()).value();
 	if (relocations.size())
-		out["rel"] = Makai::Tool::Arch::compress(relocations.toBytes());
-	out["code"]		= Makai::Tool::Arch::compress(code.toBytes());
+		out["rel"] = Makai::Pack::compress(relocations.toBytes()).value();
+	out["code"]		= Makai::Pack::compress(code.toBytes()).value();
 	out["art"]		= art;
 	out["version"]	= version;
 	out["detail"]	= detail;

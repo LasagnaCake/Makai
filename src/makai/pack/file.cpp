@@ -50,20 +50,22 @@ Nullable<Archive::LoadError> Archive::open(String const& passkey, Source&& inx, 
 					auto const fx = *files;
 					auto const nx = *names;
 					auto const bbx = ddx.block.fromBytes<String>(*in);
+					u64 lhash = 0;
 					for (usize i = 0; i < Math::lowest(fx.size(), nx.size()); ++i) {
 						auto const q = nx[i].toBytes();
-						unpack(q.span(), bbx, hash, ddx.mode.encryption, ddx.mode.compression, ddx.mode.level)
-							.then([&] (auto const ex) {
+						unpack(q.span(), bbx, key, ddx.mode.encryption, ddx.mode.compression, ddx.mode.level)
+							.then([&] (auto const ex) -> void {
 								inBuf[UTF8String::fromBytes(ex)] = fx[i];
+								lhash += hashOf(ex.span());
 							})
 						;
 					}
+					if (ddx.hash != lhash)
+						 return LoadError::PLE_BROKEN_DIR_HEADER;
 				} else return LoadError::PLE_BROKEN_DIR_STRUCTURE;
 			} else return LoadError::PLE_BROKEN_DIR_HEADER;
 		} else return LoadError::PLE_BROKEN_HEADER;
-	} else if (!info)
-		return LoadError::PLE_NO_HEADER;
-	else pack = info;
+	} else pack = info.orElse({});
 	isOpen = true;
 	return null;
 }
@@ -82,22 +84,18 @@ Nullable<Bytes<>> File::unpackFrom(BF::IReadable& reader, String const& key) con
 	auto const block = bbx.value();
 	if (auto const fdat = contents.fromBytes(reader)) {
 		Nullable<Bytes<>> fout;
-		fdat.then([&] (auto const& fe) {
-			if (fe.size() != packed) return;
-			unpack(fe.span(), block, key, mode.encryption, mode.compression, mode.level)
-				.then([&] (auto const& xe) {
-					fout = xe;
-				})
-			;
-		});
+		auto const fe = *fdat;
+		if (fe.size() == packed) return null;
+		fout = unpack(fe.span(), block, key, mode.encryption, mode.compression, mode.level);
 		if (!fout) return null;
-		if (fout.value().size() != unpacked)
-			return null;
+		auto const fdo = fout.value();
+		if (fdo.size() != unpacked) return null;
+		if (hashOf(fdo.span()) != hash) return null;
 		return fout;
 	} else return null;
 }
 
-Result<Archive::FileEntry, Archive::GetError> Archive::tryGet(UTF8String const& path) const {
+Result<Archive::FileEntry, Archive::GetError> Archive::tryGet(UTF8String const& path) {
 	if (!isOpen) return GetError::PGE_NOT_OPEN;
 	if (!in) return GetError::PGE_WRITE_ONLY;
 	if (outBuf.contains(path))
@@ -105,8 +103,8 @@ Result<Archive::FileEntry, Archive::GetError> Archive::tryGet(UTF8String const& 
 	else if (inBuf.contains(path) && inBuf[path]) {
 		auto const fheader = *inBuf[path];
 		if (auto const fdat = fheader.unpackFrom(*in, key)) {
-			FileEntry const fe = {*fdat, fheader.mode};
-			outBuf[path] = fe;
+			FileEntry fe = {*fdat, fheader.mode};
+			if (cacheLoadedFiles) outBuf[path] = fe;
 			return fe;
 		} else return GetError::PGE_BROKEN_FILE;
 	} else return GetError::PGE_NO_FILE;
@@ -151,35 +149,39 @@ Archive& Archive::close() {
 			.run([&] (BF::Encoder<PackInfo>& builder) {
 				builder.file = pack;
 				Directory dd;
-				List<Entry> files;
+				dd.hash = 0;
+				List<Entry> efiles;
 				List<Bytes<>> names;
-				auto const dblk = Block::createFor(fd.mode.encryption);
-				dd.block = builder.append(dblk);
-				for (auto const file: files().orElse({})) {
-					tryGet(file).then([&] (auto const& fd) {
-						File fzx {.unpacked = fd.data.size(), .mode = fd.mode};
+				auto const dblk = Block::createFor(dd.mode.encryption);
+				dd.block = BF::Text{builder.append(dblk)};
+				for (auto const& file: files().orElse({})) {
+					tryGet(file).then([&] (auto const& fd) -> void {
+						File fzx {{.unpacked = fd.data.size(), .mode = fd.mode}};
 						auto const blk = Block::createFor(fd.mode.encryption);
-						pack(fd.data.span(), blk, key, fd.mode.encryption, fd.mode.compression, fd.mode.level)
-							.then([&] (auto const cd) {
+						fzx.hash = hashOf(fd.data.span());
+						Pack::pack(fd.data.span(), blk, key, fd.mode.encryption, fd.mode.compression, fd.mode.level)
+							.then([&] (auto const cd) -> void {
 								fzx.packed = cd.size();
-								fzx.data = builder.append(cd);
-								fzx.block = builder.append(blk);
+								fzx.contents = {builder.append(cd)};
+								fzx.block = {builder.append(blk)};
 							})
 						;
-						files.pushBack(builder.put(fzx));
-						auto const fnb = fd.name.toString().toBytes();
-						pack(fnb.span(), blk, key, fd.mode.encryption, dd.mode.compression, dd.mode.level)
-							.then([&] (auto const& ed) {
+						efiles.pushBack(builder.put(fzx));
+						auto const fnb = file.toString().toBytes();
+						dd.hash += hashOf(fnb.span());
+						Pack::pack(fnb.span(), blk, key, fd.mode.encryption, dd.mode.compression, dd.mode.level)
+							.then([&] (auto const& ed) -> void {
 								names.pushBack(ed);
 							})
 						;
-					})
+					});
 				}
-				dd.files = builder.embed(files);
-				dd.names = builder.embed(names);
-				builder.file.directory = builder.put(dd);
+				dd.files = {builder.append(efiles)};
+				dd.names = {builder.embed(names)};
+				builder.file.directory = {builder.put(dd)};
 			})
 			.end();
 	}
+	isOpen = false;
 	return *this;
 }

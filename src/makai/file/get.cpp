@@ -1,11 +1,6 @@
 #include "file.hpp"
 
-#include "../tool/archive/archive.hpp"
-
-#include <exception>
-#include <fstream>
-#include <sstream>
-#include <filesystem>
+#include "../pack/pack.hpp"
 
 #define IMPL_ARCHIVE_
 
@@ -14,7 +9,7 @@
 #endif
 
 using namespace Makai;
-using Makai::Tool::Arch::FileArchive;
+using Makai::Pack::Archive;
 
 #ifdef IMPL_ARCHIVE_
 enum class ArchiveState {
@@ -28,8 +23,8 @@ static Atomic<ArchiveState>& state() {
 	return s;
 }
 
-static FileArchive& archive() {
-	static FileArchive arc;
+static Pack::Archive& archive() {
+	static Pack::Archive arc;
 	return arc;
 }
 #endif
@@ -132,10 +127,10 @@ static void assertFileExists(String const& path) {
 
 void Makai::File::attachArchive(String const& path, String const& password) {
 	assertFileExists(path);
-	Makai::File::attachArchive(Tool::Arch::FileArchive::Source::create<InputByteFileStream>(path), password);
+	Makai::File::attachArchive(Pack::Archive::Source::create<InputByteFileStream>(path), password);
 }
 
-void Makai::File::attachArchive(Tool::Arch::FileArchive::Source&& buffer, String const& password) {
+void Makai::File::attachArchive(Pack::Archive::Source&& buffer, String const& password) {
 	#ifdef IMPL_ARCHIVE_
 	MAKAILIB_DEBUGLN_FULL("Attaching archive...");
 	if (state() == ArchiveState::FAS_LOADING)
@@ -143,7 +138,18 @@ void Makai::File::attachArchive(Tool::Arch::FileArchive::Source&& buffer, String
 	try {
 		state() = ArchiveState::FAS_LOADING;
 		archive().close();
-		archive().open(buffer.transfer(), password);
+		if (auto const err = archive().open(password, buffer.transfer())) {
+			switch (*err) {
+				using enum Pack::Archive::LoadError;
+				case PLE_ALREADY_OPEN:			break;
+				case PLE_FILE_IS_TOO_NEW:		throw Error::FailedAction("File format is newer than supported format!", CTL_CPP_PRETTY_SOURCE);
+				case PLE_BROKEN_HEADER:			throw Error::FailedAction("Broken pack header!", CTL_CPP_PRETTY_SOURCE);
+				case PLE_BROKEN_DIR_HEADER:		throw Error::FailedAction("Broken directory header!", CTL_CPP_PRETTY_SOURCE);
+				case PLE_BROKEN_DIR_STRUCTURE:	throw Error::FailedAction("Broken directory file structure!", CTL_CPP_PRETTY_SOURCE);
+				case PLE_NOT_A_PACK:			throw Error::FailedAction("Not an archive pack!", CTL_CPP_PRETTY_SOURCE);
+				case PLE_NO_HEADER:				throw Error::FailedAction("Archive has no readable header!", CTL_CPP_PRETTY_SOURCE);
+			}
+		}
 		state() = ArchiveState::FAS_OPEN;
 		MAKAILIB_DEBUGLN_FULL("Archive Attached!");
 	} catch (Error::Generic const& e) {
@@ -270,7 +276,7 @@ String Makai::File::loadTextFromArchive(String const& path) {
 	assertPathIsValid(path);
 	#ifdef IMPL_ARCHIVE_
 	assertArchive(path);
-	return archive().getTextFile(Makai::Regex::replace(path, "^(.*?)[\\\\\\/]", ""));
+	return String::fromBytes(loadBinaryFromArchive(path));
 	#else
 	fileLoadError(path, "Archive functionality disabled!");
 	#endif
@@ -280,7 +286,20 @@ BinaryData<> Makai::File::loadBinaryFromArchive(String const& path) {
 	assertPathIsValid(path);
 	#ifdef IMPL_ARCHIVE_
 	assertArchive(path);
-	return archive().getBinaryFile(Makai::Regex::replace(path, "^(.*?)[\\\\\\/]", ""));
+	auto const f = archive().tryGet(Makai::Regex::replace(path, "^(.*?)[\\\\\\/]", ""));
+	if (f) return f.value().value().data;
+	else {
+		switch (f.error().value()) {
+			using enum Pack::Archive::GetError;
+			case PGE_NOT_OPEN:				fileLoadError(path, "Archive is not open!");
+			case PGE_WRITE_ONLY:			fileLoadError(path, "Archive is write-only!");
+			case PGE_NO_FILE:				fileLoadError(path, "File does not exist!");
+			case PGE_BROKEN_FILE_HEADER:	fileLoadError(path, "Broken file header!");
+			case PGE_BROKEN_FILE:			fileLoadError(path, "Broken file contents!");
+			default: fileLoadError(path, "Some mysterious error!");
+		}
+	}
+	fileLoadError(path, "Spooky undefined behaviours haunt your code!");
 	#else
 	fileLoadError(path, "Archive functionality disabled!");
 	#endif

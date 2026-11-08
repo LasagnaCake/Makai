@@ -2,7 +2,7 @@
 #define MAKAILIB_FILE_GET_H
 
 #include "../compat/ctl.hpp"
-#include "../tool/archive/archive.hpp"
+#include "../pack/pack.hpp"
 
 /// @brief File reading/writing facilities.
 namespace Makai::File {
@@ -20,7 +20,7 @@ namespace Makai::File {
 	/// @param buffer Stream buffer to read from.
 	/// @param password Archive password.
 	/// @throw Error::FailedAction if another archive is being loaded.
-	void attachArchive(Tool::Arch::FileArchive::Source&& buffer, String const& password = "");
+	void attachArchive(Pack::Archive::Source&& buffer, String const& password = "");
 	/// @brief Attaches a file archive for the application to read.
 	/// @param path Path to file archive.
 	/// @param password Archive password.

@@ -248,6 +248,22 @@ namespace OS::FS {
 		return copy(folders);
 	}
 
+	inline StringList walkFiles(String const& folder) {
+		if (!isDirectory(folder)) return {};
+		StringList files = filesIn(folder);
+		for (auto const& f: foldersIn(folder))
+			files.appendBack(walkFiles(concatenate(folder, f)));
+		return copy(files);
+	}
+
+	inline StringList walkFolders(String const& folder) {
+		if (!isDirectory(folder)) return {};
+		StringList folders = foldersIn(folder);
+		for (auto const& f: foldersIn(folder))
+			folders.appendBack(walkFolders(concatenate(folder, f)));
+		return copy(folders);
+	}
+
 	/// @brief Returns the executable's current working directory.
 	/// @return Current working directory.
 	inline String currentDirectory() {

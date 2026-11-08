@@ -113,6 +113,8 @@ namespace Makai::Graph {
 			Texture2D normal;
 			/// @brief Position buffer.
 			Texture2D position;
+			/// @brief Emission buffer.
+			Texture2D emission;
 			/// @brief Depth buffer.
 			Texture2D depth;
 		};

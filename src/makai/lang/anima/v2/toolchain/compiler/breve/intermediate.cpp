@@ -1,6 +1,6 @@
 #include "intermediate.hpp"
 #include "transformer.hpp"
-#include "../../../../../../tool/archive/archive.hpp"
+#include "../../../../../../data/hash.hpp"
 
 namespace Core = Makai::Anima::V2::Core;
 
@@ -442,7 +442,7 @@ static Namespace::AttributeRef createSharedAttribute() {
 					ov->dynlib += + "?ver='" + version + "'";
 				if (key.size())
 					ov->dynlib += "?key='" + Makai::Convert::toBase<Makai::Convert::Base::CB_BASE64>(
-						Makai::Tool::Arch::hashPassword(key)
+						Makai::Data::hashed(key)
 							.toBytes()
 					)  + "'";
 				ov->optional = isOptional;

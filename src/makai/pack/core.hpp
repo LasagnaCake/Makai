@@ -64,6 +64,62 @@ namespace Makai::Pack {
 		uint8 const				level	= 9
 	);
 
+	/// @brief Encrypts data.
+	/// @param data Data to encrypt.
+	/// @param password Password to use. Can be a hashed string. By default, it is empty.
+	/// @param method Encryption method. By default, it is `Encryption::PE_AES256`.
+	/// @param block IV block. By default, it is set to all zeroes.
+	/// @return Encrypted data.
+	inline Nullable<Bytes<>> encrypt(
+		Bytes<> const&		data,
+		String const&		block,
+		String const&		key		= "",
+		Encryption const	method	= Encryption::PE_AES256
+	) {
+		return encrypt(data.span(), block, key, method);
+	}
+
+	/// @brief Decrypts data.
+	/// @param data Data to decrypt.
+	/// @param password Password to use. Can be a hashed string. By default, it is empty.
+	/// @param method Decryption method. By default, it is `Encryption::PE_AES256`.
+	/// @param block IV block. By default, it is set to all zeroes.
+	/// @return Decrypted data.
+	inline Nullable<Bytes<>> decrypt(
+		Bytes<> const&		data,
+		String const&		block,
+		String const&		key		= "",
+		Encryption const	method	= Encryption::PE_AES256
+	) {
+		return decrypt(data.span(), block, key, method);
+	}
+
+	/// @brief Compresses data.
+	/// @param data Data to compress.
+	/// @param method Decompression method. By default, it is `Compression::PC_ZIP`.
+	/// @param level Compression level. By default, it is `9`.
+	/// @return Compressed data.
+	inline Nullable<Bytes<>> compress(
+		Bytes<> const&		data,
+		Compression const	method	= Compression::PC_ZIP,
+		uint8 const			level	= 9
+	) {
+		return compress(data.span(), method, level);
+	}
+
+	/// @brief Decompresses data.
+	/// @param data Data to Decompress.
+	/// @param method Decompression method. By default, it is `Compression::PC_ZIP`.
+	/// @param level Decompression level. By default, it is `9`.
+	/// @return Decompressed data.
+	inline Nullable<Bytes<>> decompress(
+		Bytes<> const&		data,
+		Compression const	method	= Compression::PC_ZIP,
+		uint8 const			level	= 9
+	) {
+		return decompress(data.span(), method, level);
+	}
+
 	Nullable<Bytes<>> pack(
 		ConstByteSpan<> const&	data,
 		String const&			block,
@@ -81,6 +137,28 @@ namespace Makai::Pack {
 		Compression const		comp	= Compression::PC_ZIP,
 		uint8 const				level	= 9
 	);
+
+	inline Nullable<Bytes<>> pack(
+		Bytes<> const&		data,
+		String const&		block,
+		String const&		key		= "",
+		Encryption const	enc		= Encryption::PE_AES256,
+		Compression const	comp	= Compression::PC_ZIP,
+		uint8 const			level	= 9
+	) {
+		return pack(data.span(), block, key, enc, comp, level);
+	}
+
+	inline Nullable<Bytes<>> unpack(
+		Bytes<> const&		data,
+		String const&		block,
+		String const&		key		= "",
+		Encryption const	enc		= Encryption::PE_AES256,
+		Compression const	comp	= Compression::PC_ZIP,
+		uint8 const			level	= 9
+	) {
+		return unpack(data.span(), block, key, enc, comp, level);
+	}
 
 	/// @brief Gets the hash for some data.
 	/// @param data Data to get hash for.
