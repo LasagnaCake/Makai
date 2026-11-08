@@ -21,17 +21,17 @@ namespace Makai::Pack {
 			u8				level		= 9;
 		};
 
-		u64		uncompressed;
-		u64		compressed;
+		u64		unpacked;
+		u64		packed;
 		Mode	mode;
 		u64		hash;
 		Text	block;
 	};
 
 	struct [[CTL_PACKED_STRUCT]] File: PackedEntry {
-		Text<String>	contents;
+		BF::RawBytes contents;
 
-		Bytes<> unpackFrom(Reader& reader);
+		Nullable<Bytes<>> unpackFrom(BF::IReadable& reader, String const& key) const;
 	};
 
 	struct [[CTL_PACKED_STRUCT]] Directory: PackedEntry {
@@ -43,7 +43,7 @@ namespace Makai::Pack {
 
 	struct [[CTL_PACKED_STRUCT]] PackInfo {
 		/// @brief Size of file token identifier.
-		constexpr usize FILE_TOKEN_SIZE = 32;
+		constexpr static usize const FILE_TOKEN_SIZE = 32;
 		/// @brief File token type.
 		using FileToken = As<char[FILE_TOKEN_SIZE]>;
 
@@ -67,6 +67,7 @@ namespace Makai::Pack {
 
 		enum class LoadError: u16 {
 			PLE_ALREADY_OPEN,
+			PLE_FILE_IS_TOO_NEW,
 			PLE_BROKEN_HEADER,
 			PLE_BROKEN_DIR_HEADER,
 			PLE_BROKEN_DIR_STRUCTURE,
@@ -93,34 +94,34 @@ namespace Makai::Pack {
 
 		Archive();
 
-		Archive(String const& passHash, Source&& in, Destination&& out, Nullable<PackInfo> const& info = null);
-		Archive(String const& passHash, Source&& in);
-		Archive(String const& passHash, Destination&& out, PackInfo const& info = {});
+		Archive(String const& passkey, Source&& in, Destination&& out, Nullable<PackInfo> const& info = null);
+		Archive(String const& passkey, Source&& in);
+		Archive(String const& passkey, Destination&& out, PackInfo const& info = {});
 
 		~Archive();
 
-		Nullable<LoadError> open(String const& passHash, Source&& in, Destination&& out, Nullable<PackInfo> const& info = null);
-		Nullable<LoadError> open(String const& passHash, Source&& in);
-		Nullable<LoadError> open(String const& passHash, Destination&& out, PackInfo const& info = {});
+		Nullable<LoadError> open(String const& passkey, Source&& in, Destination&& out, Nullable<PackInfo> const& info = null);
+		Nullable<LoadError> open(String const& passkey, Source&& in);
+		Nullable<LoadError> open(String const& passkey, Destination&& out, PackInfo const& info = {});
 
 		Result<FileEntry, GetError> tryGet(UTF8String const& path) const;
 		Nullable<AddError> tryAdd(UTF8String const& path, FileEntry const& file);
 
 		Archive&	remove(UTF8String const& path);
-		bool	contains(UTF8String const& path) const;
+		bool		contains(UTF8String const& path) const;
 
-		UTF8StringList files() const;
+		Nullable<UTF8StringList> files() const;
 
 		Archive& close();
 
 	private:
 		bool							isOpen = false;
-		String							hash;
+		String							key;
 		Nullable<PackInfo>				pack;
 		Source							in;
 		Destination						out;
 		UTF8Dictionary<Nullable<File>>	inBuf;
-		UTF8Dictionary<CachedFile>		outBuf;
+		UTF8Dictionary<FileEntry>		outBuf;
 	};
 }
 

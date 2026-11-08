@@ -1634,6 +1634,10 @@ namespace UTF {
 		/// @brief Returns the string as a standard string.
 		constexpr operator String() const {return toString();}
 
+		constexpr static auto from(Bytes<> const& bytes) {
+			return SelfType(String::fromBytes(bytes));
+		}
+
 	private:
 		constexpr void assertIsInBounds(IndexType const index) const {
 			if (index >= 0 && usize(index) > (size()-1)) outOfBoundsError(index);

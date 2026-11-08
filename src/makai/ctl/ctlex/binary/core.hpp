@@ -212,6 +212,8 @@ namespace BinaryFormat {
 		}
 	};
 
+	using RawBytes = Data<u8>;
+
 	template <Type::OneOf<String, UTF8String, UTF32String> T = String>
 	using StringTable = Table<T, Convert::toString<T>>;
 

@@ -148,7 +148,14 @@ public:
 	/// @param op Operation to apply.
 	/// @return Reference to self.
 	template<Type::Functional<OperationType> TFunction>
-	constexpr SelfType& then(TFunction const& op) {if (isSet) content.data = op(content.data); return *this;}
+	constexpr SelfType& then(TFunction const& op) {if (isSet) content.data = op(content.data); return *this;	}
+
+	/// @brief Applies an operation to the stored value, if it exists.
+	/// @tparam TFunction Operation type.
+	/// @param op Operation to apply.
+	/// @return Reference to self.
+	template<Type::Functional<ProcedureType> TFunction>
+	constexpr SelfType& then(TFunction const& op) {if (isSet) op(content.data); return *this;					}
 
 	/// @brief Returns whether there is a stored value.
 	/// @return Whether there is a stored value.

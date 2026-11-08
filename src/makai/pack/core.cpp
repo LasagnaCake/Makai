@@ -16,11 +16,6 @@ using namespace Makai;
 
 using namespace Pack;
 
-static CTL::Random::Engine::Secure& rng() {
-	static CTL::Random::Engine::Secure r;
-	return r;
-}
-
 u64 Makai::Pack::hashOf(ConstByteSpan<> const& data) {
 	return CTL::hash(data);
 }
@@ -72,7 +67,7 @@ static Nullable<Bytes<>> flate(
 ) try {
 	std::string result;
 	switch (method) {
-	case Compression::PC_NONE: return Bytes<>(data);
+	case Compression::PC_NO_COMPRESSION: return Bytes<>(data);
 	case Compression::PC_ZIP: {
 			StringSource ss(
 				data.data(),
@@ -115,7 +110,7 @@ Nullable<Bytes<>> Makai::Pack::encrypt(
 ) {
 	switch (method) {
 		default: return null;
-		case Encryption::PE_NONE:	return Bytes<>(data);
+		case Encryption::PE_NO_ENCRYPTION:	return Bytes<>(data);
 		case Encryption::PE_AES256:	return cbcEncrypt<AES>(data, password, block);
 	}
 	return null;
@@ -129,7 +124,7 @@ Nullable<Bytes<>> Makai::Pack::decrypt(
 ) {
 	switch (method) {
 		default: return null;
-		case Encryption::PE_NONE:	return Bytes<>(data);
+		case Encryption::PE_NO_ENCRYPTION:	return Bytes<>(data);
 		case Encryption::PE_AES256:	return cbcDecrypt<AES>(data, password, block);
 	}
 	return null;
@@ -149,4 +144,31 @@ Nullable<Bytes<>> Makai::Pack::decompress(
 	uint8 const				level
 ) {
 	return flate<Deflator>(data, method, level);
+}
+
+
+Nullable<Bytes<>> Makai::Pack::pack(
+	ConstByteSpan<> const&	data,
+	String const&			block,
+	String const&			key,
+	Encryption const		enc,
+	Compression const		comp,
+	uint8 const				level
+) {
+	auto const cc = compress(data, comp, level);
+	if (!cc) return null;
+	return encrypt(data, block, key, enc);
+}
+
+Nullable<Bytes<>> Makai::Pack::unpack(
+	ConstByteSpan<> const&	data,
+	String const&			block,
+	String const&			key,
+	Encryption const		enc,
+	Compression const		comp,
+	uint8 const				level
+) {
+	auto const cc = encrypt(data, block, key, enc);
+	if (!cc) return null;
+	return decompress(data, comp, level);
 }

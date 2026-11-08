@@ -1477,6 +1477,14 @@ public:
 	/// @return String as an STL string.
 	constexpr operator STDStringType() const	{return std();								}
 
+	constexpr static auto fromBytes(Bytes<> const& bytes) {
+		SelfType out;
+		out.resize(bytes.size() * sizeof(DataType), 0);
+		for (usize i = 0; i < (bytes.size() / sizeof(DataType)); i += sizeof(DataType))
+			out[i] = *(ref<DataType const>)(bytes.data() + i);
+		return out;
+	}
+
 private:
 	constexpr static DataType toLowerImpl(DataType const& c)	{return toLowerChar<DataType>(c);		}
 	constexpr static DataType toUpperImpl(DataType const& c)	{return toUpperChar<DataType>(c);		}

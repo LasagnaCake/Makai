@@ -10,9 +10,14 @@ Archive::~Archive() {
 	close();
 }
 
+static CTL::Random::Engine::Secure& rng() {
+	static CTL::Random::Engine::Secure r;
+	return r;
+}
+
 String Block::createFor(Encryption const mode) {
 	switch (mode) {
-		case Encryption::PE_NONE: return "";
+		case Encryption::PE_NO_ENCRYPTION: return "";
 		case Encryption::PE_AES256: {
 			String str;
 			str.resize(16, 0);
@@ -24,30 +29,34 @@ String Block::createFor(Encryption const mode) {
 	return "";
 }
 
-Nullable<Archive::LoadError> Archive::open(String const& passHash, Source&& inx, Destination&& outx, PackInfo const& info) {
+Nullable<Archive::LoadError> Archive::open(String const& passkey, Source&& inx, Destination&& outx, Nullable<PackInfo> const& info) {
 	if (isOpen) return LoadError::PLE_ALREADY_OPEN;
 	inBuf.clear();
 	outBuf.clear();
-	pass = passHash;
-	in = inx;
-	out = outx;
+	key = passkey;
+	if (inx)	in = move(inx);
+	if (outx)	out = move(outx);
 	if (in) {
 		auto const pp = Header<PackInfo>::build(*in);
 		if (!pp) return LoadError::PLE_BROKEN_HEADER;
-		if (pack = Header<PackInfo>(*pp).fromBytes(*in)) {
-			if (FILE_FORMAT_VERSION.major < pack->version.major)
-			if (auto const dir = unpack(pack->directory)) {
-				auto const files = unpack(dir->files);
-				auto const names = unpack<Bytes<>>(dir->names);
+		if ((pack = Header<PackInfo>(*pp).fromBytes(*in))) {
+			if (FILE_FORMAT_VERSION.major < pack.value().version.major)
+				return LoadError::PLE_FILE_IS_TOO_NEW;
+			if (auto const dir = pack.value().directory.fromBytes(*in)) {
+				auto const ddx = dir.value();
+				auto const files = unpack(ddx.files, *in);
+				auto const names = unpack<String>(ddx.names, *in);
 				if (files && names) {
 					auto const fx = *files;
 					auto const nx = *names;
+					auto const bbx = ddx.block.fromBytes<String>(*in);
 					for (usize i = 0; i < Math::lowest(fx.size(), nx.size()); ++i) {
-						decrypt(nx[i], dir.block, pass, dir.mode.encryption).then([&] (auto const e) {
-							decompress(e, dir.mode.compression, dir.mode.level).then([&] (auto const ex) {
-								inBuf[UTF8String(ex)] = files[i];
-							});
-						});
+						auto const q = nx[i].toBytes();
+						unpack(q.span(), bbx, hash, ddx.mode.encryption, ddx.mode.compression, ddx.mode.level)
+							.then([&] (auto const ex) {
+								inBuf[UTF8String::fromBytes(ex)] = fx[i];
+							})
+						;
 					}
 				} else return LoadError::PLE_BROKEN_DIR_STRUCTURE;
 			} else return LoadError::PLE_BROKEN_DIR_HEADER;
@@ -59,55 +68,72 @@ Nullable<Archive::LoadError> Archive::open(String const& passHash, Source&& inx,
 	return null;
 }
 
-Result<Archive::FileEntry, Archive::GetError> Archive::tryGet(UTF8String const& path) {
+Nullable<Archive::LoadError> Archive::open(String const& passkey, Source&& inx) {
+	return open(passkey, move(inx), {}, null);
+}
+
+Nullable<Archive::LoadError> Archive::open(String const& passkey, Destination&& outx, PackInfo const& info) {
+	return open(passkey, {}, move(outx), info);
+}
+
+Nullable<Bytes<>> File::unpackFrom(BF::IReadable& reader, String const& key) const {
+	auto const bbx = block.fromBytes<String>(reader);
+	if (!bbx) return null;
+	auto const block = bbx.value();
+	if (auto const fdat = contents.fromBytes(reader)) {
+		Nullable<Bytes<>> fout;
+		fdat.then([&] (auto const& fe) {
+			if (fe.size() != packed) return;
+			unpack(fe.span(), block, key, mode.encryption, mode.compression, mode.level)
+				.then([&] (auto const& xe) {
+					fout = xe;
+				})
+			;
+		});
+		if (!fout) return null;
+		if (fout.value().size() != unpacked)
+			return null;
+		return fout;
+	} else return null;
+}
+
+Result<Archive::FileEntry, Archive::GetError> Archive::tryGet(UTF8String const& path) const {
 	if (!isOpen) return GetError::PGE_NOT_OPEN;
 	if (!in) return GetError::PGE_WRITE_ONLY;
 	if (outBuf.contains(path))
-		return inBuf[path].data;
+		return outBuf[path];
 	else if (inBuf.contains(path) && inBuf[path]) {
 		auto const fheader = *inBuf[path];
-		auto const bbx = fheader.block.fromBytes(*in);
-		if (!bbx) return GetError::PGE_BROKEN_FILE_HEADER;
-		auto const block + *bbx;
-		if (auto const fdat = fheader.contents.fromBytes(*in)) {
-			if (fdat->size() != fheader.compressed) return GetError::PGE_BROKEN_FILE;
-			Nullable<Bytes<>> fout;
-			fdat.then([&] (auto const& fe) {
-				decrypt(fe, block, hash, fheader.mode.encryption).then([&] (auto const& ce) {
-					decompress(ce, fheader.mode.compression, fheader.mode.level).then([&] (auto const& xe) {
-						fout = xe;
-					});
-				});
-			});
-			if (!fout) return GetError::PGE_BROKEN_FILE;
-			if (fout->size() != fheader.uncompressed)
-				return GetError::PGE_BROKEN_FILE;
-			return {*fout, fheader.mode};
+		if (auto const fdat = fheader.unpackFrom(*in, key)) {
+			FileEntry const fe = {*fdat, fheader.mode};
+			outBuf[path] = fe;
+			return fe;
 		} else return GetError::PGE_BROKEN_FILE;
 	} else return GetError::PGE_NO_FILE;
 }
 
 Nullable<Archive::AddError> Archive::tryAdd(UTF8String const& path, Archive::FileEntry const& file) {
-	if (!isOpen) return GetError::PAE_NOT_OPEN;
-	if (!out) return GetError::PAE_READ_ONLY;
+	if (!isOpen) return AddError::PAE_NOT_OPEN;
+	if (!out) return AddError::PAE_READ_ONLY;
 	inBuf[path] = null;
 	outBuf[path] = file;
 	return null;
 }
 
-Pack& remove(UTF8String const& path) {
+Archive& Archive::remove(UTF8String const& path) {
 	if (!isOpen) return *this;
 	inBuf.erase(path);
 	outBuf.erase(path);
 	return *this;
 }
 
-bool contains(UTF8String const& path) const {
+bool Archive::contains(UTF8String const& path) const {
 	if (!isOpen) return false;
 	return (inBuf.contains(path) or outBuf.contains(path));
 }
 
-UTF8StringList Archive::files() const {
+Nullable<UTF8StringList> Archive::files() const {
+	if (!isOpen) return null;
 	UTF8Dictionary<bool> checked;
 	for (auto const& [file, x]: inBuf)
 		if (x) checked[file] = true;
@@ -116,7 +142,7 @@ UTF8StringList Archive::files() const {
 	return checked.keys();
 }
 
-Pack& close() {
+Archive& Archive::close() {
 	if (!isOpen) return *this;
 	if (out) {
 		BF::Encoder<PackInfo> builder(*out);
@@ -126,27 +152,27 @@ Pack& close() {
 				builder.file = pack;
 				Directory dd;
 				List<Entry> files;
-				List<Byte<>> names;
+				List<Bytes<>> names;
 				auto const dblk = Block::createFor(fd.mode.encryption);
 				dd.block = builder.append(dblk);
-				for (auto const file: files()) {
+				for (auto const file: files().orElse({})) {
 					tryGet(file).then([&] (auto const& fd) {
-						File fzx {.uncompressed = fd.data.size(), .mode = fd.mode};
-						compress(fd.data, fd.mode.compression, fd.mode.level).then([&] (auto const cd) {
-							fzx.compressed = cd.size();
-							auto const blk = Block::createFor(fd.mode.encryption);
-							encrypt(cd, blk, pass, fd.mode.encryption).then([&] (auto const& ed) {
+						File fzx {.unpacked = fd.data.size(), .mode = fd.mode};
+						auto const blk = Block::createFor(fd.mode.encryption);
+						pack(fd.data.span(), blk, key, fd.mode.encryption, fd.mode.compression, fd.mode.level)
+							.then([&] (auto const cd) {
+								fzx.packed = cd.size();
+								fzx.data = builder.append(cd);
 								fzx.block = builder.append(blk);
-								fzx.data = builder.append(ed);
-							});
-						});
+							})
+						;
 						files.pushBack(builder.put(fzx));
-						compress(fd.name.toString().toBytes(), dd.mode.compression, dd.mode.level).then([&] (auto const cd) {
-							fzx.compressed = cd.size();
-							encrypt(cd, blk, pass, fd.mode.encryption).then([&] (auto const& ed) {
+						auto const fnb = fd.name.toString().toBytes();
+						pack(fnb.span(), blk, key, fd.mode.encryption, dd.mode.compression, dd.mode.level)
+							.then([&] (auto const& ed) {
 								names.pushBack(ed);
-							});
-						});
+							})
+						;
 					})
 				}
 				dd.files = builder.embed(files);

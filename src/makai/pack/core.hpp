@@ -6,13 +6,13 @@
 namespace Makai::Pack {
 	/// @brief Encryption method.
 	enum class Encryption: u16 {
-		PE_NONE,
+		PE_NO_ENCRYPTION,
 		PE_AES256
 	};
 
 	/// @brief Compression method.
 	enum class Compression: u16 {
-		PC_NONE,
+		PC_NO_COMPRESSION,
 		PC_ZIP
 	};
 
@@ -25,8 +25,8 @@ namespace Makai::Pack {
 	Nullable<Bytes<>> encrypt(
 		ConstByteSpan<> const&	data,
 		String const&			block,
-		String const&			password	= "",
-		Encryption const		method		= Encryption::PE_AES256
+		String const&			key		= "",
+		Encryption const		method	= Encryption::PE_AES256
 	);
 
 	/// @brief Decrypts data.
@@ -38,8 +38,8 @@ namespace Makai::Pack {
 	Nullable<Bytes<>> decrypt(
 		ConstByteSpan<> const&	data,
 		String const&			block,
-		String const&			password	= "",
-		Encryption const		method		= Encryption::PE_AES256
+		String const&			key		= "",
+		Encryption const		method	= Encryption::PE_AES256
 	);
 
 	/// @brief Compresses data.
@@ -61,6 +61,24 @@ namespace Makai::Pack {
 	Nullable<Bytes<>> decompress(
 		ConstByteSpan<> const&	data,
 		Compression const		method	= Compression::PC_ZIP,
+		uint8 const				level	= 9
+	);
+
+	Nullable<Bytes<>> pack(
+		ConstByteSpan<> const&	data,
+		String const&			block,
+		String const&			key		= "",
+		Encryption const		enc		= Encryption::PE_AES256,
+		Compression const		comp	= Compression::PC_ZIP,
+		uint8 const				level	= 9
+	);
+
+	Nullable<Bytes<>> unpack(
+		ConstByteSpan<> const&	data,
+		String const&			block,
+		String const&			key		= "",
+		Encryption const		enc		= Encryption::PE_AES256,
+		Compression const		comp	= Compression::PC_ZIP,
 		uint8 const				level	= 9
 	);
 
