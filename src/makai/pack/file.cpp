@@ -183,5 +183,7 @@ Archive& Archive::close() {
 			.end();
 	}
 	isOpen = false;
+	inBuf.clear();
+	outBuf.clear();
 	return *this;
 }

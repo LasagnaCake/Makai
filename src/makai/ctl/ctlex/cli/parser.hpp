@@ -42,22 +42,21 @@ namespace CLI {
 						while (current < count)
 							argx.pushBack(args[current++]);
 						opt.value = argx.toList<Data::Value>();
+					} else if (opt.key.size() > 2 && opt.key[1] == '*') {
+						++current;
+						StringList argx;
+						while (current < count) {
+							if (args[current][0] == '-') break;
+							argx.pushBack(args[current]);
+							++current;
+						}
+						opt.key = opt.key.substring(2);
+						opt.value = argx.toList<Data::Value>();
+						--current;
 					} else {
 						opt.key = opt.key.substring(1);
 						opt.value = true;
 					}
-				} else if (opt.key.front() == '+') {
-					++current;
-					StringList argx;
-					if (current < count) while (!(
-						args[current][0] == '+'
-					or	args[current][0] == '-'
-					)) {
-						if (current >= count) break;
-						argx.pushBack(args[current++]);
-					}
-					opt.key = opt.key.substring(1);
-					opt.value = argx.toList<Data::Value>();
 				}
 				return opt;
 			}

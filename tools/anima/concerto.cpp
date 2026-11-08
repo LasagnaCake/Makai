@@ -231,9 +231,9 @@ struct ConcertoMain: Makai::AMain {
 						project.type == Project::Type::AV2_TCPT_BIN_PROGRAM ? "-B" : "",
 						"-o",
 						Makai::OS::FS::currentDirectory() + "/output/" +  project.name,
-						"-s",
-						"[" + project.sources.join(" ") + (Makai::OS::FS::isDirectory("lib/.cache") ? " lib/.cache" : "") + "]"
-					)
+						"-*s"
+					).appendBack(project.sources)
+					.pushBack(Makai::OS::FS::isDirectory("lib/.cache") ? " lib/.cache" : "")
 				);
 			} break;
 			case Project::Type::AV2_TCPT_EXECUTABLE:
@@ -298,14 +298,16 @@ struct ConcertoMain: Makai::AMain {
 		if (Makai::Regex::contains(path, R"#(^https?:\/\/)#"))
 			package = Makai::FLOW::parse(Makai::Net::File::fetchText(path + "/package.flow"));
 		else if (Makai::Regex::contains(path, R"#(^cla:\/\/)#")) {
-			Makai::Tool::Arch::FileArchive arch;
-			arch.open(
-				Makai::Tool::Arch::FileArchive::Source::create<Makai::InputByteFileStream>(
+			Makai::Pack::Archive pa;
+			pa.open(
+				Makai::Data::hashed(PACKAGEKEY, Makai::Data::HashMode::HM_SHA3_256),
+				Makai::Pack::Archive::Source::create<Makai::InputByteFileStream>(
 					Makai::Regex::replace(path, R"#(^cla:\/\/)#", "")
-				),
-				Makai::Tool::Arch::hashPassword(PACKAGEKEY)
+				)
 			);
-			package = arch.getTextFile("project.flow");
+			if (auto const pk = pa.tryGet("project.flow"))
+				package = Makai::FLOW::parse(Makai::String::fromBytes(pk.value().value().data));
+			else error("Package [" + path + "] does not contain a valid 'project.flow'!");
 		} else
 			package = Makai::File::getText(path + "/project.flow");
 		if (global) {
@@ -380,27 +382,38 @@ struct ConcertoMain: Makai::AMain {
 	void installLibrary(Makai::String const& name, Makai::String const& source) {
 		auto const outPath = "lib/" + Makai::Regex::replace(name, "[^A-Za-z0-9_]", "_");
 		if (Makai::OS::FS::isDirectory(outPath)) return;
+		Makai::OS::FS::makeDirectory(Makai::OS::FS::sourceLocation() + "/.tmp");
 		Makai::OS::FS::makeDirectory(outPath);
 		if (Makai::Regex::contains(source, R"#(^https:\/\/)#")) {
 			auto const pz = Makai::Net::File::fetchBinary(source + "/package.cla");
-			Makai::Tool::Arch::FileArchive arch;
-			arch.open(
-				Makai::Tool::Arch::FileArchive::Source::create<Makai::InputMemoryStream>(
-					Makai::span(pz)
-				),
-				Makai::Tool::Arch::hashPassword(PACKAGEKEY)
+			Makai::File::saveBinary(Makai::OS::FS::sourceLocation() + "/.tmp/package.cla", pz);
+			Makai::OS::launch(
+				Makai::OS::FS::sourceLocation() + "/" + Makai::OS::FS::asExecutable("packer"),
+				Makai::OS::FS::currentDirectory(),
+				Makai::StringList::from(
+					"unpack",
+					Makai::OS::FS::sourceLocation() + "/.tmp/package.cla",
+					"-o",
+					outPath,
+					"-p",
+					PACKAGEKEY
+				)
 			);
-			arch.unpackTo(outPath);
+			Makai::OS::FS::remove(Makai::OS::FS::sourceLocation() + "/.tmp/package.cla");
 		}
-		else if (Makai::Regex::contains(source, R"#(^cla:\/\/)#")) {
-			Makai::Tool::Arch::FileArchive arch;
-			arch.open(
-				Makai::Tool::Arch::FileArchive::Source::create<Makai::InputByteFileStream>(
-					Makai::Regex::replace(source,R"#(^cla:\/\/)#","")
-				),
-				Makai::Tool::Arch::hashPassword(PACKAGEKEY)
+		else if (Makai::Regex::contains(source, R"#!(^cla:\/\/)#!")) {
+			Makai::OS::launch(
+				Makai::OS::FS::sourceLocation() + "/" + Makai::OS::FS::asExecutable("packer"),
+				Makai::OS::FS::currentDirectory(),
+				Makai::StringList::from(
+					"unpack",
+					Makai::Regex::replace(source, R"#!(^cla:\/\/)#!", ""),
+					"-o",
+					outPath,
+					"-p",
+					PACKAGEKEY
+				)
 			);
-			arch.unpackTo(outPath);
 		} else Makai::OS::FS::copy(source, outPath);
 	}
 
@@ -414,7 +427,18 @@ struct ConcertoMain: Makai::AMain {
 	void doExport(Makai::Data::Value const& args) {
 		Makai::OS::FS::copy("src", "export/src");
 		Makai::OS::FS::copy("project.flow", "export");
-		Makai::Tool::Arch::pack("output/package.cla", "export", PACKAGEKEY);
+		Makai::OS::launch(
+			Makai::OS::FS::sourceLocation() + "/" + Makai::OS::FS::asExecutable("packer"),
+			Makai::OS::FS::currentDirectory(),
+			Makai::StringList::from(
+				"pack",
+				"export",
+				"-o",
+				"output/package.cla",
+				"-p",
+				PACKAGEKEY
+			)
+		);
 	}
 
 	void run(Makai::Data::Value const& args) override {

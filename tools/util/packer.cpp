@@ -60,27 +60,24 @@ namespace Command {
 				.splitAtLast('/')
 				.back()
 		);
-		auto const source = f["__args"][1].getString();
-		auto const packRoot = packName.get<Makai::String>()
-			.replace('\\', '/')
-			.splitAtLast('/')
-			.back()
-		;
-		Makai::Pack::Archive pa;
-		pa.open(
-			Makai::Data::hashed(cfg["pass"].getString()),
-			Makai::Pack::Archive::Destination::create<Makai::OutputFileStream<Makai::Bytes<>>>(packName)
-		);
-		for (auto const& f: Makai::OS::FS::walkFiles(source)) {
-			auto const destPath = Makai::OS::FS::concat(
-				Makai::OS::FS::fileName(packName, true),
-				f.sliced(source.size())
+		auto const source = cfg["__args"][1].getString();
+		auto const packRoot = packName.replaced('\\', '/').splitAtLast('/').back();
+		Makai::Bytes<> outFile;
+		{
+			Makai::Pack::Archive pa;
+			pa.open(
+				Makai::Data::hashed(cfg["pass"].getString(), Makai::Data::HashMode::HM_SHA3_256),
+				Makai::Pack::Archive::Destination::create<Makai::Pack::BF::Writer>(outFile)
 			);
-			if (auto const e = pa.tryAdd(f, {.data = Makai::File::loadBinary(f)})) {
-				// TODO: Error handling
+			for (auto const& f: Makai::OS::FS::walkFiles(source)) {
+				auto const destPath = f.sliced(source.size());
+				if (auto const e = pa.tryAdd(destPath, {.data = Makai::File::loadBinary(f)})) {
+					// TODO: Error handling
+				}
 			}
+			pa.close();
 		}
-		pa.close();
+		Makai::File::saveBinary(packName, outFile);
 		DEBUGLN("Done!");
 	}
 
@@ -93,17 +90,22 @@ namespace Command {
 			"\\$\\{name\\}(\\.pack)?",
 			Makai::OS::FS::fileName(cfg["__args"][1], true)
 		);
-		Makai::Pack::Archive pa;
-		pa.open(
-			Makai::Data::hashed(cfg["pass"].getString()),
-			Makai::Pack::Archive::Source::create<Makai::InputFileStream<Makai::Bytes<>>>(cfg["__args"][1].getString())
-		);
-		for (auto const& f: pa.files()) {
-			pa.tryGet(f).then([] (auto const& fe) {
-				Makai::File::saveText(Makai::OS::FS::concatenate(outFolder, fe));
-			}).onError([] (auto const& e) {
-				// TODO: Error handling
+		{
+			Makai::Pack::Archive pa;
+			pa.open(
+				Makai::Data::hashed(cfg["pass"].getString(), Makai::Data::HashMode::HM_SHA3_256),
+				Makai::Pack::Archive::Source::create<Makai::InputFileStream<Makai::Bytes<>>>(cfg["__args"][1].getString())
+			);
+			pa.files().then([&] (auto const& files) {
+				for (auto const& f: files) {
+					pa.tryGet(f).then([&] (auto const& fe) {
+						Makai::File::saveBinary(Makai::OS::FS::concatenate(outFolder, f), fe.data);
+					}).onError([] (auto const& e) {
+						// TODO: Error handling
+					});
+				}
 			});
+			pa.close();
 		}
 		DEBUGLN("Done!");
 	}
@@ -111,23 +113,23 @@ namespace Command {
 	static void doKeygen(Makai::Data::Value const& cfg) {
 		DEBUGLN("Generating keyfile...");
 		usize sz = srng.number<usize>(32, 64);
-		CTL::String const pkid = CTL::toString("PASSKEY_ID", srng.integer<usize>(), "EX");
-		CTL::String keyfile = "";
-		keyfile += CTL::toString(
-			"#ifndef ", pkid, "_H\n",
-			"#define ", pkid, "_H\n",
-			"#include <makai/makai.hpp>\n"
-		);
-		keyfile += CTL::toString(
-			"constinit static CTL::Ex::ObfuscatedStaticString<",
-			sz
-			,"> const PASS_KEY = CTL::Ex::ObfuscatedStaticString<",
-			sz
-			,">(\""
-		);
-		CTL::String const passhash = Makai::Tool::Arch::hashPassword(cfg["pass"]);
+		CTL::String const passhash = Makai::Data::hashed(cfg["pass"].getString(), Makai::Data::HashMode::HM_SHA3_256);
 		DEBUGLN("Password hash size: ", passhash.size());
 		if (cfg["type"].getString() == "embed") {
+			CTL::String const pkid = CTL::toString("PASSKEY_ID", srng.integer<usize>(), "EX");
+			CTL::String keyfile = "";
+			keyfile += CTL::toString(
+				"#ifndef ", pkid, "_H\n",
+				"#define ", pkid, "_H\n",
+				"#include <makai/makai.hpp>\n"
+			);
+			keyfile += CTL::toString(
+				"constinit static CTL::Ex::ObfuscatedStaticString<",
+				sz
+				,"> const PASS_KEY = CTL::Ex::ObfuscatedStaticString<",
+				sz
+				,">(\""
+			);
 			for (char const c: passhash) {
 				std::stringstream stream;
 				stream << std::hex << (unsigned int)(unsigned char)(c);

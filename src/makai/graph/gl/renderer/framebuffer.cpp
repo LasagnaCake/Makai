@@ -135,12 +135,13 @@ Graph::DrawBuffer& Graph::DrawBuffer::create(uint32 const width, uint32 const he
 		0
 	);
 	// Setup buffers to use
-	unsigned int attachments[3] = {
+	unsigned int attachments[4] = {
 		GL_COLOR_ATTACHMENT0,
 		GL_COLOR_ATTACHMENT1,
-		GL_COLOR_ATTACHMENT2
+		GL_COLOR_ATTACHMENT2,
+		GL_COLOR_ATTACHMENT3
 	};
-	glDrawBuffers(3, attachments);
+	glDrawBuffers(4, attachments);
 	// Setup display rectangle
 	rect[0] = Vertex(-1, +1, 0, 0, 1);
 	rect[1] = Vertex(+1, +1, 0, 1, 1);

@@ -50,8 +50,8 @@ int main(int argc, char** argv) try {
 	Makai::CLI::Parser cli(argc, argv);
 	translationBase(cli.tl);
 	auto cfg = cli.parse(configBase());
-	auto const flx = cfg["src"].getArray().toList<Makai::String>();
-	Transformer::Import::importer = [dirs = flx] (auto const path) -> File {
+	auto const dirs = cfg["src"].getArray().toList<Makai::String>();
+	Transformer::Import::importer = [&dirs] (auto const path) -> File {
 		static Makai::Dictionary<File> cache;
 		if (path.empty()) throw Makai::Error::FailedAction("Module name is empty!");
 		if (cache.contains(path)) return cache[path];
@@ -90,7 +90,7 @@ int main(int argc, char** argv) try {
 		);
 		auto const outPath = Makai::OS::FS::currentDirectory() + "/" + outName;
 		DEBUGLN("Level: ", level);
-		DEBUGLN("Additional Sources: [\"", flx.join("\", \""), "\"]");
+		DEBUGLN("Additional Sources: [\"", dirs.join("\", \""), "\"]");
 		if (level == "parse-tree" || level == "parse") {
 			Makai::File::saveText(
 				outPath + ".bpt",
