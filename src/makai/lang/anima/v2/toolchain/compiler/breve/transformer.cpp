@@ -1483,6 +1483,7 @@ ATransformer::Result Expression::transform(Context& context, Node::Instance cons
 		case Node::Content::AV2_TANC_ASSERTION:			return context.transform<Assertion>(node);
 		case Node::Content::AV2_TANC_PROMOTION:			return context.transform<Promotion>(node);
 		case Node::Content::AV2_TANC_FILE_MODULE_DECL:	return context.transform<FileModule>(node);
+		case Node::Content::AV2_TANC_EXIT:				return context.transform<Exit>(node);
 		default: context.error("Unsupported expression!", node);
 	}
 }
