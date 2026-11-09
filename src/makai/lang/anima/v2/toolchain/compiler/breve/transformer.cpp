@@ -598,11 +598,6 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 				ov->methodOf = scope->type.asWeak();
 			if (ov->constructor)
 				type.constructors.pushBack(ov);
-			if (ov->scope->isPrivate())
-				privates.pushBack(ov->scope.asStrong());
-			else if (ov->scope->isProtected())
-				protecteds.pushBack(ov->scope.asStrong());
-			ov->scope->makePublic();
 		}
 		if (decl.scope->isPrivate())
 			privates.pushBack(decl.scope.asStrong());
@@ -2092,6 +2087,8 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 	if (!fn.scope->function)
 		context.error("Symbol is not a function!", node->leftSide);
 	auto& f = *fn.scope->function;
+	if (!fn.scope->isPublic())
+		context.error("Cannot call this function in this scope (function is not public)!");
 	Function::ArgTypes args;
 	Makai::List<Result> argResults;
 	usize const memspot = context.top()->impl->main.size();
@@ -2143,8 +2140,6 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 	}
 	auto& ov = *ovf;
 	++ov.fullImpl->uses;
-	if (!ov.scope->isPublic())
-		context.error("Cannot call this overload in this scope (overload is not public)!");
 	if (isMemFn) {
 		if (fn.isCompilable())
 			directArgs.insert(fn.direct, 0);
