@@ -556,8 +556,8 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	type.name = "__" + name.join("_") + node->name();
 	List<Namespace::VariableRef> defaulted;
 	List<Namespace::VariableRef> statics;
-	List<Namespace::VariableRef> privates;
-	List<Namespace::VariableRef> protecteds;
+	List<Namespace::Instance> privates;
+	List<Namespace::Instance> protecteds;
 	scope->type->def = TypeDecl::Definition::AV2_TCTD_STRUCT;
 	scope->type->flags.isStructure = true;
 	MAKAILIB_DEBUGLN_FULL("Parsing fields...");
@@ -571,14 +571,12 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		MAKAILIB_DEBUGLN_FULL("Field: ", var.name);
 		var.id = id;
 		if (var.scope->isPrivate())
-			privates.pushBack(decl.scope->variable);
+			privates.pushBack(var.scope.asStrong());
 		else if (var.scope->isProtected())
-			protecteds.pushBack(decl.scope->variable);
-		var.scope->makePublic();
+			protecteds.pushBack(var.scope.asStrong());
 		if (var.staticEntity)
-			statics.pushBack(decl.scope->variable);
-		if (var.scope->isPrivate())
-			type.explicitNew = true;
+			statics.pushBack(var.scope->variable);
+		var.scope->makePublic();
 	}
 	context.pop(name.size());
 	context.registerType(scope);
@@ -600,7 +598,17 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 				ov->methodOf = scope->type.asWeak();
 			if (ov->constructor)
 				type.constructors.pushBack(ov);
+			if (ov->scope->isPrivate())
+				privates.pushBack(ov->scope.asStrong());
+			else if (ov->scope->isProtected())
+				protecteds.pushBack(ov->scope.asStrong());
+			ov->scope->makePublic();
 		}
+		if (decl.scope->isPrivate())
+			privates.pushBack(decl.scope.asStrong());
+		else if (decl.scope->isProtected())
+			protecteds.pushBack(decl.scope.asStrong());
+		decl.scope->makePublic();
 		if (scope->subspaces.contains(fn.name))
 			context.error("Symbol with this name already exists!", method);
 		type.methods[fn.name] = decl.scope->function;
@@ -620,6 +628,11 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 				if (!ov->staticEntity)
 					ov->methodOf = scope->type.asWeak();
 			}
+			if (decl.scope->isPrivate())
+				privates.pushBack(decl.scope.asStrong());
+			else if (decl.scope->isProtected())
+				protecteds.pushBack(decl.scope.asStrong());
+			decl.scope->makePublic();
 			if (scope->subspaces.contains(fn.name))
 				context.error("Symbol with this name already exists!", property);
 		}
@@ -631,7 +644,17 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 					context.error("Missing appropriate [this] parameter!", property);
 				if (!ov->staticEntity)
 					ov->methodOf = scope->type.asWeak();
+				if (ov->scope->isPrivate())
+					privates.pushBack(ov->scope.asStrong());
+				else if (ov->scope->isProtected())
+					protecteds.pushBack(ov->scope.asStrong());
+				ov->scope->makePublic();
 			}
+			if (decl.scope->isPrivate())
+				privates.pushBack(decl.scope.asStrong());
+			else if (decl.scope->isProtected())
+				protecteds.pushBack(decl.scope.asStrong());
+			decl.scope->makePublic();
 			if (scope->subspaces.contains(fn.name))
 				context.error("Symbol with this name already exists!", property);
 		}
@@ -644,10 +667,11 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	for (auto& entry: doItLater)
 		context.getExpression(entry);
 	context.pop(implName.size());
-	for (auto& var: privates)
-		var->scope->makePrivate();
-	for (auto& var: protecteds)
-		var->scope->makeProtected();
+	for (auto& scope: privates)
+		scope->makePrivate();
+	for (auto& scope: protecteds)
+		scope->makeProtected();
+	if (privates.size()) type.explicitNew = true;
 	return rett;
 }
 
@@ -1020,7 +1044,7 @@ ATransformer::Result PrefixExpression::transform(Context& context, Node::Instanc
 		}
 		MAKAILIB_DEBUGLN_FULL("~~~~~~~~~~~~~ Transfer Mode: [", mod, "]");
 		if (val.scope && val.scope->variable) {
-			if (!val.scope->isPublic()) context.error("Variable is not public!", node);
+			if (!val.scope->isPublic()) context.error("Token is not public!", node);
 			if (val.scope->variable->isConstant && node->base.text != "copy")
 				context.error("Constants can only be copied!", node);
 			val.scope->variable->setFillState(node->base.text != "move");
@@ -1369,7 +1393,7 @@ ATransformer::Result PathExpression::transform(Context& context, Node::Instance 
 		auto const [path, ns] = resolve(context, node);
 		if (!ns)
 			context.error("Symbol does not exist!", node);
-		if (!ns->isPublic()) context.error("Variable is not public!", node);
+		if (!ns->isPublic()) context.error("Token is not public!", node);
 		result.source = addToStack(context, ns.asStrong(), node);
 		if (ns->variable) {
 			result.type		= ns->variable->type.asStrong();
@@ -2119,6 +2143,8 @@ ATransformer::Result Call::transform(Context& context, Node::Instance const& nod
 	}
 	auto& ov = *ovf;
 	++ov.fullImpl->uses;
+	if (!ov.scope->isPublic())
+		context.error("Cannot call this overload in this scope (overload is not public)!");
 	if (isMemFn) {
 		if (fn.isCompilable())
 			directArgs.insert(fn.direct, 0);
