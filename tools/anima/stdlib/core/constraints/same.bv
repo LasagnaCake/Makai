@@ -3,3 +3,5 @@ using import core.types
 with module Is
 
 kind Same[A, B] => #A == #B
+
+kind Not[A, B] => #A != #B
