@@ -918,11 +918,20 @@ void Engine::doBinaryOperation(Operator const op) {
 
 template <class T>
 static bool uopIt(Object::Storage const& out, Object::Storage const& lhs, Operator const op, Runtime::Environment& env) {
-	switch (op) {
-		using enum Operator;
-		case AV2_UOP_NEGATE:	*out = *env.newValue<T>(-lhs->to<T>());						return true;
-		case AV2_UOP_INVERSE:	*out = *env.newValue<T>(Makai::Cast::as<T>(1) / lhs->to<T>());	return true;
-		default: break;
+	if constexpr (Makai::Type::OneOf<T, String, UTF8String, UTF32String>) {
+		switch (op) {
+			using enum Operator;
+			case AV2_UOP_TOSTRING:	*out = *env.newValue<UTF8String>(lhs->to<T>()); return true;
+			default: break;
+		}
+	} else {
+		switch (op) {
+			using enum Operator;
+			case AV2_UOP_NEGATE:	*out = *env.newValue<T>(-lhs->to<T>());							return true;
+			case AV2_UOP_INVERSE:	*out = *env.newValue<T>(Makai::Cast::as<T>(1) / lhs->to<T>());	return true;
+			case AV2_UOP_TOSTRING:	*out = *env.newValue<UTF8String>(lhs->serialize().toString());	return true;
+			default: break;
+		}
 	}
 	if constexpr (Makai::Type::Ex::Math::Vector::Vector<T>) {
 		switch (op) {
@@ -988,6 +997,7 @@ void Engine::doUnaryOperation(Operator const op) {
 	else if (lhs->isSigned())		success = uopIt<int64>(out, lhs, op, *env);
 	else if (lhs->isNumber())		success = uopIt<double>(out, lhs, op, *env);
 	else if (lhs->isAlgebraic())	success = uopIt<Vector4>(out, lhs, op, *env);
+	else if (lhs->isString())		success = uopIt<UTF8String>(out, lhs, op, *env);
 	else if (lhs->isArray())		success = arrayUopIt(lhs, op, *env);
 	if (!success) {
 		if (inStrictMode())
@@ -1322,6 +1332,7 @@ void Engine::v2Op() {
 			return doUnaryOperation(op.op);
 		else return doBinaryOperation(op.op);
 	}
+	if (op.op = Operator::AV2_UOP_TOSTRING) return doUnaryOperation(op.op);
 	if (op.op == Operator::AV2_UOP_LOGIC_NOT && !(op.count % 2))
 		return;
 	if (
