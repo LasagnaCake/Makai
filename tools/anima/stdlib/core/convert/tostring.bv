@@ -9,6 +9,10 @@ if false {
 		toString :: (self: Self) -> string
 	}
 
+	extend string with ToString {
+		toString :: (self: Self) => self
+	}
+
 	extend [T: Is.Basic] T with ToString {
 		toString :: (self: Self) => $"{self}"
 	}
