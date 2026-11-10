@@ -671,6 +671,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 }
 
 ATransformer::Result TraitDecl::transform(Context& context, Node::Instance const& node) {
+	context.error("Traits are currently in the works, sorry :/");
 	if (!node->leftSide)
 		context.error("Expected declaration name here!");
 	auto const name = context.pathOf(node->leftSide);
