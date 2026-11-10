@@ -3361,10 +3361,13 @@ ATransformer::Result TryBlock::transform(Context& context, Node::Instance const&
 }
 
 ATransformer::Result StringInterpolation::transform(Context& context, Node::Instance const& node) {
-	StringList parts = node->value.size() ? node->value.getArray().toList<String>([] (auto const& e) {return e.getString();}) : StringList();
+	StringList parts;
+	if (node->value.isArray())
+		parts = node->value.getArray().toList<String>([] (auto const& e) {return e.getString();});
 	List<Result> stack;
 	parts.reverse();
-	UTF8String base = parts.size() ? parts.popBack() : UTF8String();
+	UTF8String base;
+	if (parts.size()) base = parts.popBack();
 	usize const count = node->children.size();
 	for (usize i = 0; i < count; ++i) {
 		auto const expr = context.getExpression(node->children[i]);
@@ -3378,7 +3381,8 @@ ATransformer::Result StringInterpolation::transform(Context& context, Node::Inst
 				context.impl()->writeMainLine("push", expr.source.value());
 			else if (expr.isStackTop() && expr.isCopied())
 				context.impl()->writeMainLine("copy", *expr.source, "-> top");
-			context.impl()->writeMainLine("op strfy");
+			if (expr.type != context.basicType("string"))
+				context.impl()->writeMainLine("op strfy");
 			if (base.size())
 				context.impl()->writeMainLine("push", base);
 			base.clear();
