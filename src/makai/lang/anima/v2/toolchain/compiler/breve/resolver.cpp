@@ -1160,7 +1160,7 @@ Node::Instance StringInterpolationResolver::resolve(Parser& parser, Node::Instan
 		} else current.pushBack(str[i]);
 	}
 	parts.pushBack(current);
-	result->value = parts.toList<Makai::Data::Value>([] (auto const& e) {return e.toString();});
+	result->value = parts.toList<Makai::Data::Value>([] (auto const& e) -> Makai::Data::Value {return e.toString();});
 	return result;
 }
 
