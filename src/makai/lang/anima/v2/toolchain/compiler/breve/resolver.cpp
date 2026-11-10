@@ -1019,7 +1019,7 @@ Node::Instance PromotionResolver::resolve(Parser& parser, Node::Instance const& 
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_PROMOTION;
 	if (parser.context.peek().type == LTS_TT_QUESTION)
-		result->base = parser.context.next();
+		result->base = parser.context.next().token();
 	else result->leftSide = parser.nextExpression();
 	return result;
 }
@@ -1120,7 +1120,18 @@ Node::Instance StringInterpolationResolver::resolve(Parser& parser, Node::Instan
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_STRING_INTERPOLATION;
-	auto const str = Makai::UTF8String(parser.context.getNext(LTS_TT_STRING).getString());
+	if (!(
+		parser.context.peek().type == LTS_TT_SINGLE_QUOTE_STRING
+	or	parser.context.peek().type == LTS_TT_DOUBLE_QUOTE_STRING
+	or	parser.context.peek().type == LTS_TT_BACKTICK_STRING
+	or	parser.context.peek().type == LTS_TT_FR_SINGLE_QUOTE_STRING
+	or	parser.context.peek().type == LTS_TT_FR_DOUBLE_QUOTE_STRING
+	or	parser.context.peek().type == LTS_TT_JP_SINGLE_QUOTE_STRING
+	or	parser.context.peek().type == LTS_TT_JP_DOUBLE_QUOTE_STRING
+	)) {
+
+	}
+	auto const str = Makai::UTF8String(parser.context.next().token().value.getString());
 	result->value = str.toString();
 	Makai::UTF8String current;
 	Makai::UTF8StringList parts;
