@@ -918,7 +918,7 @@ void Engine::doBinaryOperation(Operator const op) {
 
 template <class T>
 static bool uopIt(Object::Storage const& out, Object::Storage const& lhs, Operator const op, Runtime::Environment& env) {
-	if constexpr (Makai::Type::OneOf<T, String, UTF8String, UTF32String>) {
+	if constexpr (Makai::Type::OneOf<T, Makai::String, Makai::UTF8String, Makai::UTF32String>) {
 		switch (op) {
 			using enum Operator;
 			case AV2_UOP_TOSTRING:	*out = *env.newValue<UTF8String>(lhs->to<T>()); return true;
