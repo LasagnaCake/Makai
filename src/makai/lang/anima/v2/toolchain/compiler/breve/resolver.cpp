@@ -362,7 +362,7 @@ Node::Instance ExtensionResolver::resolve(Parser& parser, Node::Instance const& 
 		or	id == "not"
 		) {
 			parser.context.next();
-			result->middle = context.nextExpression();
+			result->middle = parser.nextExpression();
 			if (id == "not") {
 				result->value = true;
 				return result;
