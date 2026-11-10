@@ -357,8 +357,17 @@ Node::Instance ExtensionResolver::resolve(Parser& parser, Node::Instance const& 
 		parser.context.error("Invalid expression for extension!");
 	if (parser.context.peek().type == LTS_TT_IDENTIFIER) {
 		auto const id = parser.context.peek().value.getString();
-		if (id == "with")
+		if (
+			id == "with"
+		or	id == "not"
+		) {
 			parser.context.next();
+			result->middle = context.nextExpression();
+			if (id == "not") {
+				result->value = true;
+				return result;
+			}
+		}
 	}
 	result->rightSide = parser.nextExpression();
 	if (!result->rightSide->isDeclarationOrBlock())

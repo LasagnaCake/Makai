@@ -14,6 +14,6 @@ if false {
 	}
 
 	extend [T: Is.Basic] T with ToString {
-		toString :: (self: Self) => $"{self}"
+		toString :: (self: Self) => if Is.Not[T, string] $"{self}" else self
 	}
 }

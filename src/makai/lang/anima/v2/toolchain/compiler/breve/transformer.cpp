@@ -2753,8 +2753,13 @@ ATransformer::Result TypeExtension::transform(Context& context, Node::Instance c
 	auto const type = context.getType(node->leftSide);
 	AsNonConst<decltype(type)> trait;
 	context.scopeStack.pushBack(type.type->scope.asStrong());
+	if (node->templateDecl) {
+		// TODO: This
+		context.error("Generic extensions are not yet implemented, my apologies :/");
+	}
 	if (node->middle) {
 		// TODO: This
+		context.error("Traited extensions are not yet implemented, my apologies :/");
 	}
 	for (auto& extension: node->children) {
 		auto const ext = context.getExpression(extension);
@@ -2776,6 +2781,8 @@ ATransformer::Result TypeExtension::transform(Context& context, Node::Instance c
 				ov->variant = Function::Overload::Variant::Object::AV2_TCB_FO_VO_CLASS;
 			}
 		} else if (ns->property) {
+
+		} else if (ns->type) {
 
 		} else if (ns->isPureNamespace())
 			context.error("This type of declaration is disallowed in this context!", extension);
