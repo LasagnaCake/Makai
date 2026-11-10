@@ -436,6 +436,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	struct TraitDecl: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
+
+	struct StringInterpolation: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
 }
 
 #endif

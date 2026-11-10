@@ -29,6 +29,7 @@ namespace Makai::Anima::V2::Core {
 		AV2_UOP_SQRT,
 		AV2_UOP_LENGTH,
 		AV2_UOP_POP,
+		AV2_UOP_TOSTRING,
 		AV2_BOP_START = 1 << 6,
 		AV2_BOP_ADD = AV2_BOP_START,
 		AV2_BOP_SUB,

@@ -358,6 +358,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		virtual ~TryResolver() {}
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
+
+	struct StringInterpolationResolver: AResolver {
+		StringInterpolationResolver(): AResolver() {}
+		virtual ~StringInterpolationResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
 }
 
 #endif

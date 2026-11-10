@@ -2887,6 +2887,8 @@ ATransformer::Result NullDecay::transform(Context& context, Node::Instance const
 
 ATransformer::Result Evaluation::transform(Context& context, Node::Instance const& node) {
 	ATransformer::Result result;
+	if (node->value.isString())
+		return context.getExpression(context.evaluate(node->value.getString()));
 	auto const lhs = context.getExpression(node);
 	if (lhs.isCompilable() && lhs.direct.isString())
 		return context.getExpression(context.evaluate(lhs.direct.getString()));
@@ -3356,6 +3358,40 @@ ATransformer::Result TryBlock::transform(Context& context, Node::Instance const&
 		context.impl()->writeMainLine(tryScope->compose()->toString());
 		return {.source = {"move top"}, .type = resultType, .likelihood = likelihood, .mayBeEmpty = mayBeEmpty or !node->rightSide};
 	}
+}
+
+ATransformer::Result StringInterpolation::transform(Context& context, Node::Instance const& node) {
+	StringList parts = node->value.getArray().toList<String>([] (auto const& e) {return e.getString();});
+	List<Result> stack;
+	parts.reverse();
+	UTF8String base = parts.popBack();
+	usize const count = node->children.size();
+	for (usize i = 0; i < count; ++i) {
+		auto const expr = context.getExpression(node->children[i]);
+		if (!expr.direct.isUndefined()) {
+			base += expr.direct.isString() ? expr.direct.getString() : expr.direct.toString();
+			if (parts.size()) base += parts.popBack();
+		} else {
+			if (expr.mayBeEmpty)
+				context.error("One or more paths may not return a value!");
+			if (expr.shouldBePushed())
+				context.impl()->writeMainLine("push", then.source.value());
+			else if (expr.isStackTop() && expr.isCopied())
+				context.impl()->writeMainLine("copy", *then.source, "-> top");
+			context.impl()->writeMainLine("op strfy");
+			if (base.size())
+				context.impl()->writeMainLine("push", base);
+			base.clear();
+			context.impl()->writeMainLine("swap");
+			if (parts.size()) base += parts.popBack();
+		}
+	}
+	if (stack.size()) {
+		if (base.size()) context.impl()->writeMainLine("push", base);
+		context.impl()->writeMainLine("op add [", stack.size() + !base.empty(), "] <str>");
+	}
+	if (stack.empty()) return {.source = {base.toString()}, .scope = type->scope.asStrong(), .type = context.basicType("string"), .direct = base.toString()};
+	else return {.source = {"move top"}, .scope = type->scope.asStrong(), .type = context.basicType("string")};
 }
 
 Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {
