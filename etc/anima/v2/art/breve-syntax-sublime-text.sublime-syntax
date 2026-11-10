@@ -28,15 +28,15 @@ contexts:
     - include: templates
 
   strings:
-    - match: '"'
+    - match: '\$?"'
       scope: punctuation.definition.string.begin.breve
       push: double_quoted_string
 
-    - match: "'"
+    - match: '\$?'''
       scope: punctuation.definition.string.begin.breve
       push: single_quoted_string
       
-    - match: '`'
+    - match: '\$?`'
       scope: punctuation.definition.string.begin.breve
       push: backtick_string
 
@@ -216,7 +216,7 @@ contexts:
     - match: '\b(enum)\b'
       scope: storage.type.enum
 
-    - match: '\b(extend|with|decl)\b'
+    - match: '\b(extend|with|eval)\b'
       scope: storage.type.impl
 
     - match: '\b(prop|module)\b'
@@ -227,11 +227,11 @@ contexts:
       scope: storage.type.breve
 
   escape_char:
-    - match: '\\.|\\u\{[0-9]+\}'
+    - match: '\\.|\\u\{[0-9]+\}|\{\{'
       scope: constant.character.escape.breve
 
   interpolations:
-    - match: '\$\{'
+    - match: '\{'
       scope: punctuation.section.interpolation.begin
       push: string_interpolation
 
@@ -239,7 +239,7 @@ contexts:
     - meta_scope: meta.string
     - include: breve
       scope: source.bv.embedded
-    - match: '\}\$'
+    - match: '\}'
       scope: punctuation.section.interpolation.end
       pop: true
 

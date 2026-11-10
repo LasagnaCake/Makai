@@ -2,6 +2,14 @@ using import core.types
 
 using import core.constraints.basic
 
-module Convert {
-	toString :: (what: Is.Basic) => (what as string)
+with module Convert
+
+if false {
+	trait ToString {
+		toString :: (self: Self) -> string
+	}
+
+	extend [T: Is.Basic] T with ToString {
+		toString :: (self: Self) => $"{self}"
+	}
 }

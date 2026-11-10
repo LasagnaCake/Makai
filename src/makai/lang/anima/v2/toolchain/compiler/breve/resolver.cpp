@@ -1136,7 +1136,7 @@ Node::Instance StringInterpolationResolver::resolve(Parser& parser, Node::Instan
 	Makai::UTF8String current;
 	Makai::UTF8StringList parts;
 	for (usize i = 0; i < str.size(); ++i) {
-		if (str[i] == Makai::UTF8Char{'$'}) {
+		if (str[i] != Makai::UTF8Char{'{'}) {
 			++i;
 			if (i >= str.size()) break;
 			if (str[i] != Makai::UTF8Char{'{'})
@@ -1148,9 +1148,8 @@ Node::Instance StringInterpolationResolver::resolve(Parser& parser, Node::Instan
 				while (
 					i < str.size()
 				&&	str[i] != Makai::UTF8Char{'}'}
-				&&	str[i+1] != Makai::UTF8Char{'$'}
 				) current.pushBack(str[++i]);
-				i += 2;
+				++i;
 				Node::Instance evalx = Node::Instance::create();
 				evalx->content = Node::Content::AV2_TANC_EVAL_BLOCK;
 				evalx->value = current.toString();
@@ -1160,7 +1159,14 @@ Node::Instance StringInterpolationResolver::resolve(Parser& parser, Node::Instan
 		} else current.pushBack(str[i]);
 	}
 	parts.pushBack(current);
-	result->value = parts.toList<Makai::Data::Value>([] (auto const& e) -> Makai::Data::Value {return e.toString();});
+	bool complex = false;
+	for (auto& part: parts) {
+		if (part.size()) {
+			complex = true;
+			break;
+		}
+	}
+	if (complex) result->value = parts.toList<Makai::Data::Value>([] (auto const& e) -> Makai::Data::Value {return e.toString();});
 	return result;
 }
 

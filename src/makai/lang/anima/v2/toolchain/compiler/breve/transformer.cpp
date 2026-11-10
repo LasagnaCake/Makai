@@ -3361,10 +3361,10 @@ ATransformer::Result TryBlock::transform(Context& context, Node::Instance const&
 }
 
 ATransformer::Result StringInterpolation::transform(Context& context, Node::Instance const& node) {
-	StringList parts = node->value.getArray().toList<String>([] (auto const& e) {return e.getString();});
+	StringList parts = node->value.size() ? node->value.getArray().toList<String>([] (auto const& e) {return e.getString();}) : StringList();
 	List<Result> stack;
 	parts.reverse();
-	UTF8String base = parts.popBack();
+	UTF8String base = parts.size() ? parts.popBack() : UTF8String();
 	usize const count = node->children.size();
 	for (usize i = 0; i < count; ++i) {
 		auto const expr = context.getExpression(node->children[i]);
@@ -3382,13 +3382,16 @@ ATransformer::Result StringInterpolation::transform(Context& context, Node::Inst
 			if (base.size())
 				context.impl()->writeMainLine("push", base);
 			base.clear();
-			context.impl()->writeMainLine("swap");
-			if (parts.size()) base += parts.popBack();
+			if (parts.size()) {
+				context.impl()->writeMainLine("swap");
+				base += parts.popBack();
+			}
 		}
 	}
 	if (stack.size()) {
 		if (base.size()) context.impl()->writeMainLine("push", base);
-		context.impl()->writeMainLine("op add [", stack.size() + !base.empty(), "] <str>");
+		if (stack.size() > 1)
+			context.impl()->writeMainLine("op add [", stack.size() + !base.empty() - 1, "] <str>");
 	}
 	auto const strType = context.basicType("string");
 	if (stack.empty()) return {.source = {base.toString()}, .scope = strType->scope.asStrong(), .type = strType, .direct = base.toString()};
