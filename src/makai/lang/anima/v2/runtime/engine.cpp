@@ -1224,17 +1224,17 @@ void Engine::fastUnaryOperation(Operator const op, BasicType const type) {
 		case Runtime::BasicType::AV2_BT_INT8:		fuopu<int8>(val->data(), op);	break;
 		case Runtime::BasicType::AV2_BT_UINT8:		fuopu<uint8>(val->data(), op);	break;
 		case Runtime::BasicType::AV2_BT_INT16:		fuopu<int16>(val->data(), op);	break;
-		case Runtime::BasicType::AV2_BT_UINT16:	fuopu<uint16>(val->data(), op);	break;
+		case Runtime::BasicType::AV2_BT_UINT16:		fuopu<uint16>(val->data(), op);	break;
 		case Runtime::BasicType::AV2_BT_INT32:		fuopu<int32>(val->data(), op);	break;
 		case Runtime::BasicType::AV2_BT_CHAR:
-		case Runtime::BasicType::AV2_BT_UINT32:	fuopu<uint32>(val->data(), op);		break;
+		case Runtime::BasicType::AV2_BT_UINT32:		fuopu<uint32>(val->data(), op);		break;
 		case Runtime::BasicType::AV2_BT_INT64:		fuopu<int64>(val->data(), op);		break;
-		case Runtime::BasicType::AV2_BT_UINT64:	fuopu<uint64>(val->data(), op);		break;
-		case Runtime::BasicType::AV2_BT_REAL32:	fuopu<float32>(val->data(), op);	break;
-		case Runtime::BasicType::AV2_BT_REAL64:	fuopu<float64>(val->data(), op);	break;
+		case Runtime::BasicType::AV2_BT_UINT64:		fuopu<uint64>(val->data(), op);		break;
+		case Runtime::BasicType::AV2_BT_REAL32:		fuopu<float32>(val->data(), op);	break;
+		case Runtime::BasicType::AV2_BT_REAL64:		fuopu<float64>(val->data(), op);	break;
 		case Runtime::BasicType::AV2_BT_REAL128:	fuopu<float128>(val->data(), op);	break;
-		case Runtime::BasicType::AV2_BT_VECTOR:	fuopu<Vector4>(val->data(), op);	break;
-		case Runtime::BasicType::AV2_BT_MATRIX:	fuopu<Matrix4x4>(val->data(), op);	break;
+		case Runtime::BasicType::AV2_BT_VECTOR:		fuopu<Vector4>(val->data(), op);	break;
+		case Runtime::BasicType::AV2_BT_MATRIX:		fuopu<Matrix4x4>(val->data(), op);	break;
 		default: {
 			if (inStrictMode())
 				return crash(invalidOperationError("Invalid/Unsupported fast operator for the given values!"));
@@ -1332,7 +1332,7 @@ void Engine::v2Op() {
 			return doUnaryOperation(op.op);
 		else return doBinaryOperation(op.op);
 	}
-	if (op.op = Operator::AV2_UOP_TOSTRING) return doUnaryOperation(op.op);
+	if (op.op == Operator::AV2_UOP_TOSTRING) return doUnaryOperation(op.op);
 	if (op.op == Operator::AV2_UOP_LOGIC_NOT && !(op.count % 2))
 		return;
 	if (
@@ -1431,11 +1431,11 @@ void Engine::v2Compare() {
 			*env->top() = *env->newValue(Cast::as<int8>(order.order()));
 		break;
 		using enum Makai::StandardOrder;
-		case AV2_OP_EQUALS:			*env->top() = *env->newValue(order == EQUAL);		break;
-		case AV2_OP_NOT_EQUALS:		*env->top() = *env->newValue(order != EQUAL);		break;
+		case AV2_OP_EQUALS:			*env->top() = *env->newValue(order == EQUAL);	break;
+		case AV2_OP_NOT_EQUALS:		*env->top() = *env->newValue(order != EQUAL);	break;
 		case AV2_OP_GREATER_THAN:	*env->top() = *env->newValue(order == GREATER);	break;
-		case AV2_OP_GREATER_EQUALS:	*env->top() = *env->newValue(order != LESS);		break;
-		case AV2_OP_LESS_THAN:		*env->top() = *env->newValue(order == LESS);		break;
+		case AV2_OP_GREATER_EQUALS:	*env->top() = *env->newValue(order != LESS);	break;
+		case AV2_OP_LESS_THAN:		*env->top() = *env->newValue(order == LESS);	break;
 		case AV2_OP_LESS_EQUALS:	*env->top() = *env->newValue(order != GREATER);	break;
 	}
 	MAKAILIB_DEBUGLN_FULL("Result: ", env->top()->to<int64>());
