@@ -921,15 +921,15 @@ static bool uopIt(Object::Storage const& out, Object::Storage const& lhs, Operat
 	if constexpr (Makai::Type::OneOf<T, Makai::String, Makai::UTF8String, Makai::UTF32String>) {
 		switch (op) {
 			using enum Operator;
-			case AV2_UOP_TOSTRING:	*out = *env.newValue<UTF8String>(lhs->to<T>()); return true;
+			case AV2_UOP_TOSTRING:	*out = *env.newValue<Makai::UTF8String>(lhs->to<T>()); return true;
 			default: break;
 		}
 	} else {
 		switch (op) {
 			using enum Operator;
-			case AV2_UOP_NEGATE:	*out = *env.newValue<T>(-lhs->to<T>());							return true;
-			case AV2_UOP_INVERSE:	*out = *env.newValue<T>(Makai::Cast::as<T>(1) / lhs->to<T>());	return true;
-			case AV2_UOP_TOSTRING:	*out = *env.newValue<UTF8String>(lhs->serialize().toString());	return true;
+			case AV2_UOP_NEGATE:	*out = *env.newValue<T>(-lhs->to<T>());									return true;
+			case AV2_UOP_INVERSE:	*out = *env.newValue<T>(Makai::Cast::as<T>(1) / lhs->to<T>());			return true;
+			case AV2_UOP_TOSTRING:	*out = *env.newValue<Makai::UTF8String>(lhs->serialize().toString());	return true;
 			default: break;
 		}
 	}
