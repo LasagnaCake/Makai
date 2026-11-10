@@ -541,6 +541,12 @@ Node::Instance FunctionDeclResolver::resolve(Parser& parser, Node::Instance cons
 		parser.context.next();
 		result->templateDecl = ArrayResolver().resolve(parser, null, {});
 	}
+	if (parser.context.peek().type == LTS_TT_OPEN_CURLY) {
+		auto const fproto = result->middle = Node::Instance::create();
+		fproto->content = Node::Content::AV2_TANC_DECLARATION;
+		result->rightSide = parser.nextExpression();
+		return result;
+	}
 	result->middle = FunctionPrototypeResolver().resolve(parser, null, {});
 	if (result->middle->templateDecl) {
 		if (!result->templateDecl)
@@ -1012,7 +1018,9 @@ Node::Instance PromotionResolver::resolve(Parser& parser, Node::Instance const& 
 	Node::Instance result = Node::Instance::create();
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_PROMOTION;
-	result->leftSide = parser.nextExpression();
+	if (parser.context.peek().type == LTS_TT_QUESTION)
+		result->base = parser.context.next().token();
+	else result->leftSide = parser.nextExpression();
 	return result;
 }
 
@@ -1105,6 +1113,54 @@ Node::Instance MetaTransformationResolver::resolve(Parser& parser, Node::Instanc
 	result->leftSide = result->leftSide->leftSide;
 	parser.context.expectNext(LTS_TT_BIG_ARROW);
 	result->rightSide = parser.nextExpression();
+	return result;
+}
+
+Node::Instance StringInterpolationResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	Node::Instance result = Node::Instance::create();
+	result->base = token;
+	result->content = Node::Content::AV2_TANC_STRING_INTERPOLATION;
+	if (!(
+		parser.context.peek().type == LTS_TT_SINGLE_QUOTE_STRING
+	or	parser.context.peek().type == LTS_TT_DOUBLE_QUOTE_STRING
+	or	parser.context.peek().type == LTS_TT_BACKTICK_STRING
+	or	parser.context.peek().type == LTS_TT_FR_SINGLE_QUOTE_STRING
+	or	parser.context.peek().type == LTS_TT_FR_DOUBLE_QUOTE_STRING
+	or	parser.context.peek().type == LTS_TT_JP_SINGLE_QUOTE_STRING
+	or	parser.context.peek().type == LTS_TT_JP_DOUBLE_QUOTE_STRING
+	)) {
+
+	}
+	auto const str = Makai::UTF8String(parser.context.next().token().value.getString());
+	result->value = str.toString();
+	Makai::UTF8String current;
+	Makai::UTF8StringList parts;
+	for (usize i = 0; i < str.size(); ++i) {
+		if (str[i] == Makai::UTF8Char{'$'}) {
+			++i;
+			if (i >= str.size()) break;
+			if (str[i] != Makai::UTF8Char{'{'})
+				current.pushBack(str[--i]);
+			else {
+				parts.pushBack(current);
+				current = "";
+				++i;
+				while (
+					i < str.size()
+				&&	str[i] != Makai::UTF8Char{'}'}
+				&&	str[i+1] != Makai::UTF8Char{'$'}
+				) current.pushBack(str[++i]);
+				i += 2;
+				Node::Instance evalx = Node::Instance::create();
+				evalx->content = Node::Content::AV2_TANC_EVAL_BLOCK;
+				evalx->value = current.toString();
+				result->children.pushBack(evalx);
+				current = "";
+			}
+		} else current.pushBack(str[i]);
+	}
+	parts.pushBack(current);
+	result->value = parts.toList<Makai::Data::Value>([] (auto const& e) -> Makai::Data::Value {return e.toString();});
 	return result;
 }
 

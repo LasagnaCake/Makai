@@ -918,11 +918,20 @@ void Engine::doBinaryOperation(Operator const op) {
 
 template <class T>
 static bool uopIt(Object::Storage const& out, Object::Storage const& lhs, Operator const op, Runtime::Environment& env) {
-	switch (op) {
-		using enum Operator;
-		case AV2_UOP_NEGATE:	*out = *env.newValue<T>(-lhs->to<T>());						return true;
-		case AV2_UOP_INVERSE:	*out = *env.newValue<T>(Makai::Cast::as<T>(1) / lhs->to<T>());	return true;
-		default: break;
+	if constexpr (Makai::Type::OneOf<T, Makai::String, Makai::UTF8String, Makai::UTF32String>) {
+		switch (op) {
+			using enum Operator;
+			case AV2_UOP_TOSTRING:	*out = *env.newValue<Makai::UTF8String>(lhs->to<T>()); return true;
+			default: break;
+		}
+	} else {
+		switch (op) {
+			using enum Operator;
+			case AV2_UOP_NEGATE:	*out = *env.newValue<T>(-lhs->to<T>());									return true;
+			case AV2_UOP_INVERSE:	*out = *env.newValue<T>(Makai::Cast::as<T>(1) / lhs->to<T>());			return true;
+			case AV2_UOP_TOSTRING:	*out = *env.newValue<Makai::UTF8String>(lhs->serialize().toString());	return true;
+			default: break;
+		}
 	}
 	if constexpr (Makai::Type::Ex::Math::Vector::Vector<T>) {
 		switch (op) {
@@ -988,6 +997,7 @@ void Engine::doUnaryOperation(Operator const op) {
 	else if (lhs->isSigned())		success = uopIt<int64>(out, lhs, op, *env);
 	else if (lhs->isNumber())		success = uopIt<double>(out, lhs, op, *env);
 	else if (lhs->isAlgebraic())	success = uopIt<Vector4>(out, lhs, op, *env);
+	else if (lhs->isString())		success = uopIt<UTF8String>(out, lhs, op, *env);
 	else if (lhs->isArray())		success = arrayUopIt(lhs, op, *env);
 	if (!success) {
 		if (inStrictMode())
@@ -1214,17 +1224,17 @@ void Engine::fastUnaryOperation(Operator const op, BasicType const type) {
 		case Runtime::BasicType::AV2_BT_INT8:		fuopu<int8>(val->data(), op);	break;
 		case Runtime::BasicType::AV2_BT_UINT8:		fuopu<uint8>(val->data(), op);	break;
 		case Runtime::BasicType::AV2_BT_INT16:		fuopu<int16>(val->data(), op);	break;
-		case Runtime::BasicType::AV2_BT_UINT16:	fuopu<uint16>(val->data(), op);	break;
+		case Runtime::BasicType::AV2_BT_UINT16:		fuopu<uint16>(val->data(), op);	break;
 		case Runtime::BasicType::AV2_BT_INT32:		fuopu<int32>(val->data(), op);	break;
 		case Runtime::BasicType::AV2_BT_CHAR:
-		case Runtime::BasicType::AV2_BT_UINT32:	fuopu<uint32>(val->data(), op);		break;
+		case Runtime::BasicType::AV2_BT_UINT32:		fuopu<uint32>(val->data(), op);		break;
 		case Runtime::BasicType::AV2_BT_INT64:		fuopu<int64>(val->data(), op);		break;
-		case Runtime::BasicType::AV2_BT_UINT64:	fuopu<uint64>(val->data(), op);		break;
-		case Runtime::BasicType::AV2_BT_REAL32:	fuopu<float32>(val->data(), op);	break;
-		case Runtime::BasicType::AV2_BT_REAL64:	fuopu<float64>(val->data(), op);	break;
+		case Runtime::BasicType::AV2_BT_UINT64:		fuopu<uint64>(val->data(), op);		break;
+		case Runtime::BasicType::AV2_BT_REAL32:		fuopu<float32>(val->data(), op);	break;
+		case Runtime::BasicType::AV2_BT_REAL64:		fuopu<float64>(val->data(), op);	break;
 		case Runtime::BasicType::AV2_BT_REAL128:	fuopu<float128>(val->data(), op);	break;
-		case Runtime::BasicType::AV2_BT_VECTOR:	fuopu<Vector4>(val->data(), op);	break;
-		case Runtime::BasicType::AV2_BT_MATRIX:	fuopu<Matrix4x4>(val->data(), op);	break;
+		case Runtime::BasicType::AV2_BT_VECTOR:		fuopu<Vector4>(val->data(), op);	break;
+		case Runtime::BasicType::AV2_BT_MATRIX:		fuopu<Matrix4x4>(val->data(), op);	break;
 		default: {
 			if (inStrictMode())
 				return crash(invalidOperationError("Invalid/Unsupported fast operator for the given values!"));
@@ -1322,6 +1332,7 @@ void Engine::v2Op() {
 			return doUnaryOperation(op.op);
 		else return doBinaryOperation(op.op);
 	}
+	if (op.op == Operator::AV2_UOP_TOSTRING) return doUnaryOperation(op.op);
 	if (op.op == Operator::AV2_UOP_LOGIC_NOT && !(op.count % 2))
 		return;
 	if (
@@ -1420,11 +1431,11 @@ void Engine::v2Compare() {
 			*env->top() = *env->newValue(Cast::as<int8>(order.order()));
 		break;
 		using enum Makai::StandardOrder;
-		case AV2_OP_EQUALS:			*env->top() = *env->newValue(order == EQUAL);		break;
-		case AV2_OP_NOT_EQUALS:		*env->top() = *env->newValue(order != EQUAL);		break;
+		case AV2_OP_EQUALS:			*env->top() = *env->newValue(order == EQUAL);	break;
+		case AV2_OP_NOT_EQUALS:		*env->top() = *env->newValue(order != EQUAL);	break;
 		case AV2_OP_GREATER_THAN:	*env->top() = *env->newValue(order == GREATER);	break;
-		case AV2_OP_GREATER_EQUALS:	*env->top() = *env->newValue(order != LESS);		break;
-		case AV2_OP_LESS_THAN:		*env->top() = *env->newValue(order == LESS);		break;
+		case AV2_OP_GREATER_EQUALS:	*env->top() = *env->newValue(order != LESS);	break;
+		case AV2_OP_LESS_THAN:		*env->top() = *env->newValue(order == LESS);	break;
 		case AV2_OP_LESS_EQUALS:	*env->top() = *env->newValue(order != GREATER);	break;
 	}
 	MAKAILIB_DEBUGLN_FULL("Result: ", env->top()->to<int64>());

@@ -932,7 +932,12 @@ static void doOperation(Context& context) {
 	else if (op == "lnot")	bop.op = Operator::AV2_UOP_LOGIC_NOT;
 	else if (op == "bnot")	bop.op = Operator::AV2_UOP_BIT_NOT;
 	else if (op == "apop")	bop.op = Operator::AV2_UOP_POP;
+	else if (op == "strfy")	bop.op = Operator::AV2_UOP_TOSTRING;
 	else context.error("Invalid/Unsupported operation!");
+	if (context.peek().type == LTS_TT_OPEN_BRACKET) {
+		bop.count = context.expectNext(LTS_TT_OPEN_BRACKET).getNext(LTS_TT_INTEGER, "repetition count").getUnsigned();
+		context.expectNext(LTS_TT_CLOSE_BRACKET);
+	}
 	if (context.peek().type == LTS_TT_LESS_THAN) {
 		bop.sameType = true;
 		auto const type = context.expectNext(LTS_TT_LESS_THAN).getNext(LTS_TT_IDENTIFIER, "basic type").getString();
