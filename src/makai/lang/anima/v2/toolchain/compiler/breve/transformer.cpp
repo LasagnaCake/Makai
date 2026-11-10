@@ -3390,8 +3390,9 @@ ATransformer::Result StringInterpolation::transform(Context& context, Node::Inst
 		if (base.size()) context.impl()->writeMainLine("push", base);
 		context.impl()->writeMainLine("op add [", stack.size() + !base.empty(), "] <str>");
 	}
-	if (stack.empty()) return {.source = {base.toString()}, .scope = type->scope.asStrong(), .type = context.basicType("string"), .direct = base.toString()};
-	else return {.source = {"move top"}, .scope = type->scope.asStrong(), .type = context.basicType("string")};
+	auto const strType = context.basicType("string");
+	if (stack.empty()) return {.source = {base.toString()}, .scope = strType->scope.asStrong(), .type = strType, .direct = base.toString()};
+	else return {.source = {"move top"}, .scope = strType->scope.asStrong(), .type = strType};
 }
 
 Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {
