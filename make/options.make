@@ -24,11 +24,12 @@ omp-threads:=128
 export omp-threads
 endif
 
-ifdef os
-export os
+ifeq ($(OS),Windows_NT)
+os?=win
 else
-export os:=win
+os?=linux
 endif
+export os
 
 ifdef arch
 export arch
