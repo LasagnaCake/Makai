@@ -270,6 +270,12 @@ namespace OS::FS {
 		return std::filesystem::current_path().string();
 	}
 
+	/// @brief Returns the executable's current working directory.
+	/// @return Current working directory.
+	inline String here() {
+		return currentDirectory();
+	}
+
 	/// @brief Resolves a path to its absolute path.
 	/// @param path Path to resolve.
 	/// @return Absolute path.
@@ -297,6 +303,24 @@ namespace OS::FS {
 		#else
 		return resolve("/proc/self/exe").splitAtLast('/').front();
 		#endif
+	}
+
+	/// @brief Returns the executable's storage directory.
+	/// @return Location of executable.
+	inline String source() {
+		return sourceLocation();
+	}
+
+	/// @brief Returns the executable's storage directory.
+	/// @return Location of executable.
+	inline String there() {
+		return sourceLocation();
+	}
+
+	/// @brief Returns the executable's storage directory.
+	/// @return Location of executable.
+	inline String myPlace() {
+		return sourceLocation();
 	}
 
 	inline String asSharedLibrary(String const name) {
