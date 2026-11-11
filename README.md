@@ -41,12 +41,14 @@ Things you'll find here:
 - GJK-based 2D & 3D collision testing (Via `Makai::Collision` namespace)
 - Window & input handling (Via `Makai::App` class && `Makai::Input` namespace)
 - Filesystem handling (Via `Makai::File` namespace)
-- Archive file handling (Via `Makai::Tool::Arch` namespace)
+- Pack file format handling (Via `Makai::Pack` namespace)
+- Multiprocessing (Via `Makai::MP` namespace)
 - Other utilities (encoding/decoding, JSON & FLOW support, etc.)
 
 ### Future
 
 - Image processing (Via `Makai::Image` namespace)
+- Video processing (Via `Makai::Video` namespace)
  
 ## Supported operating systems
 
@@ -129,6 +131,7 @@ Since a version of (most of) them are bundled[^1], including your own version of
 | GL3W       | OpenGL Wrangling                                    | Yes ("Implementation" file[^6])                     |
 | GLAD       | OpenGL Wrangling                                    | Yes ("Implementation" file[^6])                     |
 | OpenGL     | Graphics backend                                    | No                                                  |
+| OpenCL     | Multiprocessing backend                             | \*Yes (Lib file[^3])                                |
 | miniaudio  | Audio backend                                       | Yes (Implementation file[^2])                       |
 | SDL2_Net   | TCP/UDP backend                                     | \*Yes (Lib file[^3])                                |
 | cURL       | Networking backend                                  | \*Yes (Lib file[^3])                                |
@@ -147,7 +150,7 @@ In the meantime, you can read the headers directly.
 
 ## Bugs & issues
 
-see [Issues](Issues.txt).
+See [Issues](Issues.txt).
 
 ## TODO
 
