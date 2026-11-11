@@ -2,6 +2,9 @@
 
 None
 
+[ OS-specific(?) ]
+> OpenGL loading fails on linux
+
 [ Library-specific(?) ]
 > Fullscreen does not work properly
 
