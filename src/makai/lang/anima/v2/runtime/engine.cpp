@@ -1759,7 +1759,7 @@ void Engine::v2ScopeEnter() {
 	);
 	if (count == Cast::as<decltype(count)>(-1))
 		env->locals() = env->scopeStack[-2]->localStack;
-	else if (count) env->locals().resize(count, nullptr);
+	else if (count) env->locals().expand(count, {});
 }
 
 void Engine::v2ScopeExit() {
@@ -2006,7 +2006,7 @@ void Engine::v2ScopeKeep() {
 }
 
 void Engine::v2ScopeDeclare() {
-	env->locals().appendBack(Makai::List<Context::Storage>(current.type, nullptr));
+	env->locals().expand(current.type, {});
 }
 
 void Engine::v2Cast() {

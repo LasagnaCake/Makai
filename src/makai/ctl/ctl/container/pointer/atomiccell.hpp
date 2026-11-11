@@ -47,7 +47,7 @@ struct AtomicCell:
 		/// @brief Underlying value.
 		DataType	value;
 		/// @brief Count of reference to value.
-		usize		refs;
+		usize		refs	= 0;
 
 		/// @brief Creates a scope-bound lock.
 		/// @return Scope lock.
@@ -76,7 +76,7 @@ struct AtomicCell:
 
 	/// @brief Move constructor (`AtomicCell`).
 	/// @param obj Cell to reference.
-	AtomicCell(SelfType&& other): wrapper(displace(other.wrapper)) {}
+	AtomicCell(SelfType&& other) {swap(*this, other);}
 
 	/// @brief Copy assignment operator.
 	/// @param obj Cell to reference.
@@ -95,7 +95,7 @@ struct AtomicCell:
 	/// @param obj Cell to reference.
 	/// @return Reference to self.
 	SelfType& operator=(SelfType&& other) {
-		wrapper = displace(other.wrapper);
+		swap(*this, other);
 		return *this;
 	}
 
@@ -223,6 +223,7 @@ private:
 			wrapper->oplock.unlock();
 			delete displace(wrapper);
 		} else wrapper->oplock.unlock();
+		wrapper = nullptr;
 	}
 
 	[[noreturn]] static void emptyError() {

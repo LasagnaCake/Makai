@@ -404,7 +404,9 @@ namespace Makai::Anima::V2::Runtime {
 			AtomicCell<TypeModel> const& type,
 			AtomicCell<TypeModel> const& origin
 		) {
-			return Storage::create(move(content), type, origin);
+			auto const store = Storage::create(type, origin);
+			store->content = move(content);
+			return store;
 		}
 
 		Object(Object&&)			= default;

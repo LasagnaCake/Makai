@@ -1399,9 +1399,12 @@ private:
 	constexpr void remake(usize const newSize) {
 		CTL_DEVMODE_FN_DECL;
 		auto const newCount = (count < newSize) ? count : newSize;
-		if (!newSize)		dump();
-		else if (!count)	contents.resize(newSize);
-		else {
+		if (!newSize)
+			dump();
+		else if (!count) {
+			contents.free();
+			contents.invoke(newSize);
+		} else {
 			StorageType buffer;
 			buffer.create(newSize);
 			safeMove(contents.data(), buffer.data(), newCount);
