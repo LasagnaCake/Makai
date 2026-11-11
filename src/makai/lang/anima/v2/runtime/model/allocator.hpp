@@ -66,7 +66,7 @@ namespace Makai::Anima::V2::Runtime {
 		}
 
 	private:
-		Impl::BlockAllocator alloc{2u << 20};
+		Impl::BlockAllocator alloc{1024 << 8};
 	};
 
 	template <class T>

@@ -17,5 +17,5 @@ main :: () {
 
 	@ByCopy total := (OS.Time.localNow(OS.Time.Precision.NANOS) - start)
 
-	IO.writeLine("\nResult::{\n  total-time: ", total / (count as float), "\n  total-time-ns: ", total, "\n}")
+	IO.writeLine("\nResult::{{\n  total-time: ", total / (count as float), "\n  total-time-ns: ", total, "\n}")
 }

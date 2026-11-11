@@ -1165,7 +1165,7 @@ Node::Instance StringInterpolationResolver::resolve(Parser& parser, Node::Instan
 				++i;
 				Node::Instance evalx = Node::Instance::create();
 				evalx->content = Node::Content::AV2_TANC_EVAL_BLOCK;
-				evalx->value = current.toString();
+				evalx->value = "(" + current.toString() + ")";
 				result->children.pushBack(evalx);
 				current = "";
 			}
