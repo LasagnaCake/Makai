@@ -349,7 +349,7 @@ Node::Instance ExtensionResolver::resolve(Parser& parser, Node::Instance const& 
 	result->base = token;
 	result->content = Node::Content::AV2_TANC_TYPE_EXTENSION;
 	result->leftSide = parser.nextExpression();
-	if (leftSide->content == Node::Content::AV2_TANC_ARRAY) {
+	if (result->leftSide->content == Node::Content::AV2_TANC_ARRAY) {
 		result->templateDecl = leftSide;
 		result->leftSide = parser.nextExpression();
 	}

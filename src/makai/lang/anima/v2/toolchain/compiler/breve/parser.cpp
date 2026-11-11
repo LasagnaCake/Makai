@@ -200,6 +200,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("assert", prefixes, new AssertionResolver());
 	add("kind", prefixes, new KindResolver());
 	add(LTS_TT_SHARP, prefixes, new PromotionResolver());
+	add(LTS_TT_DOLLAR, prefixes, new StringInterpolationResolver());
 	// Advanced infixes
 	MAKAILIB_DEBUGLN_FULL("Advanced infix parsers");
 	add("when", infixes, new InlineIfElseResolver());
@@ -229,7 +230,6 @@ Parser::Parser(BaseContext& context): context(context) {
 	add(LTS_TT_RANGE, infixes, new RangeResolver());
 	add(LTS_TT_LAMBDA, infixes, new LambdaResolver());
 	add(LTS_TT_LITTLE_ARROW, infixes, new FunctionPrototypeResolver());
-	add(LTS_TT_DOLLAR, infixes, new StringInterpolationResolver());
 	add("as", infixes, new CastResolver());
 	add("try", infixes, new TryResolver());
 	MAKAILIB_DEBUGLN_FULL("Done!");
