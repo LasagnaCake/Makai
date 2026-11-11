@@ -671,6 +671,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 }
 
 ATransformer::Result TraitDecl::transform(Context& context, Node::Instance const& node) {
+	return {}
 	context.error("Traits are currently in the works, sorry :/");
 	if (!node->leftSide)
 		context.error("Expected declaration name here!");
@@ -2757,10 +2758,12 @@ ATransformer::Result TypeExtension::transform(Context& context, Node::Instance c
 	context.scopeStack.pushBack(type.type->scope.asStrong());
 	if (node->templateDecl) {
 		// TODO: This
+		return {};
 		context.error("Generic extensions are not yet implemented, my apologies :/");
 	}
 	if (node->middle) {
 		// TODO: This
+		return {};
 		context.error("Traited extensions are not yet implemented, my apologies :/");
 	}
 	for (auto& extension: node->children) {
