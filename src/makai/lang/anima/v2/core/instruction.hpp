@@ -277,6 +277,13 @@ namespace Makai::Anima::V2::Core {
 			uint8 local: 1;
 		};
 
+		struct [[gnu::aligned(4)]] Coop {
+			enum class Name: u8 {
+				AV2_ICN_TAG
+			};
+			Name name;
+		};
+
 		/// @brief Instruction name.
 		enum class Name: uint32 {
 			/// @brief No-operation.
@@ -428,6 +435,10 @@ namespace Makai::Anima::V2::Core {
 			/// @param type Discarded.
 			/// @details `test`
 			AV2_IN_TEST,
+			/// @brief Coroutine operation.
+			/// @param type `Coop` = operation to perform.
+			/// @details `co`
+			AV2_IN_CORO_OP,
 		};
 
 		/// @brief Instruction "Name" (opcode).
