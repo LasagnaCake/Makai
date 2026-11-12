@@ -23,7 +23,7 @@
 
 using namespace Makai;
 
-void setGLAttribute(SDL_GLattr const a, int const v) {
+static void setGLAttribute(SDL_GLattr const a, int const v) {
 	if (SDL_GL_SetAttribute(a, v))
 		throw Error::FailedAction(
 			"Failed to set attribute!",
