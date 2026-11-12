@@ -89,7 +89,13 @@ appState(App::AppState::AS_CLOSED) {
 	setGLAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
 	setGLAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 	// Create OpenGL context
-	SDL_GL_CreateContext(sdlWindow);
+	if (!SDL_GL_CreateContext(sdlWindow)) {
+		throw Error::FailedAction(
+			"Failed to create OpenGL context!",
+			SDL_GetError(),
+			CTL_CPP_PRETTY_SOURCE
+		);
+	}
 	Makai::Input::Manager::setTargetWindow(window);
 	if (Makai::Input::TextCapture::capturing())
 		Makai::Input::TextCapture::end();
