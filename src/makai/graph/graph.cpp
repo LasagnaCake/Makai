@@ -13,3 +13,14 @@ Makai::Graph::GraphicalAPI Makai::Graph::getUsedAPI() {
     return Makai::Graph::GraphicalAPI::GA_OPENGL;
     #endif
 }
+
+extern "C"
+{
+	CTL_DYNEXPORT u32 NvOptimusEnablement;
+	CTL_DYNEXPORT u32 AmdPowerXpressRequestHighPerformance;
+}
+
+Makai::Graph::requestGPU(bool enabled) {
+	NvOptimusEnablement = (u32)enabled;
+	AmdPowerXpressRequestHighPerformance = (u32)enabled;
+}
