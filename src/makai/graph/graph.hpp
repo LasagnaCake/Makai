@@ -12,6 +12,8 @@ namespace Makai::Graph {
 	/// @brief Returns the underlying graphical API used.
 	/// @return Graphical API used.
 	GraphicalAPI getUsedAPI();
+
+	void requestGPU(bool const enabled = true);
 }
 
 #include "armature/armature.hpp"
