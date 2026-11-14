@@ -20,7 +20,7 @@ extern "C"
 	CTL_DYNEXPORT u32 AmdPowerXpressRequestHighPerformance;
 }
 
-Makai::Graph::requestGPU(bool enabled) {
+void Makai::Graph::requestGPU(bool const enabled) {
 	NvOptimusEnablement = (u32)enabled;
 	AmdPowerXpressRequestHighPerformance = (u32)enabled;
 }
