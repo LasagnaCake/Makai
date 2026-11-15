@@ -545,6 +545,9 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		} else return false;
 		return true;
 	};
+	scope->subspaces["Self"] = scope;
+	if (type.base)
+		scope->subspaces["Base"] = type.base->scope.asStrong();
 	MAKAILIB_DEBUGLN_FULL("struct {");
 	List<Node::Instance> doItLater;
 	for (auto& entry: node->rightSide->children)
@@ -667,6 +670,8 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	for (auto& scope: protecteds)
 		scope->makeProtected();
 	if (privates.size()) type.explicitNew = true;
+	scope->subspaces["Self"] = null;
+	scope->subspaces["Base"] = null;
 	return rett;
 }
 
@@ -710,6 +715,8 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 			context.error("Enums can only derive from integers!", node->middle);
 		type.base = base;
 	} else type.base = context.basicType("int64");
+	scope->subspaces["Self"] = scope;
+	scope->subspaces["Base"] = type.base->scope.asStrong();
 	MAKAILIB_DEBUGLN_FULL("Integer type is ", type.base->name);
 	type.flags.isEnum = true;
 	type.flags.isValueType = true;
@@ -768,7 +775,9 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 	context.registerType(scope);
 	auto implName = name;
 	implName.back() = "::IMPL__" + implName.back();
-	context.declare(implName);
+	auto const implScope = context.declare(implName);
+	implScope->subspaces["Self"] = scope;
+	implScope->subspaces["Base"] = type.base->scope.asStrong();
 	MAKAILIB_DEBUGLN_FULL("Parsing methods...");
 	MAKAILIB_DEBUGLN_FULL("Method count: ", methods.size());
 	for (auto& method: methods) {
@@ -785,6 +794,8 @@ ATransformer::Result EnumDecl::transform(Context& context, Node::Instance const&
 		scope->subspaces[fn.name] = decl.scope;
 	}
 	context.pop(1);
+	scope->subspaces["Self"] = null;
+	scope->subspaces["Base"] = null;
 	return {};
 }
 
