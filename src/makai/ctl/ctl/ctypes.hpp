@@ -152,9 +152,11 @@ typedef unsigned int uint;
 #if CPU_ARCH == 64
 /// @brief Signed 128-bit integer.
 typedef __int128_t	int128;
+typedef int128		i128;
 
 /// @brief Unsigned 128-bit integer.
 typedef __uint128_t	uint128;
+typedef uint128		u128;
 #endif
 
 /// @brief Generic pointer.
@@ -234,13 +236,11 @@ using i8 =		int8;
 using i16 =		int16;
 using i32 =		int32;
 using i64 =		int64;
-using i128 =	int128;
 using imax =	intmax;
 using u8 =		uint8;
 using u16 =		uint16;
 using u32 =		uint32;
 using u64 =		uint64;
-using u128 =	uint128;
 using umax =	uintmax;
 using f32 =		float32;
 using f64 =		float64;
