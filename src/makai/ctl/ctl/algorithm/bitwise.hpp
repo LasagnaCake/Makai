@@ -43,18 +43,18 @@ constexpr usize oneCount(usize n) {
 }
 
 constexpr usize zeroCount(usize const n) {
-	return (sizeof(usize) * 8) - ocount(n);
+	return (sizeof(usize) * 8) - oneCount(n);
 }
 
 namespace Bit {
-	constexpr usize set(usize const n)										{return zeroCount(n);					}
-	constexpr usize unset(usize const n)									{return zeroCount(n);					}
-	constexpr bool any(usize const n)										{return oneCount(n);					}
-	constexpr bool all(usize const n)										{return !zeroCount(n);					}
-	constexpr bool none(usize const n)										{return !oneCount(n);					}
-	constexpr bool atLeast(usize const n, usize const min)					{return min <= oneCount(n);				}
-	constexpr bool upTo(usize const n, usize const max)						{return oneCount(n) <= max;				}
-	constexpr bool some(usize const n, usize const min, usize const max)	{return atLest(n, min) && upTo(n, max);	}
+	constexpr usize set(usize const n)										{return zeroCount(n);						}
+	constexpr usize unset(usize const n)									{return zeroCount(n);						}
+	constexpr bool any(usize const n)										{return oneCount(n);						}
+	constexpr bool all(usize const n)										{return !zeroCount(n);						}
+	constexpr bool none(usize const n)										{return !oneCount(n);						}
+	constexpr bool atLeast(usize const n, usize const min)					{return min <= oneCount(n);					}
+	constexpr bool upTo(usize const n, usize const max)						{return oneCount(n) <= max;					}
+	constexpr bool some(usize const n, usize const min, usize const max)	{return atLeast(n, min) && upTo(n, max);	}
 }
 
 CTL_NAMESPACE_END
