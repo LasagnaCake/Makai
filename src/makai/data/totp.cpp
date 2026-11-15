@@ -16,5 +16,6 @@ String Makai::Data::totp(String const& secret, i64 const time, u64 const interva
 }
 
 String Makai::Data::TOTP::get() const {
-	return Makai::Data::totp(secret, OS::Time::Clock::sinceEpoch<Makai::OS::Time::Seconds>(), interval, digits, mode);
+	auto const ts = OS::Time::unixNow();
+	return Makai::Data::totp(secret, Zone::convert(ts, Zone::current(), Zone::utc()), interval, digits, mode);
 }

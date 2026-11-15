@@ -45,7 +45,7 @@ static void doHelpMessage() {
 }
 
 int main(int argc, char** argv) try {
-	if (CTL::CPP::Debug::hasDebugger() or (CTL_TARGET_OS == CTL_OS_UNIX))
+	if (CTL::CPP::Debug::debugged())
 		CTL::CPP::Debug::Traceable::trap = true;
 	Makai::CLI::Parser cli(argc, argv);
 	translationBase(cli.tl);

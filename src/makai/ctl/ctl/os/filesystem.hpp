@@ -276,6 +276,12 @@ namespace OS::FS {
 		return currentDirectory();
 	}
 
+	/// @brief Returns the executable's current working directory.
+	/// @return Current working directory.
+	inline String yourPlace() {
+		return currentDirectory();
+	}
+
 	/// @brief Resolves a path to its absolute path.
 	/// @param path Path to resolve.
 	/// @return Absolute path.
