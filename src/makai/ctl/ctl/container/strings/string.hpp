@@ -422,6 +422,24 @@ public:
 		return SelfType(*this).reverse();
 	}
 
+	constexpr IndexType firstOf(SelfType const& sub) const {
+		if (auto const str = subsub<DataType const>(data(), size(), sub.data(), sub.size()))
+			return str - data();
+		return -1;
+	}
+
+	constexpr SelfType& replaceWith(SelfType const& match, SelfType const& rep) {
+		ssize m = 0;
+		while ((m = firstOf(match)) != -1)
+			eraseRange(m, rep.size())
+				.insert(m, rep);
+		return *this;
+	}
+
+	constexpr SelfType replacedWith(SelfType const& match, SelfType const& rep) const {
+		return copy(*this).replaceWith(match, rep);
+	}
+
 	/// @brief Finds the the position of the first character that matches a value.
 	/// @param value Value to search for.
 	/// @return The index of the value, or -1 if not found.
@@ -1294,7 +1312,7 @@ public:
 	/// @brief Returns a substring, starting at a given point.
 	/// @param start Start of new string.
 	/// @return Resulting substring.
-	SelfType substring(IndexType const start) const {
+	constexpr SelfType substring(IndexType const start) const {
 		return sliced(start);
 	}
 
@@ -1302,7 +1320,7 @@ public:
 	/// @param start Start of new string.
 	/// @param length Length of new string.
 	/// @return Resulting substring.
-	SelfType substring(IndexType start, SizeType const length) const {
+	constexpr SelfType substring(IndexType start, SizeType const length) const {
 		assertIsInBounds(start);
 		wrapBounds(start);
 		while (start < 0) start += size();

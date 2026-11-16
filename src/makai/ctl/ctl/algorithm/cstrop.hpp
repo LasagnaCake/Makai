@@ -6,7 +6,8 @@
 
 CTL_NAMESPACE_BEGIN
 
-constexpr cstring strstr(cstring const str, usize const sz, cstring const sub, usize const subsz) {
+template <class T>
+constexpr ref<T> subsub(ref<T> const str, usize const sz, ref<T> const sub, usize const subsz) {
 	if (!(str && sub)) return null;
 	if (!(sz && subsz)) return null;
 	for (usize i = 0; i < sz; ++i) {
@@ -16,9 +17,14 @@ constexpr cstring strstr(cstring const str, usize const sz, cstring const sub, u
 			if ((i + j) >= sz) return null;
 			else if (str[i+j] != sub[j]) break;
 		}
-		if (j == subsz) return (str + i);
+		if (j == subsz)
+			return (str + i);
 	}
+	return null;
 }
+
+constexpr auto const& strstr	= subsub<char const>;
+constexpr auto const& wstrwstr	= subsub<wchar const>;
 
 CTL_NAMESPACE_END
 

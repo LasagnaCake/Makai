@@ -775,6 +775,24 @@ namespace UTF {
 			return -1;
 		}
 
+		constexpr IndexType firstOf(SelfType const& sub) const {
+			if (auto const str = subsub<DataType const>(data(), size(), sub.data(), sub.size()))
+				return str - data();
+			return -1;
+		}
+
+		constexpr SelfType& replaceWith(SelfType const& match, SelfType const& rep) {
+			ssize m = 0;
+			while ((m = firstOf(match)) != -1)
+				eraseRange(m, rep.size())
+					.insert(m, rep);
+			return *this;
+		}
+
+		constexpr SelfType replacedWith(SelfType const& match, SelfType const& rep) const {
+			return copy(*this).replaceWith(match, rep);
+		}
+
 		/// @brief Performs a binary search to find the index of a character that matches a value.
 		/// @param value Value to search for.
 		/// @return The index of the value, or -1 if not found.
