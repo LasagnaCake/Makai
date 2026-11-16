@@ -42,7 +42,7 @@ namespace CPP::Debug {
 		}
 		pinfo[count < 4096 ? count : 4095] = '\0';
 		constexpr auto tracer = "TracerPid:\t";
-		const auto tp = strstr(pinfo, count, tracer, sizeof(tracer));
+		const auto tp = subsub<char const>(pinfo, count, tracer, sizeof(tracer));
 		if (!tp) return false;
 		for (cstring cc = tp + 11; cc < (pinfo + count); ++cc) {
 			if (*cc <= ' ') continue;

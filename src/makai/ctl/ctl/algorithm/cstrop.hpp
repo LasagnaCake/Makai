@@ -23,9 +23,6 @@ constexpr ref<T> subsub(ref<T> const str, usize const sz, ref<T> const sub, usiz
 	return null;
 }
 
-constexpr auto const& strstr	= subsub<char const>;
-constexpr auto const& wstrwstr	= subsub<wchar const>;
-
 CTL_NAMESPACE_END
 
 #endif
