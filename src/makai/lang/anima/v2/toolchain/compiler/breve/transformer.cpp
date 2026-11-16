@@ -3020,7 +3020,10 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 		auto const caseScope = context.declare(UTF8StringList::from("<case>" + caseExpr->name()));
 		caseScope->varc += switchScope->varc;
 		caseScope->implementContents = true;
-		if (caseExpr->leftSide->base.text != "else") {
+		if (!(
+			caseExpr->leftSide->base.text == "else"
+		or	caseExpr->leftSide->base.text == "_"
+		)) {
 			for (auto const& ccx: caseExpr->leftSide->children) {
 				auto const match = context.getExpression(ccx);
 				if (!match.isCompilable())
@@ -3054,6 +3057,9 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 		isFirstCase = false;
 	}
 	auto const matchIndices = matches.keys();
+	MAKAILIB_DEBUGLN_FULL("Total matches: ", matches.size());
+	if (matchIndices.empty())
+		context.error("Switch statement is empy!", node);
 	auto const lowestIndex = matchIndices.front() < matchIndices.back() ? matchIndices.front() : matchIndices.back();
 	auto const highestIndex = matchIndices.front() < matchIndices.back() ? matchIndices.back() : matchIndices.front();
 	UTF8String choices = "[";
@@ -3088,7 +3094,10 @@ ATransformer::Result Match::transform(Context& context, Node::Instance const& no
 		auto const caseScope = context.declare(UTF8StringList::from("<case>" + caseExpr->name()));
 		caseScope->varc += matchScope->varc;
 		caseScope->implementContents = true;
-		if (caseExpr->leftSide->base.text != "else") {
+		if (!(
+			caseExpr->leftSide->base.text == "else"
+		or	caseExpr->leftSide->base.text == "_"
+		)) {
 			for (auto const& ccx: caseExpr->leftSide->children) {
 				auto const match = context.getExpression(ccx);
 				if (match.shouldBePushed())
@@ -3215,7 +3224,10 @@ ATransformer::Result ShortMatch::transform(Context& context, Node::Instance cons
 			break;
 			default: context.error("Invalid case!", caseExpr);
 		}
-		if (caseExpr->leftSide->base.text != "else") {
+		if (!(
+			caseExpr->leftSide->base.text == "else"
+		or	caseExpr->leftSide->base.text == "_"
+		)) {
 			for (auto const& ccx: caseExpr->leftSide->children) {
 				auto const match = context.getExpression(ccx);
 				if (match.type != matchVar->type)
