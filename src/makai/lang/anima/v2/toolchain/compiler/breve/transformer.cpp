@@ -3072,7 +3072,7 @@ ATransformer::Result Switch::transform(Context& context, Node::Instance const& n
 	context.pop(1);
 	context.impl()->writeMainLine(switchScope->compose()->toString());
 	if (!result.source) return {};
-	return {.source = {"move top"}, .type = result.type, .likelihood = result.likelihood + result.likelihood,.mayBeEmpty = mayBeEmpty or !hasDefault};
+	return {.source = {"move top"}, .type = result.type, .likelihood = result.likelihood + result.likelihood, .mayBeEmpty = mayBeEmpty or !hasDefault};
 }
 
 ATransformer::Result Match::transform(Context& context, Node::Instance const& node) {
