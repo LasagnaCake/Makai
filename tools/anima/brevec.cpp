@@ -34,14 +34,14 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 static void doHelpMessage() {
 	DEBUGLN("Breve Compiler - V" + VER.serialize().get<Makai::String>());
 	DEBUGLN("Usage:\n");
-	DEBUGLN(R"(brevec <file> [-o <name>] [-l <level>] [+s <dirs> ...] [-S] [-W])");
+	DEBUGLN(R"(brevec <file> [-o <name>] [-l <level>] [-*s <dirs> ...] [-S] [-W])");
 	DEBUGLN("\nWhere:");
-	DEBUGLN(R"#(<file>:           Path to the source file)#");
-	DEBUGLN(R"#([-o <name>]:      Output file name)#");
-	DEBUGLN(R"#([-l <level>]:     Compilation level (bpt|bir|min) (Only use last level, for assembly output))#");
-	DEBUGLN(R"#([+s <dirs> ...]:  Additional directories to look for source files in)#");
-	DEBUGLN(R"#([-W]:             Output web-compatible .anp files)#");
-	DEBUGLN(R"#([-S]:             Strip file of superfluous content (symbol names, etc.))#");
+	DEBUGLN(R"#(<file>:            Path to the source file)#");
+	DEBUGLN(R"#([-o <name>]:       Output file name)#");
+	DEBUGLN(R"#([-l <level>]:      Compilation level (bpt|bir|min) (Only use last level, for assembly output))#");
+	DEBUGLN(R"#([-*s <dirs> ...]:  Additional directories to look for source files in)#");
+	DEBUGLN(R"#([-W]:              Output web-compatible .anp files)#");
+	DEBUGLN(R"#([-S]:              Strip file of superfluous content (symbol names, etc.))#");
 }
 
 int main(int argc, char** argv) try {
