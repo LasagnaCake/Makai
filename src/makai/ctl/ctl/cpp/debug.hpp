@@ -2,10 +2,13 @@
 #define CTL_CPP_DEBUG_H
 
 #include "../namespace.hpp"
+#include "../algorithm/cstrop.hpp"
 #include <signal.h>
 
 #if (CTL_TARGET_OS == CTL_OS_WINDOWS)
 #include <debugapi.h>
+#elif (CTL_TARGET_OS == CTL_OS_UNIX)
+#include <cstdio>
 #else
 #endif
 
@@ -32,14 +35,14 @@ namespace CPP::Debug {
 		auto const cf = fopen("/proc/self/status", "r");
 		if (!cf) return false;
 		As<char[4096]> pinfo;
-		auto const count = fread(pinfo, 1, 4096, file);
+		auto const count = fread(pinfo, 1, 4096, cf);
 		if (ferror(cf)) {
 			fclose(cf);
 			return false;
 		}
-		pinfo[count < 4096 ? pinfo : 4095] = '\0';
+		pinfo[count < 4096 ? count : 4095] = '\0';
 		constexpr auto tracer = "TracerPid:\t";
-		const auto tp = strstr(pinfo, tracer);
+		const auto tp = strstr(pinfo, count, tracer, sizeof(tracer));
 		if (!tp) return false;
 		for (cstring cc = tp + 11; cc < (pinfo + count); ++cc) {
 			if (*cc <= ' ') continue;
