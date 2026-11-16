@@ -1157,6 +1157,13 @@ namespace Data {
 				unquotedIDs
 			&&	str.validate(isIdentifierNameChar<typename StringType::DataType>)
 			&&	!isNumberChar(str.front())
+			&&	!(
+					str.lower() != "null"
+				or	str.lower() != "undefined"
+				or	str.lower() != "nan"
+				or	str.lower() != "nil"
+				or	str.lower() != "none"
+				)
 			) return str;
 			StringType result = "\"";
 			for (auto const& c: str) {
