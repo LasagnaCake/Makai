@@ -10,7 +10,7 @@ namespace Makai::Anima::V2::Runtime {
 	struct ALibrary;
 
 	// While `AtomicCell` is not working, this will do
-	using Storage = AtomicCell<Object>;
+	using Storage = Instance<Object, Object>;
 
 	struct MethodTable {
 		Map<uint64, uint64>	table;

@@ -22,7 +22,7 @@ endif
 
 SDL			= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2$(LIBFILE_TYPE)
 SDLNET		= lib/SDL2-2.0.10/lib/$(LIBFILE_SRC)/libSDL2_net.a
-CRYPTOPP	= lib/cryptopp/lib/$(LIBFILE_SRC)/libcryptopp.a
+CRYPTOPP	= lib/cryptopp-modern/lib/$(LIBFILE_SRC)/libcryptopp.a
 CURL		= lib/curl/lib/$(LIBFILE_SRC)/libcurl$(LIBFILE_TYPE)
 #OPENSSL		= lib/openssl/lib/$(LIBFILE_SRC)/openssl$(LIBFILE_TYPE)
 PCRE2_8		= lib/pcre2/lib/$(LIBFILE_SRC)/libpcre2-8.a
@@ -100,7 +100,7 @@ LINUX_FULL_PRE := :
 OS_DEPENDENT_LIBS := $(BASE_LIBS) sdl:$(SDL) curl:$(CURL)
 else
 ifeq ($(os),linux)
-LINUX_FULL_PRE := @unzip -o lib/cryptopp/lib/$(os)64/libcryptopp.a.zip -d lib/cryptopp/lib/$(os)64/
+LINUX_FULL_PRE := @unzip -o lib/cryptopp-modern/lib/$(os)64/libcryptopp.a.zip -d lib/cryptopp-modern/lib/$(os)64/
 OS_DEPENDENT_LIBS := $(BASE_LIBS)
 endif
 endif

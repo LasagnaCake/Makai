@@ -314,7 +314,7 @@ namespace Impl::Memory {
 	};
 
 	template<
-		usize PAGE_SIZE		= ONE_MIBIBYTE,
+		usize PAGE_SIZE		= ONE_KIBIBYTE * 4,
 		bool AUTOCOLLECT	= true
 	>
 	struct PagedAllocator {
@@ -455,7 +455,7 @@ CTL_DIAGBLOCK_END;
 /// @tparam TData Type to handle memory for.
 template<
 	Type::NonVoid TData,
-	usize PAGE_SIZE		= ONE_MIBIBYTE,
+	usize PAGE_SIZE		= ONE_KIBIBYTE * 4,
 	bool AUTOCOLLECT	= true
 >
 struct PagedAllocator {
