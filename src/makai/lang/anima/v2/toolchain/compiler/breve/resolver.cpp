@@ -953,7 +953,20 @@ Node::Instance SwitchResolver::resolve(Parser& parser, Node::Instance const& lef
 			break;
 		}
 		auto const caseDecl = Node::Instance::create();
-		caseDecl->leftSide = parser.nextExpression();
+		caseDecl->leftSide = Node::Instance::create();
+		do {
+			auto const expr = parser.nextExpression();
+			if (expr->base.text == "else" or expr->base.text == "_") {
+				if (caseDecl->leftSide->children.size())
+					parser.context.error("default case cannot coexist with other cases!");
+				caseDecl->leftSide = expr;
+				break;
+			}
+			caseDecl->leftSide->children.pushBack(expr);
+			if (parser.context.peek().type == LTS_TT_BIG_ARROW)
+				break;
+			parser.context.expectNext(LTS_TT_COMMA);
+		} while (parser.context.peek().type != LTS_TT_BIG_ARROW);
 		parser.context.expectNext(LTS_TT_BIG_ARROW);
 		if (parser.context.peek().type == (LTS_TT_CLOSE_CURLY))
 			parser.context.error("Missing case statement!");
