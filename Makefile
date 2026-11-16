@@ -96,11 +96,11 @@ endif
 ifeq ($(os),win)
 define MOVE_DLL
 endef
-LINUX_FULL_PRE := :
+ADDENDA_FULL_PRE := @unzip -o lib/cryptopp-modern/lib/$(os)64/libcryptopp.a.zip -d lib/cryptopp-modern/lib/$(os)64/
 OS_DEPENDENT_LIBS := $(BASE_LIBS) sdl:$(SDL) curl:$(CURL)
 else
 ifeq ($(os),linux)
-LINUX_FULL_PRE := @unzip -o lib/cryptopp-modern/lib/$(os)64/libcryptopp.a.zip -d lib/cryptopp-modern/lib/$(os)64/
+ADDENDA_FULL_PRE := @unzip -o lib/cryptopp-modern/lib/$(os)64/libcryptopp.a.zip -d lib/cryptopp-modern/lib/$(os)64/
 OS_DEPENDENT_LIBS := $(BASE_LIBS)
 endif
 endif
@@ -259,7 +259,7 @@ combine-extern:
 
 link-extern:
 	@echo "Packing libraries..."
-	$(LINUX_FULL_PRE)
+	$(ADDENDA_FULL_PRE)
 	@echo "Libraries: $(OS_DEPENDENT_LIBS)";
 	$(call pack-extern, $(OS_DEPENDENT_LIBS))
 	$(call combine-extern)
