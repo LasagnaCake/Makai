@@ -487,6 +487,10 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	auto const scope = context.declare(name);
 	auto& type = *(scope->type = scope->type.create());
 	auto const rett = Result{.scope = scope, .type = scope->type, .mayBeEmpty = false};
+	type.scope = scope.asWeak();
+	type.node = node;
+	type.name = "__" + name.join("_") + node->name();
+	type.pureName = name.back();
 	if (node->templateDecl) {
 		context.pop(name.size());
 		type.flags.isGeneric = true;
@@ -554,9 +558,6 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		if (!evalDecl(entry, entry))
 			doItLater.pushBack(entry);
 	MAKAILIB_DEBUGLN_FULL("}");
-	type.scope = scope.asWeak();
-	type.node = node;
-	type.name = "__" + name.join("_") + node->name();
 	List<Namespace::VariableRef> defaulted;
 	List<Namespace::VariableRef> statics;
 	List<Namespace::Instance> privates;
@@ -2959,7 +2960,20 @@ ATransformer::Result Promotion::transform(Context& context, Node::Instance const
 	auto const type = context.getType(node->leftSide).type;
 	if (!type)
 		context.error("Expected type here!", node->leftSide);
-	return {.type = context.infoType(), .direct = Makai::Data::Value(Makai::toString("info::", type->node->name()))};
+	String const id = type->metaID();
+	return {.type = context.basicType("type"), .direct = id};
+}
+
+ATransformer::Result Demotion::transform(Context& context, Node::Instance const& node) {
+	auto const expr = context.getExpression(node->leftSide);
+	if (expr.direct.isUndefined())
+		context.error("Value is not direct type information!", node->leftSide);
+	if (expr.type != context.basicType("type"))
+		context.error("Value is not direct type information!", node->leftSide);
+	String const id = expr.direct.getString();
+	if (!context.allTypes.contains(id))
+		context.error("This type does not exist!", node->leftSide);
+	return {.type = context.allTypes[id]};
 }
 
 ATransformer::Result Switch::transform(Context& context, Node::Instance const& node) {
@@ -3575,6 +3589,7 @@ void ATransformer::Context::registerType(Namespace::Instance const& ns) {
 	static usize id = 0;
 	if (!ns) return;
 	root->subspaces["0__@Tx1_USER_TYPES"]->subspaces[Makai::toString("#", idName(++id), "::") + ns->name] = ns;
+	allTypes[ns->type->metaID()] = ns->type;
 }
 
 void ATransformer::Context::registerFunction(Namespace::Instance const& ns) {

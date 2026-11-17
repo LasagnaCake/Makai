@@ -104,6 +104,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 
 			Context();
 
+			UTF8Dictionary<Namespace::TypeRef>					allTypes;
 			UTF8Dictionary<Namespace::TypeRef>					basics;
 			Map<Handle<TypeDecl>, Namespace::TypeRef>			arrays;
 			Map<Handle<TypeDecl>, Namespace::TypeRef>			nullables;
@@ -418,6 +419,18 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	};
 
 	struct Promotion: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct Demotion: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct MetaQuery: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct MetaTransformation: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 

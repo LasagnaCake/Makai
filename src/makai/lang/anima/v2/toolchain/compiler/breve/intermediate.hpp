@@ -230,6 +230,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			}
 		}
 
+		UTF8String metaID() const {
+			return "meta::" + node->name() + "::" + name;
+		}
+
 		TypeDecl(UTF8String const& name = "");
 		virtual ~TypeDecl();
 	};
