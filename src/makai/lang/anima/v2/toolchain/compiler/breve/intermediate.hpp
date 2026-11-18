@@ -202,6 +202,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		List<Namespace::TypeRef>				args;
 		UTF8Dictionary<Namespace::TraitRef>		traits;
 
+		String const dtx;
+
 		usize uses = 0;
 
 		bool explicitNew = false;
@@ -230,9 +232,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 			}
 		}
 
-		UTF8String metaID() const {
-			return "meta::" + node->name() + "::" + name;
-		}
+		UTF8String metaID() const;
 
 		TypeDecl(UTF8String const& name = "");
 		virtual ~TypeDecl();

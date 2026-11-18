@@ -186,6 +186,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
 	};
 
+	struct TraitDeclResolver: AResolver {
+		TraitDeclResolver(): AResolver() {}
+		virtual ~TraitDeclResolver() {}
+		Node::Instance resolve(Parser& parser, Node::Instance const& lhs, BaseContext::Axiom const& token) override;
+	};
+
 	struct EnumResolver: AResolver {
 		EnumResolver(): AResolver() {}
 		virtual ~EnumResolver() {}

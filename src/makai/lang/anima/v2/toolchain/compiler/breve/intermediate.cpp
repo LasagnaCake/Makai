@@ -13,7 +13,7 @@ IWritable::~IWritable() {}
 Namespace::Namespace(UTF8String const& name): Labeled(name) {}
 Function::Function(UTF8String const& name): Labeled(name) {}
 Trait::Trait(UTF8String const& name): Labeled(name) {}
-TypeDecl::TypeDecl(UTF8String const& name): Labeled(name) {}
+TypeDecl::TypeDecl(UTF8String const& name): Labeled(name), dtx(Makai::Data::hashed(__DATE__ __TIME__, Data::HashMode::HM_SHA3_512)) {}
 Variable::Variable(UTF8String const& name): Labeled(name) {}
 Property::Property(UTF8String const& name): Labeled(name) {}
 Attribute::Attribute(UTF8String const& name): Labeled(name) {}
@@ -136,6 +136,13 @@ Function::SearchResult Function::overloadFromVariables(List<Namespace::VariableR
 static bool const test(Namespace::TypeRef const& a, Namespace::TypeRef const& b, bool const fuzzy) {
 	if (fuzzy) return TypeDecl::stronger(a, b) != b;
 	else return a != b;
+}
+
+Makai::UTF8String  TypeDecl::metaID() const {
+	return "meta::"
+	+	Makai::Data::hashed((node->name() + "::" + name).toString(), Makai::Data::HashMode::HM_SHA3_512)
+	+ "::" + dtx
+	;
 }
 
 static bool validate(Function::OverloadRef ov, Makai::List<Namespace::TypeRef> const& args, Function::FuzzySearch const fuzz) {

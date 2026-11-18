@@ -500,6 +500,23 @@ Node::Instance TemplateDeclResolver::resolve(Parser& parser, Node::Instance cons
 	return result;
 }
 
+Node::Instance TraitDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
+	auto const nbd = NamedBlockDeclResolver().resolve(parser, leftSide, token);
+	if (!nbd->templateDecl) {
+		auto const tdecl = Node::Instance::create();
+		tdecl->leftSide		= nbd->leftSide;
+		nbd->templateDecl	= tdecl;
+	}
+	auto const tself = Node::Instance::create();
+	tself->base.text = "Self";
+	tself->value = "Self";
+	tself->content = Node::Content::AV2_TANC_NAME;
+	if (bd->templateDecl->children.size())
+		nbd->templateDecl->children.insert(0, tself);
+	else nbd->templateDecl->children.pushBack(tself);
+	return nbd;
+}
+
 Node::Instance NamedBlockDeclResolver::resolve(Parser& parser, Node::Instance const& leftSide, BaseContext::Axiom const& token) {
 	MAKAILIB_DEBUGLN_FULL("Resolving named block expression...");
 	Node::Instance result = Node::Instance::create();

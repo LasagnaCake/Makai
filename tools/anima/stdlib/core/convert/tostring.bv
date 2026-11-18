@@ -14,8 +14,8 @@ if false {
 	}
 
 	extend [T: Is.Basic] T with ToString {
-		assert Is.Not[T, void]
+		assert Is.Not[Self, void]
 
-		toString :: (self: Self) => if Is.Not[T, string] $"{self}" else self
+		toString :: (self: Self) => if Is.Not[Self, string] $"{self}" else self
 	}
 }

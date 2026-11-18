@@ -168,7 +168,7 @@ Parser::Parser(BaseContext& context): context(context) {
 	add("for", prefixes, new LoopResolver());
 	add("extend", prefixes, new ExtensionResolver());
 	add("import", prefixes, new ImportResolver());
-	add("trait", prefixes, new NamedBlockDeclResolver());
+	add("trait", prefixes, new TraitDeclResolver());
 	add("module", prefixes, new NamedBlockDeclResolver(true, false));
 	add("struct", prefixes, new NamedBlockDeclResolver(false, true));
 	add("enum", prefixes, new EnumResolver());

@@ -685,16 +685,121 @@ ATransformer::Result TraitDecl::transform(Context& context, Node::Instance const
 	if (context.top()->subspaces.contains(name.front()))
 		context.error("Symbol with this name already exists in the current scope!", node->leftSide);
 	auto const scope = context.declare(name);
-	auto& type = *(scope->type = scope->type.create());
-	auto const rett = Result{.scope = scope, .type = scope->type, .mayBeEmpty = false};
+	auto& trait = *(scope->trait = scope->trait.create());
+	auto const rett = Result{.scope = scope, .mayBeEmpty = false};
+	Makai::Function<bool(Node::Instance const&, Node::Instance const&)> evalDecl;
+	evalDecl = [&] (Node::Instance const& node, Node::Instance const& root) -> bool {
+		if (node->content == Node::Content::AV2_TANC_DECLARATION) {
+			if (
+				node->base.type == LTS_TT_COLON
+			or	node->base.type == LTS_TT_DECLARE
+			or	node->base.type == LTS_TT_ASSIGN
+			) context.error("Invalid declaration inside trait declaration!", node);
+		} else if (node->content == Node::Content::AV2_TANC_ATTRIBUTE) {
+			return evalDecl(node->rightSide, root);
+		} else return false;
+		return true;
+	};
 	if (node->templateDecl) {
 		context.pop(name.size());
-		type.flags.isGeneric = true;
-		type.declaration = node;
+		trait.flags.isGeneric = true;
+		trait.declaration = node;
 		scope->declaration = node;
 		scope->state = context.scopeStack;
 		return rett;
 	}
+	List<Node::Instance> doItLater;
+	for (auto& entry: node->rightSide->children)
+		if (!evalDecl(entry, entry))
+			doItLater.pushBack(entry);
+	List<Namespace::Instance> privates;
+	List<Namespace::Instance> protecteds;
+	MAKAILIB_DEBUGLN_FULL("Parsing methods...");
+	MAKAILIB_DEBUGLN_FULL("Method count: ", methods.size());
+	implName.back() = "::IMPL__" + implName.back();
+	auto const implScope = context.declare(implName);
+	scope->type = scope->subspaces["Self"];
+	implScope->subspaces["Self"] = scope->subspaces["Self"];
+	auto& type = *scope->type;
+	auto tscope = type.scope;
+	for (auto& method: methods) {
+		auto const decl = context.getExpression(method);
+		auto& fn = *decl.scope->function;
+		for (auto& ov: fn.current) {
+			if (!ov->staticEntity && (ov->arguments.empty() or ov->arguments[0]->type != scope->type))
+				context.error("Missing appropriate [this] parameter!", method);
+			if (!ov->staticEntity)
+				ov->methodOf = tscope->type.asWeak();
+			if (ov->constructor)
+				type.constructors.pushBack(ov);
+		}
+		if (decl.scope->isPrivate())
+			privates.pushBack(decl.scope.asStrong());
+		else if (decl.scope->isProtected())
+			protecteds.pushBack(decl.scope.asStrong());
+		decl.scope->makePublic();
+		if (tscope->subspaces.contains(fn.name) && !tscope->subspaces[fn.name]->function)
+			context.error("Symbol with this name already exists!", method);
+		type.methods[fn.name] = decl.scope->function;
+		tscope->subspaces[fn.name] = decl.scope;
+	}
+	MAKAILIB_DEBUGLN_FULL("Parsing properties...");
+	MAKAILIB_DEBUGLN_FULL("Property count: ", properties.size());
+	for (auto& property: properties) {
+		auto const decl = context.getExpression(property);
+		auto& prop = *decl.scope->property;
+		if (prop.getter) {
+			auto& fn = *prop.getter;
+			fn.name += "_" + prop.name + node->name();
+			for (auto& ov: fn.current) {
+				if (!ov->staticEntity && (ov->arguments.empty() or ov->arguments[0]->type != scope->type))
+					context.error("Missing appropriate [this] parameter!", property);
+				if (!ov->staticEntity)
+					ov->methodOf = scope->type.asWeak();
+			}
+			if (decl.scope->isPrivate())
+				privates.pushBack(decl.scope.asStrong());
+			else if (decl.scope->isProtected())
+				protecteds.pushBack(decl.scope.asStrong());
+			decl.scope->makePublic();
+			if (tscope->subspaces.contains(fn.name))
+				context.error("Symbol with this name already exists!", property);
+		}
+		if (prop.setter) {
+			auto& fn = *prop.setter;
+			fn.name += "_" + prop.name + node->name();
+			for (auto& ov: fn.current) {
+				if (!ov->staticEntity && (ov->arguments.empty() or ov->arguments[0]->type != tscope->type))
+					context.error("Missing appropriate [this] parameter!", property);
+				if (!ov->staticEntity)
+					ov->methodOf = tscope->type.asWeak();
+				if (ov->scope->isPrivate())
+					privates.pushBack(ov->scope.asStrong());
+				else if (ov->scope->isProtected())
+					protecteds.pushBack(ov->scope.asStrong());
+				ov->scope->makePublic();
+			}
+			if (decl.scope->isPrivate())
+				privates.pushBack(decl.scope.asStrong());
+			else if (decl.scope->isProtected())
+				protecteds.pushBack(decl.scope.asStrong());
+			decl.scope->makePublic();
+			if (tscope->subspaces.contains(fn.name))
+				context.error("Symbol with this name already exists!", property);
+		}
+		if (tscope->subspaces.contains(prop.name))
+			context.error("Symbol with this name already exists!", property);
+		prop.fieldOf = tscope->type.asWeak();
+		type.methods[prop.name] = decl.scope->function;
+		tscope->subspaces[prop.name] = decl.scope;
+	}
+	for (auto& entry: doItLater)
+		context.getExpression(entry);
+	context.pop(implName.size());
+	for (auto& scope: privates)
+		scope->makePrivate();
+	for (auto& scope: protecteds)
+		scope->makeProtected();
 	return rett;
 }
 
@@ -2765,18 +2870,25 @@ ATransformer::Result UnionTypeDecl::transform(Context& context, Node::Instance c
 }
 
 ATransformer::Result TypeExtension::transform(Context& context, Node::Instance const& node) {
-	auto const type = context.getType(node->leftSide);
-	AsNonConst<decltype(type)> trait;
+	Intermediate::TraitRef trait;
 	context.scopeStack.pushBack(type.type->scope.asStrong());
 	if (node->templateDecl) {
-		// TODO: This
+		for (auto& [_, type]: allTypes) {
+			auto const implScope = context.declare("<tex>::" + type->metaID());
+			top()->subspaces[selfID] = type->scope;
+			auto const selfID = "__" + Makai::toString(id) + "xx_TSelf_" + type->name;
+			auto const generic = templateFor(node);
+			auto const rargs = ReificationArgs::from(context.evaluate(generic->params.keys().front() + " = " + selfID)));
+			trait = context.getTrait(node->middle);
+			context.reify(node, rargs);
+			context.pop(1);
+		}
 		return {};
-		context.error("Generic extensions are not yet implemented, my apologies :/");
 	}
+	auto const type = context.getType(node->leftSide);
 	if (node->middle) {
 		// TODO: This
 		return {};
-		context.error("Traited extensions are not yet implemented, my apologies :/");
 	}
 	for (auto& extension: node->children) {
 		auto const ext = context.getExpression(extension);
@@ -3592,6 +3704,33 @@ void ATransformer::Context::registerType(Namespace::Instance const& ns) {
 	allTypes[ns->type->metaID()] = ns->type;
 }
 
+void ATransformer::Context::addGlobalTrait(GlobalTrait const& trait) {
+	static usize id = 0;
+	if (!trait.baseTrait) return;
+	globalTraits.pushBack(trait);
+	for (auto& type: allTypes)
+		reifyGlobalTrait(globalTraits.back(), type);
+}
+
+void ATransformer::Context::reifyGlobalTrait(GlobalTrait const& trait, Context::TypeDecl const& type) {
+	static usize id = 0;
+	if (!ns) return;
+	auto const selfID = "__" + Makai::toString(id) + "xx_TSelf_" + type->name;
+	declare(UTF8StringList::from("<rgt>::" + type->metaID() + Makai::toString("_rid", id++)));
+	top()->subspaces[selfID] = type->scope;
+	auto const selfDecl = trait.baseTrait->templateDecl.children.font();
+	trait.baseTrait->templateDecl.children.front() = trait.selfConstraint;
+	auto const rargs = ReificationArgs::from(context.evaluate("Self = " + selfID)));
+	if (reify(trait.baseTrait->declaration, rargs)
+		reify(trait.declaration, rargs);
+	trait.baseTrait->templateDecl.children.front() = selfDecl;
+}
+
+void ATransformer::Context::hydrateType(Context::TypeDecl const& type) {
+	for (auto const& gt: globalTraits)
+		reifyGlobalTrait(gt, type);
+}
+
 void ATransformer::Context::registerFunction(Namespace::Instance const& ns) {
 	static usize id = 0;
 	if (!ns) return;
@@ -3639,17 +3778,21 @@ Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Con
 	usize index = 0;
 	Makai::UTF8Dictionary<bool> visited;
 	List<KeyValuePair<UTF8String, Node::Instance>> set;
-	declare(UTF8StringList::from("<reify>::" + node->name() + Makai::toString("_rid", rid)));
+	declare(UTF8StringList::from("<reify>::" + node->name() + Makai::toString("_rid", rid++)));
 	for (auto const& arg: targs) {
 		if (index >= generic->names.size())
 			continue;
 		Template::Parameter param;
 		if (arg->content == Node::Content::AV2_TANC_ASSIGNMENT) {
-			if (!generic->params.contains(arg->leftSide->base.text))
-				error("Template parameter does not exist!", arg);
+			if (!generic->params.contains(arg->leftSide->base.text)) {
+				context.pop(1);
+				return "Template parameter [" +arg->leftSide->base.text+ "] does not exist";
+			}
 			param = generic->params[arg->leftSide->base.text];
-			if (visited.contains(param.name))
-				error("Template parameter has already been set!", arg);
+			if (visited.contains(param.name)) {
+				context.pop(1);
+				return "Template parameter [" +param.name+ "] has already been set!";
+			}
 			visited[param.name] = true;
 			set.pushBack({param.name, arg->rightSide});
 		} else {
@@ -3669,16 +3812,20 @@ Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Con
 			set.pushBack({name, generic->params[name].defaultValue});
 		else missing.pushBack(name);
 	}
-	if (missing.size())
-		error("Missing arguments [" + missing.join(", ") + "] for template declaration!", node);
+	if (missing.size()) {
+		context.pop(1);
+		return "Missing arguments [" + missing.join(", ") + "] for template declaration!";
+	}
 	UTF8String reifyName = node->name();
 	for (auto const& [name, decl]: set) {
 		auto const& arg = generic->params[name];
 		auto const scope = declare(UTF8StringList::from(name));
 		if (arg.type->basic && arg.type->basic < Core::BasicType::AV2_BT_TYPEID) {
 			auto const expr = getExpression(decl);
-			if (expr.direct.isUndefined())
-				error("Template parameters may only accept direct expressions!", decl);
+			if (expr.direct.isUndefined()) {
+				context.pop(2);
+				return "Template parameter [" + name + "] may only accept direct expressions!";
+			}
 			auto const value = expr.direct;
 			auto const type = *arg.type->basic;
 			auto& var = *(scope->variable = scope->variable.create());
@@ -3707,14 +3854,18 @@ Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Con
 				case AV2_BT_BOOL: var.value = value.getBoolean(); break;
 				default: mismatched = true;
 			}
-			if (mismatched)
-				error("Type mismatch (Expected: [" + var.type->name + "], got [" + expr.type->name + "])!", decl);
+			if (mismatched) {
+				context.pop(2);
+				return "Type mismatch (Expected: [" + var.type->name + "], got [" + expr.type->name + "])!";
+			}
 			reifyName += ";" + name + "=value:" + value.toString();
 		} else {
 			auto const type = getType(decl);
 			if (arg.type->basic != Core::BasicType::AV2_BT_TYPEID) {
-				if (!type.type->derivedFrom(arg.type))
-					error("Type does not derive from required type!", decl);
+				if (!type.type->derivedFrom(arg.type)) {
+					context.pop(2);
+					return "Type for [" + name + "] does not derive from required type!";
+				}
 			}
 			StringList missing;
 			for (auto const& constraint: arg.constraints) {
@@ -3722,16 +3873,23 @@ Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Con
 				if (auto const out = satisfies(refx->variable)) {
 					if (!out.value())
 						missing.pushBack(constraint->name);
-				} else error("Constraint [" + constraint->name + "] is a bad constraint!", decl);
+				} else {
+					context.pop(2);
+					return "Constraint [" + constraint->name + "] is a bad constraint!";
+				}
 			}
-			if (missing.size())
-				error("Template argument ["+ name + "] does not satisfy required constraint(s) [" + missing.join(", ") + "]!", decl);
+			if (missing.size()) {
+				context.pop(2);
+				return "Template argument ["+ name + "] does not satisfy required constraint(s) [" + missing.join(", ") + "]!";
+			}
 			missing.clear();
 			for (auto const& trait: arg.traits)
 				if (!type.type->traits.contains(trait->node->name()))
 					missing.pushBack(trait->name);
-			if (missing.size())
-				error("Template argument ["+ name + "] does not implement required trait(s) [" + missing.join(", ") + "]!", decl);
+			if (missing.size()) {
+				context.pop(2);
+				return "Template argument ["+ name + "] does not implement required trait(s) [" + missing.join(", ") + "]!";
+			}
 			scope->type = type.type;
 			reifyName += ";" + name + "=type:" + type.type->name;
 		}
