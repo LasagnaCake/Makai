@@ -121,13 +121,17 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			List<GlobalTrait> globalTraits;
 
 			void addGlobalTrait(GlobalTrait const& trait);
-			void reifyGlobalTrait(GlobalTrait const& trait, Context::TypeDecl const& forType);
-			void hydrateType(Context::TypeDecl const& type);
+			void reifyGlobalTrait(GlobalTrait const& trait, Namespace::TypeRef const& forType);
+
+			void extendWithTrait(Intermediate::TraitRef const& trait, Namespace::TypeRef const& type, Node::Instance const& decl);
+
+			void hydrateType(Namespace::TypeRef const& type);
 
 			Node::Instance evaluate(UTF8String const& eval);
 
 			Result getExpression(Node::Instance const& node);
 			Result getType(Node::Instance const& node);
+			Result getTrait(Node::Instance const& node);
 
 			template <Type::Subclass<ATransformer> T>
 			Result transform(Node::Instance const& node) {
@@ -204,6 +208,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	};
 
 	struct TypeRequest: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct TraitRequest: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 

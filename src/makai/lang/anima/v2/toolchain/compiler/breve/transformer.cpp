@@ -1628,6 +1628,17 @@ ATransformer::Result TypeRequest::transform(Context& context, Node::Instance con
 	return {.type = t};
 }
 
+
+ATransformer::Result TraitRequest::transform(Context& context, Node::Instance const& node) {
+	ATransformer::Result rest;
+	Namespace::Instance t;
+	Namespace::TraitRef tx;
+	if (t = context.fetch(node))
+		tx = t->trait;
+	if (!tx) context.error("Trait does not exist!", node);
+	return {.scope = t};
+}
+
 static void resolveEmptyAttribute(
 	ATransformer::Context& context,
 	Node::Instance const& node,
@@ -2873,23 +2884,12 @@ ATransformer::Result TypeExtension::transform(Context& context, Node::Instance c
 	Intermediate::TraitRef trait;
 	context.scopeStack.pushBack(type.type->scope.asStrong());
 	if (node->templateDecl) {
-		for (auto& [_, type]: allTypes) {
-			auto const implScope = context.declare("<tex>::" + type->metaID());
-			top()->subspaces[selfID] = type->scope;
-			auto const selfID = "__" + Makai::toString(id) + "xx_TSelf_" + type->name;
-			auto const generic = templateFor(node);
-			auto const rargs = ReificationArgs::from(context.evaluate(generic->params.keys().front() + " = " + selfID)));
-			trait = context.getTrait(node->middle);
-			context.reify(node, rargs);
-			context.pop(1);
-		}
+		addGlobalTrait({context.getTrait(node->middle), node->templateDecl, node->rightSide});
 		return {};
 	}
 	auto const type = context.getType(node->leftSide);
-	if (node->middle) {
-		// TODO: This
-		return {};
-	}
+	if (node->middle)
+		extendWithTrait(context.getTrait(node->middle), type);
 	for (auto& extension: node->children) {
 		auto const ext = context.getExpression(extension);
 		if (!ext.scope)
@@ -3693,6 +3693,11 @@ ATransformer::Result ATransformer::Context::getType(Node::Instance const& node) 
 	return transform(expr, node);
 }
 
+ATransformer::Result ATransformer::Context::getTrait(Node::Instance const& node) {
+	static auto expr = TraitRequest();
+	return transform(expr, node).scope->trait;
+}
+
 static Makai::String idName(usize const id) {
 	return Makai::Format::pad(Makai::toString(id), '0', 16, CTL::Format::Justify::CFJ_LEFT);
 }
@@ -3709,24 +3714,43 @@ void ATransformer::Context::addGlobalTrait(GlobalTrait const& trait) {
 	if (!trait.baseTrait) return;
 	globalTraits.pushBack(trait);
 	for (auto& type: allTypes)
-		reifyGlobalTrait(globalTraits.back(), type);
+		reifyGlobalTrait(trait, type);
 }
 
-void ATransformer::Context::reifyGlobalTrait(GlobalTrait const& trait, Context::TypeDecl const& type) {
+void ATransformer::Context::reifyGlobalTrait(GlobalTrait const& trait, Namespace::TypeRef const& type) {
 	static usize id = 0;
-	if (!ns) return;
+	if (!type) return;
 	auto const selfID = "__" + Makai::toString(id) + "xx_TSelf_" + type->name;
 	declare(UTF8StringList::from("<rgt>::" + type->metaID() + Makai::toString("_rid", id++)));
 	top()->subspaces[selfID] = type->scope;
-	auto const selfDecl = trait.baseTrait->templateDecl.children.font();
-	trait.baseTrait->templateDecl.children.front() = trait.selfConstraint;
+	Node::Instance prevSelf;
+	if (trait.baseTrait) {
+		prevSelf = trait.baseTrait->templateDecl.children.font();
+		trait.baseTrait->templateDecl.children.front() = trait.selfConstraint;
+	}
 	auto const rargs = ReificationArgs::from(context.evaluate("Self = " + selfID)));
-	if (reify(trait.baseTrait->declaration, rargs)
+	if (trait.baseTrait && reify(trait.baseTrait->declaration, rargs))
 		reify(trait.declaration, rargs);
-	trait.baseTrait->templateDecl.children.front() = selfDecl;
+	else if (trait.declaration)
+		reify(trait.declaration, rargs);
+	if (trait.baseTrait)
+		trait.baseTrait->templateDecl.children.front() = prevSelf;
 }
 
-void ATransformer::Context::hydrateType(Context::TypeDecl const& type) {
+void ATransformer::Context::extendWithTrait(Intermediate::TraitRef const& trait, Namespace::TypeRef const& type, Node::Instance const& decl) {
+	static usize id = 0;
+	if (!type) return;
+	auto const selfID = "__" + Makai::toString(id) + "xx_TSelf_" + type->name;
+	declare(UTF8StringList::from("<extend-trait>::" + type->metaID() + Makai::toString("_rid", id++)));
+	top()->subspaces[selfID] = type->scope;
+	Node::Instance prevSelf;
+	auto const rargs = ReificationArgs::from(context.evaluate("Self = " + selfID)));
+	auto const result = reify(trait.baseTrait->declaration, rargs);
+	if (!result)
+		error("Trait Extension Error: " + result.error().value(), decl);
+}
+
+void ATransformer::Context::hydrateType(Namespace::TypeRef const& type) {
 	for (auto const& gt: globalTraits)
 		reifyGlobalTrait(gt, type);
 }
@@ -3899,12 +3923,18 @@ Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Con
 		pop(1);
 		return reifications[reifyName];
 	}
-	auto const reified = getExpression(node);
-	reifications[reifyName] = reified.scope;
-	registerReification(reified.scope);
-	pop(1);
-	node->templateDecl = tdecl;
-	return reified.scope;
+	try {
+		auto const reified = getExpression(node);
+		reifications[reifyName] = reified.scope;
+		registerReification(reified.scope);
+		pop(1);
+		node->templateDecl = tdecl;
+		return reified.scope;
+	} catch (Context::CompilationError const& e) {
+		node->templateDecl = tdecl;
+		pop(1);
+		return e.report();
+	}
 }
 
 ATransformer::Template::Instance ATransformer::Context::templateFor(Node::Instance const& node) {
