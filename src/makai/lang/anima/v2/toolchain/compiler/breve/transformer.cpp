@@ -677,8 +677,6 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 }
 
 ATransformer::Result TraitDecl::transform(Context& context, Node::Instance const& node) {
-	return {};
-	context.error("Traits are currently in the works, sorry :/");
 	if (!node->leftSide)
 		context.error("Expected declaration name here!");
 	auto const name = context.pathOf(node->leftSide);
@@ -687,6 +685,8 @@ ATransformer::Result TraitDecl::transform(Context& context, Node::Instance const
 	auto const scope = context.declare(name);
 	auto& trait = *(scope->trait = scope->trait.create());
 	auto const rett = Result{.scope = scope, .mayBeEmpty = false};
+	List<Node::Instance> methods;
+	List<Node::Instance> properties;
 	Makai::Function<bool(Node::Instance const&, Node::Instance const&)> evalDecl;
 	evalDecl = [&] (Node::Instance const& node, Node::Instance const& root) -> bool {
 		if (node->content == Node::Content::AV2_TANC_DECLARATION) {
@@ -702,7 +702,6 @@ ATransformer::Result TraitDecl::transform(Context& context, Node::Instance const
 	};
 	if (node->templateDecl) {
 		context.pop(name.size());
-		trait.flags.isGeneric = true;
 		trait.declaration = node;
 		scope->declaration = node;
 		scope->state = context.scopeStack;
@@ -716,9 +715,10 @@ ATransformer::Result TraitDecl::transform(Context& context, Node::Instance const
 	List<Namespace::Instance> protecteds;
 	MAKAILIB_DEBUGLN_FULL("Parsing methods...");
 	MAKAILIB_DEBUGLN_FULL("Method count: ", methods.size());
+	auto implName = name;
 	implName.back() = "::IMPL__" + implName.back();
 	auto const implScope = context.declare(implName);
-	scope->type = scope->subspaces["Self"];
+	scope->type = scope->subspaces["Self"]->type;
 	implScope->subspaces["Self"] = scope->subspaces["Self"];
 	auto& type = *scope->type;
 	auto tscope = type.scope;
@@ -2881,15 +2881,24 @@ ATransformer::Result UnionTypeDecl::transform(Context& context, Node::Instance c
 }
 
 ATransformer::Result TypeExtension::transform(Context& context, Node::Instance const& node) {
-	Intermediate::TraitRef trait;
-	context.scopeStack.pushBack(type.type->scope.asStrong());
+	Namespace::TraitRef trait;
 	if (node->templateDecl) {
-		addGlobalTrait({context.getTrait(node->middle), node->templateDecl, node->rightSide});
+		context.addGlobalTrait(
+			Context::GlobalTrait{
+				context.getTrait(node->middle),
+				node->templateDecl,
+				node->rightSide
+			}
+		);
 		return {};
 	}
-	auto const type = context.getType(node->leftSide);
-	if (node->middle)
-		extendWithTrait(context.getTrait(node->middle), type);
+	auto const type = context.getType(node->leftSide).type;
+	context.scopeStack.pushBack(type->scope.asStrong());
+	if (node->middle) {
+		auto const trait = context.getTrait(node->middle);
+		context.extendWithTrait(trait, type, node);
+		type->traits[trait->name] = trait;
+	}
 	for (auto& extension: node->children) {
 		auto const ext = context.getExpression(extension);
 		if (!ext.scope)
@@ -2901,7 +2910,7 @@ ATransformer::Result TypeExtension::transform(Context& context, Node::Instance c
 				ov->variant == Function::Overload::Variant::Object::AV2_TCB_FO_VO_NONE
 			or	ov->variant == Function::Overload::Variant::Object::AV2_TCB_FO_VO_CLASS
 			) {
-				if (ov->arguments.empty() or ov->arguments.front()->type != type.scope->type.asWeak())
+				if (ov->arguments.empty() or ov->arguments.front()->type != type.asWeak())
 					context.error(
 						"Missing valid [this] argument for member function!\n"
 						"Did you make sure the type is correct, or to set function as [@Static]?"
@@ -3450,8 +3459,10 @@ ATransformer::Result TemplateReification::transform(Context& context, Node::Inst
 	auto const curStack = context.scopeStack;
 	context.scopeStack = decl->state;
 	auto const reified = context.reify(decl->declaration, node->children);
+	if (!reified)
+		context.error("Reification Failure: " + reified.error(), node);
 	context.scopeStack = curStack;
-	return {.scope = reified, .type = reified->type};
+	return ATransformer::Result{.scope = reified.value(), .type = reified.value()->type};
 }
 
 ATransformer::Result TypeReification::transform(Context& context, Node::Instance const& node) {
@@ -3693,7 +3704,7 @@ ATransformer::Result ATransformer::Context::getType(Node::Instance const& node) 
 	return transform(expr, node);
 }
 
-ATransformer::Result ATransformer::Context::getTrait(Node::Instance const& node) {
+Namespace::TraitRef ATransformer::Context::getTrait(Node::Instance const& node) {
 	static auto expr = TraitRequest();
 	return transform(expr, node).scope->trait;
 }
@@ -3710,44 +3721,47 @@ void ATransformer::Context::registerType(Namespace::Instance const& ns) {
 }
 
 void ATransformer::Context::addGlobalTrait(GlobalTrait const& trait) {
-	static usize id = 0;
 	if (!trait.baseTrait) return;
 	globalTraits.pushBack(trait);
-	for (auto& type: allTypes)
+	for (auto const& [_, type]: allTypes)
 		reifyGlobalTrait(trait, type);
 }
 
 void ATransformer::Context::reifyGlobalTrait(GlobalTrait const& trait, Namespace::TypeRef const& type) {
 	static usize id = 0;
 	if (!type) return;
+	if (trait.baseTrait && type->traits.contains(trait.baseTrait->name))
+		return;
 	auto const selfID = "__" + Makai::toString(id) + "xx_TSelf_" + type->name;
 	declare(UTF8StringList::from("<rgt>::" + type->metaID() + Makai::toString("_rid", id++)));
-	top()->subspaces[selfID] = type->scope;
+	top()->subspaces[selfID] = type->scope.asStrong();
 	Node::Instance prevSelf;
 	if (trait.baseTrait) {
-		prevSelf = trait.baseTrait->templateDecl.children.font();
-		trait.baseTrait->templateDecl.children.front() = trait.selfConstraint;
+		prevSelf = trait.baseTrait->declaration->templateDecl->children.front();
+		trait.baseTrait->declaration->templateDecl->children.front() = trait.selfConstraint;
 	}
-	auto const rargs = ReificationArgs::from(context.evaluate("Self = " + selfID)));
+	auto const rargs = ReificationArgs::from(evaluate("Self = " + selfID));
 	if (trait.baseTrait && reify(trait.baseTrait->declaration, rargs))
 		reify(trait.declaration, rargs);
 	else if (trait.declaration)
 		reify(trait.declaration, rargs);
 	if (trait.baseTrait)
-		trait.baseTrait->templateDecl.children.front() = prevSelf;
+		trait.baseTrait->declaration->templateDecl->children.front() = prevSelf;
 }
 
-void ATransformer::Context::extendWithTrait(Intermediate::TraitRef const& trait, Namespace::TypeRef const& type, Node::Instance const& decl) {
+void ATransformer::Context::extendWithTrait(Namespace::TraitRef const& trait, Namespace::TypeRef const& type, Node::Instance const& decl) {
 	static usize id = 0;
-	if (!type) return;
+	if (!(type && trait)) return;
+	if (type->traits.contains(trait->name))
+		error("Trait for this type has already been declared!", decl);
 	auto const selfID = "__" + Makai::toString(id) + "xx_TSelf_" + type->name;
 	declare(UTF8StringList::from("<extend-trait>::" + type->metaID() + Makai::toString("_rid", id++)));
-	top()->subspaces[selfID] = type->scope;
+	top()->subspaces[selfID] = type->scope.asStrong();
 	Node::Instance prevSelf;
-	auto const rargs = ReificationArgs::from(context.evaluate("Self = " + selfID)));
-	auto const result = reify(trait.baseTrait->declaration, rargs);
+	auto const rargs = ReificationArgs::from(evaluate("Self = " + selfID));
+	auto const result = reify(trait->declaration, rargs);
 	if (!result)
-		error("Trait Extension Error: " + result.error().value(), decl);
+		error("Trait Extension Error: " + result.error(), decl);
 }
 
 void ATransformer::Context::hydrateType(Namespace::TypeRef const& type) {
@@ -3794,7 +3808,9 @@ Node::Instance ATransformer::Context::evaluate(Makai::UTF8String const& eval) {
 	return parse;
 }
 
-Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Context::ReificationArgs const& targs) {
+using Rtd = Makai::Result<Namespace::Instance, Makai::String>;
+
+Rtd ATransformer::Context::reify(Node::Instance const& node, Context::ReificationArgs const& targs) {
 	static usize rid = 0;
 	auto const tdecl = node->templateDecl;
 	node->templateDecl = nullptr;
@@ -3809,13 +3825,13 @@ Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Con
 		Template::Parameter param;
 		if (arg->content == Node::Content::AV2_TANC_ASSIGNMENT) {
 			if (!generic->params.contains(arg->leftSide->base.text)) {
-				context.pop(1);
-				return "Template parameter [" +arg->leftSide->base.text+ "] does not exist";
+				pop(1);
+				return Makai::String("Template parameter [" +arg->leftSide->base.text+ "] does not exist");
 			}
 			param = generic->params[arg->leftSide->base.text];
 			if (visited.contains(param.name)) {
-				context.pop(1);
-				return "Template parameter [" +param.name+ "] has already been set!";
+				pop(1);
+				return Makai::String("Template parameter [" +param.name+ "] has already been set!");
 			}
 			visited[param.name] = true;
 			set.pushBack({param.name, arg->rightSide});
@@ -3837,8 +3853,8 @@ Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Con
 		else missing.pushBack(name);
 	}
 	if (missing.size()) {
-		context.pop(1);
-		return "Missing arguments [" + missing.join(", ") + "] for template declaration!";
+		pop(1);
+		return Makai::String("Missing arguments [" + missing.join(", ") + "] for template declaration!");
 	}
 	UTF8String reifyName = node->name();
 	for (auto const& [name, decl]: set) {
@@ -3847,8 +3863,8 @@ Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Con
 		if (arg.type->basic && arg.type->basic < Core::BasicType::AV2_BT_TYPEID) {
 			auto const expr = getExpression(decl);
 			if (expr.direct.isUndefined()) {
-				context.pop(2);
-				return "Template parameter [" + name + "] may only accept direct expressions!";
+				pop(2);
+				return Makai::String("Template parameter [" + name + "] may only accept direct expressions!");
 			}
 			auto const value = expr.direct;
 			auto const type = *arg.type->basic;
@@ -3879,40 +3895,40 @@ Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Con
 				default: mismatched = true;
 			}
 			if (mismatched) {
-				context.pop(2);
-				return "Type mismatch (Expected: [" + var.type->name + "], got [" + expr.type->name + "])!";
+				pop(2);
+				return Makai::String("Type mismatch (Expected: [" + var.type->name + "], got [" + expr.type->name + "])!");
 			}
 			reifyName += ";" + name + "=value:" + value.toString();
 		} else {
 			auto const type = getType(decl);
 			if (arg.type->basic != Core::BasicType::AV2_BT_TYPEID) {
 				if (!type.type->derivedFrom(arg.type)) {
-					context.pop(2);
-					return "Type for [" + name + "] does not derive from required type!";
+					pop(2);
+					return Makai::String("Type for [" + name + "] does not derive from required type!");
 				}
 			}
 			StringList missing;
 			for (auto const& constraint: arg.constraints) {
 				auto const refx = reify(constraint->node, ReificationArgs::from(decl));
-				if (auto const out = satisfies(refx->variable)) {
+				if (auto const out = satisfies(refx.value()->variable)) {
 					if (!out.value())
 						missing.pushBack(constraint->name);
 				} else {
-					context.pop(2);
-					return "Constraint [" + constraint->name + "] is a bad constraint!";
+					pop(2);
+					return Makai::String("Constraint [" + constraint->name + "] is a bad constraint!");
 				}
 			}
 			if (missing.size()) {
-				context.pop(2);
-				return "Template argument ["+ name + "] does not satisfy required constraint(s) [" + missing.join(", ") + "]!";
+				pop(2);
+				return Makai::String("Template argument ["+ name + "] does not satisfy required constraint(s) [" + missing.join(", ") + "]!");
 			}
 			missing.clear();
 			for (auto const& trait: arg.traits)
 				if (!type.type->traits.contains(trait->node->name()))
 					missing.pushBack(trait->name);
 			if (missing.size()) {
-				context.pop(2);
-				return "Template argument ["+ name + "] does not implement required trait(s) [" + missing.join(", ") + "]!";
+				pop(2);
+				return Makai::String("Template argument ["+ name + "] does not implement required trait(s) [" + missing.join(", ") + "]!");
 			}
 			scope->type = type.type;
 			reifyName += ";" + name + "=type:" + type.type->name;
@@ -3930,7 +3946,7 @@ Namespace::Instance ATransformer::Context::reify(Node::Instance const& node, Con
 		pop(1);
 		node->templateDecl = tdecl;
 		return reified.scope;
-	} catch (Context::CompilationError const& e) {
+	} catch (Makai::Error::Generic const& e) {
 		node->templateDecl = tdecl;
 		pop(1);
 		return e.report();

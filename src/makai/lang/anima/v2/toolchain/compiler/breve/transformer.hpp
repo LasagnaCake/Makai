@@ -114,7 +114,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			UTF8Dictionary<Namespace::Instance>					reifications;
 
 			struct GlobalTrait {
-				Namespace::Instance baseTrait;
+				Namespace::TraitRef baseTrait;
 				Node::Instance declaration;
 				Node::Instance selfConstraint;
 			};
@@ -123,7 +123,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			void addGlobalTrait(GlobalTrait const& trait);
 			void reifyGlobalTrait(GlobalTrait const& trait, Namespace::TypeRef const& forType);
 
-			void extendWithTrait(Intermediate::TraitRef const& trait, Namespace::TypeRef const& type, Node::Instance const& decl);
+			void extendWithTrait(Namespace::TraitRef const& trait, Namespace::TypeRef const& type, Node::Instance const& decl);
 
 			void hydrateType(Namespace::TypeRef const& type);
 
@@ -131,7 +131,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 
 			Result getExpression(Node::Instance const& node);
 			Result getType(Node::Instance const& node);
-			Result getTrait(Node::Instance const& node);
+
+			Namespace::TraitRef getTrait(Node::Instance const& node);
 
 			template <Type::Subclass<ATransformer> T>
 			Result transform(Node::Instance const& node) {
@@ -143,7 +144,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 
 			using ReificationArgs = List<Node::Instance>;
 
-			Result<String, Namespace::Instance> reify(Node::Instance const& node, ReificationArgs const& targs);
+			Makai::Result<Namespace::Instance, String> reify(Node::Instance const& node, ReificationArgs const& targs);
 			Template::Instance templateFor(Node::Instance const& node);
 
 			static Namespace::TypeRef infoType();

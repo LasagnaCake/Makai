@@ -511,7 +511,7 @@ Node::Instance TraitDeclResolver::resolve(Parser& parser, Node::Instance const& 
 	tself->base.text = "Self";
 	tself->value = "Self";
 	tself->content = Node::Content::AV2_TANC_NAME;
-	if (bd->templateDecl->children.size())
+	if (nbd->templateDecl->children.size())
 		nbd->templateDecl->children.insert(0, tself);
 	else nbd->templateDecl->children.pushBack(tself);
 	return nbd;
