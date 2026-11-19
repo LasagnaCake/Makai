@@ -32,7 +32,10 @@ struct SystemLib: ALibrary {
 		context.methods.add("av2/system/dynamic/invoke",	dinvoke	);
 	}
 
-	String name() const override {return "av2/system";}
+	String name() const override {
+		static auto const cname[] = "av2/system";
+		return {cname, cname + sizeof(cname)};
+	}
 };
 
 AV2_Library(SystemLib);

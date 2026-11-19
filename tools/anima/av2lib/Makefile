@@ -96,7 +96,6 @@ prologue:
 
 av2:
 	$(call compile, console)
-	$(call compile, tostring)
 	$(call compile, convert)
 	$(call compile, string)
 	$(call compile, meta)

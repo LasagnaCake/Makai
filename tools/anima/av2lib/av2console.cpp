@@ -37,7 +37,10 @@ struct ConsoleLib: ALibrary {
 		context.methods.add("av2/console/writeLine_any",	writeLine_any		);
 	}
 
-	String name() const override {return "av2/console";}
+	CSpan<char> name() const override {
+		static auto const cname[] = "av2/console";
+		return {cname, cname + sizeof(cname)};
+	}
 };
 
 AV2_Library(ConsoleLib);

@@ -41,7 +41,10 @@ struct NetLib: ALibrary {
 		context.methods.add("av2/net/fetchBinary",	Net::File::fetchBinary);
 	}
 
-	String name() const override {return "av2/net";}
+	String name() const override {
+		static auto const cname[] = "av2/net";
+		return {cname, cname + sizeof(cname)};
+	}
 };
 
 AV2_Library(NetLib);

@@ -53,7 +53,10 @@ struct TimeLib: ALibrary {
 		context.methods.add("av2/time/procNow",		procNow		);
 	}
 
-	String name() const override {return "av2/time";}
+	String name() const override {
+		static auto const cname[] = "av2/time";
+		return {cname, cname + sizeof(cname)};
+	}
 };
 
 AV2_Library(TimeLib);

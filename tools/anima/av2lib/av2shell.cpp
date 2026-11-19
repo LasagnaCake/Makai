@@ -41,7 +41,10 @@ struct ShellLib: ALibrary {
 		context.methods.add("av2/shell/exec",	exec	);
 	}
 
-	String name() const override {return "av2/shell";}
+	String name() const override {
+		static auto const cname[] = "av2/shell";
+		return {cname, cname + sizeof(cname)};
+	}
 };
 
 AV2_Library(ShellLib);
