@@ -70,9 +70,9 @@ void Context::Library::Impl::close() {
 void Context::loadLibraries() {
 	MAKAILIB_DEBUGLN_FULL("Loading libraries...");
 	for (auto& lib: toBeLoaded) {
-		MAKAILIB_DEBUGLN_FULL("<", lib->name(), ">");
+		MAKAILIB_DEBUGLN_FULL("<", String(lib->name()), ">");
 		lib->load(*this);
-		MAKAILIB_DEBUGLN_FULL("</", lib->name(), ">");
+		MAKAILIB_DEBUGLN_FULL("</", String(lib->name()), ">");
 	}
 	toBeLoaded.clear();
 	MAKAILIB_DEBUGLN_FULL("Done loading libraries!");

@@ -322,5 +322,6 @@ contexts:
 
   inline_assembly_block:
     - meta_scope: string.quoted.other.breve
+    - include: interpolations
     - match: '\}'
       pop: true

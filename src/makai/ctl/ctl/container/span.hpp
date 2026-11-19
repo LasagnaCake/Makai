@@ -552,6 +552,30 @@ constexpr auto rospan(T& value)
 	return rospan(value.data(), value.size());
 }
 
+template <class T>
+struct CSpan {
+	using PointerType = ref<T const>;
+
+	CSpan(PointerType const begin, PointerType const end):
+		from(begin < end ? begin : end),
+		to(end < begin ? begin : end) {
+			if (!(from && to)) {
+				begin = nullptr;
+				end = nullptr;
+			}
+		}
+
+	PointerType begin() const	{return from;	}
+	PointerType end() const		{return to;		}
+
+	PointerType data() const {return from;	}
+	usize size() const {return to - from;	}
+
+private:
+	PointerType from;
+	PointerType to;
+};
+
 CTL_NAMESPACE_END
 
 #endif // CTL_CONTAINER_SPAN_H

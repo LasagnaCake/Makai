@@ -11,7 +11,7 @@ namespace Makai::Anima::V2::Runtime {
 		virtual void unload(Context::Remover const& remover);
 		virtual void close();
 
-		virtual String			name() const	= 0;
+		virtual CSpan<char>		name() const	= 0;
 		virtual Data::Version	version() const	{return Data::Version{0};		}
 		virtual usize			hash() const	{return Makai::hash(name());	}
 
