@@ -97,9 +97,9 @@ Nullable<Bytes<>> File::unpackFrom(BF::IReadable& reader, String const& key) con
 
 Result<Archive::FileEntry, Archive::GetError> Archive::tryGet(UTF8String const& path) {
 	if (!isOpen) return GetError::PGE_NOT_OPEN;
-	if (!in) return GetError::PGE_WRITE_ONLY;
 	if (outBuf.contains(path))
 		return outBuf[path];
+	if (!in) return GetError::PGE_WRITE_ONLY;
 	else if (inBuf.contains(path) && inBuf[path]) {
 		auto const fheader = *inBuf[path];
 		if (auto const fdat = fheader.unpackFrom(*in, key)) {
@@ -136,8 +136,10 @@ Nullable<UTF8StringList> Archive::files() const {
 	for (auto const& [file, x]: inBuf)
 		if (x) checked[file] = true;
 	for (auto const& [file, _]: outBuf)
-		checked[file] = true;
-	return checked.keys();
+		if (!checked.contains(file))
+			checked[file] = true;
+	auto const chk = checked.keys();
+	return chk;
 }
 
 Archive& Archive::close() {
@@ -155,26 +157,42 @@ Archive& Archive::close() {
 				auto const dblk = Block::createFor(dd.mode.encryption);
 				dd.block = BF::Text{builder.append(dblk)};
 				for (auto const& file: files().orElse({})) {
-					tryGet(file).then([&] (auto const& fd) -> void {
-						File fzx {{.unpacked = fd.data.size(), .mode = fd.mode}};
-						auto const blk = Block::createFor(fd.mode.encryption);
-						fzx.hash = hashOf(fd.data.span());
-						Pack::pack(fd.data.span(), blk, key, fd.mode.encryption, fd.mode.compression, fd.mode.level)
-							.then([&] (auto const cd) -> void {
-								fzx.packed = cd.size();
-								fzx.contents = {builder.append(cd)};
-								fzx.block = {builder.append(blk)};
-							})
-						;
-						efiles.pushBack(builder.put(fzx));
-						auto const fnb = file.toString().toBytes();
-						dd.hash += hashOf(fnb.span());
-						Pack::pack(fnb.span(), blk, key, fd.mode.encryption, dd.mode.compression, dd.mode.level)
-							.then([&] (auto const& ed) -> void {
-								names.pushBack(ed);
-							})
-						;
-					});
+					auto const f = tryGet(file);
+					tryGet(file)
+						.then([&] (auto const& fd) -> void {
+							File fzx {{.unpacked = fd.data.size(), .mode = fd.mode}};
+							auto const blk = Block::createFor(fd.mode.encryption);
+							fzx.hash = hashOf(fd.data.span());
+							auto const pk = Pack::pack(fd.data.span(), blk, key, fd.mode.encryption, fd.mode.compression, fd.mode.level);
+							if (!pk) throw Error::FailedAction("Failed to pack file!");
+							pk.then([&] (auto const& cd) -> void {
+									fzx.packed = cd.size();
+									fzx.contents = {builder.append(cd)};
+									fzx.block = {builder.append(blk)};
+								})
+							;
+							efiles.pushBack(builder.put(fzx));
+							auto const fnb = file.toString().toBytes();
+							dd.hash += hashOf(fnb.span());
+							auto const pq = Pack::pack(fnb.span(), blk, key, fd.mode.encryption, dd.mode.compression, dd.mode.level);
+							pq.then([&] (auto const& ed) -> void {
+									names.pushBack(ed);
+								})
+							;
+							if (!pq) throw Error::FailedAction("Failed to pack file!");
+						})
+						.onError([] (auto const& e) {
+							switch (e) {
+								using enum Pack::Archive::GetError;
+								case PGE_NOT_OPEN:				throw Error::FailedAction("Archive is not open!");
+								case PGE_WRITE_ONLY:			throw Error::FailedAction("Archive is write-only!");
+								case PGE_NO_FILE:				throw Error::FailedAction("File does not exist!");
+								case PGE_BROKEN_FILE_HEADER:	throw Error::FailedAction("Broken file header!");
+								case PGE_BROKEN_FILE:			throw Error::FailedAction("Broken file contents!");
+								default:						throw Error::FailedAction("Some mysterious error!");
+							}
+						})
+					;
 				}
 				dd.files = {builder.append(efiles)};
 				dd.names = {builder.embed(names)};

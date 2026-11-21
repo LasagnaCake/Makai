@@ -224,43 +224,62 @@ namespace OS::FS {
 		return "";
 	}
 
+	struct Entry {
+		bool folder = false;
+		String path;
+		String name;
+
+		constexpr static bool isFolder(Entry const& e)	{return e.folder;	}
+		constexpr static bool isFile(Entry const& e)	{return !e.folder;	}
+
+		constexpr static String toPath(Entry const& e)	{return e.path;		}
+		constexpr static String toName(Entry const& e)	{return e.name;		}
+	};
+
+	inline List<Entry> entriesIn(String const& folder) {
+		if (!isDirectory(folder)) return {};
+		List<Entry> entries;
+		for (auto const& e: fs::directory_iterator(folder.std())) {
+			String name = e.path().filename().string();
+			if (e.is_directory())
+				name = e.path().stem().string();
+			else name = e.path().filename().string();
+			entries.pushBack({e.is_directory(), concatenate(folder, name), name});
+		}
+		return copy(entries);
+	}
+
 	inline StringList filesIn(String const& folder) {
 		if (!isDirectory(folder)) return {};
-		StringList files;
-		for (auto const& e: fs::directory_iterator(folder.std())) {
-			if (e.is_directory()) continue;
-			String name = e.path().filename().string();
-			String path = concatenate(folder, name);
-			files.pushBack(path);
-		}
-		return copy(files);
+		return entriesIn(folder).filter(Entry::isFile).toList<String>(Entry::toPath);
 	}
 
 	inline StringList foldersIn(String const& folder) {
 		if (!isDirectory(folder)) return {};
-		StringList folders;
-		for (auto const& e: fs::directory_iterator(folder.std())) {
-			if (!e.is_directory()) continue;
-			String name = e.path().stem().string();
-			String path = concatenate(folder, name);
-			folders.pushBack(path);
-		}
-		return copy(folders);
+		return entriesIn(folder).filter(Entry::isFolder).toList<String>(Entry::toPath);
 	}
 
 	inline StringList walkFiles(String const& folder) {
 		if (!isDirectory(folder)) return {};
-		StringList files = filesIn(folder);
-		for (auto const& f: foldersIn(folder))
-			files.appendBack(walkFiles(concatenate(folder, f)));
+		StringList files;
+		auto const entries = entriesIn(folder);
+		for (auto const& e: entries) {
+			if (e.folder) files.appendBack(walkFiles(e.path));
+			else files.pushBack(e.path);
+		}
 		return copy(files);
 	}
 
 	inline StringList walkFolders(String const& folder) {
 		if (!isDirectory(folder)) return {};
-		StringList folders = foldersIn(folder);
-		for (auto const& f: foldersIn(folder))
-			folders.appendBack(walkFolders(concatenate(folder, f)));
+		StringList folders;
+		auto const entries = entriesIn(folder);
+		for (auto const& e: entries) {
+			if (e.folder) {
+				folders.pushBack(e.path);
+				folders.appendBack(walkFolders(e.path));
+			}
+		}
 		return copy(folders);
 	}
 

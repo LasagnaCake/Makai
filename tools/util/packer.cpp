@@ -47,6 +47,20 @@ namespace Command {
 		DEBUGLN("keygen <file> [--password <password>] [--type <type>]");
 	}
 
+	static void packFolder(Makai::Pack::Archive& pa, Makai::String const& folder, Makai::String const& source) {
+		auto const files = Makai::OS::FS::walkFiles(folder);
+		for (auto const& f: files) {
+			DEBUGLN("- ", f);
+			auto const destPath = f.sliced(source.size());
+			if (auto const e = pa.tryAdd(destPath, {.data = Makai::File::loadBinary(f)})) {
+				switch (e.value()) {
+					case Makai::Pack::Archive::AddError::PAE_NOT_OPEN:	throw Makai::Error::FailedAction("");
+					case Makai::Pack::Archive::AddError::PAE_READ_ONLY:	throw Makai::Error::FailedAction("");
+				}
+			}
+		}
+	}
+
 	static void doPack(Makai::Data::Value const& cfg) {
 		DEBUGLN("Packing archive...");
 		if (cfg["__args"].size() < 2)
@@ -69,12 +83,8 @@ namespace Command {
 				Makai::Data::hashed(cfg["pass"].getString(), Makai::Data::HashMode::HM_SHA3_256),
 				Makai::Pack::Archive::Destination::create<Makai::Pack::BF::Writer>(outFile)
 			);
-			for (auto const& f: Makai::OS::FS::walkFiles(source)) {
-				auto const destPath = f.sliced(source.size());
-				if (auto const e = pa.tryAdd(destPath, {.data = Makai::File::loadBinary(f)})) {
-					// TODO: Error handling
-				}
-			}
+			DEBUGLN("Folder: ", source);
+			packFolder(pa, source, source);
 			pa.close();
 		}
 		Makai::File::saveBinary(packName, outFile);

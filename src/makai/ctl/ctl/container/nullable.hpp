@@ -150,7 +150,7 @@ public:
 	/// @param op Operation to apply.
 	/// @return Reference to self.
 	template<Type::Functional<void(DataType const&)> TFunction>
-	constexpr SelfType& then(TFunction const& op) {if (isSet) op(content.data); return *this;					}
+	constexpr SelfType const& then(TFunction const& op) const {if (isSet) op(content.data); return *this;		}
 
 	/// @brief Returns whether there is a stored value.
 	/// @return Whether there is a stored value.
