@@ -168,7 +168,7 @@ Nullable<Bytes<>> Makai::Pack::unpack(
 	Compression const		comp,
 	uint8 const				level
 ) {
-	auto const cc = encrypt(data, block, key, enc);
+	auto const cc = decrypt(data, block, key, enc);
 	if (!cc) return null;
 	return decompress(data, comp, level);
 }
