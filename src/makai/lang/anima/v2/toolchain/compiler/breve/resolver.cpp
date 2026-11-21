@@ -1079,9 +1079,15 @@ Node::Instance ProofResolver::resolve(Parser& parser, Node::Instance const& left
 		))
 			parser.context.error("Expected '(' or '{' to follow after [with]!");
 		result->middle = parser.nextExpression();
-		for (auto& child: result->middle->children)
-			if (child->content != Node::Content::AV2_TANC_DECLARATION)
-				parser.context.error("[with] blocks can only have declarations!");
+		for (auto& child: result->middle->children) {
+			auto cc = child;
+			while (cc->content == Node::Content::AV2_TANC_ATTRIBUTE)
+				cc = cc->rightSide;
+			if (cc->content != Node::Content::AV2_TANC_DECLARATION)
+				parser.context.error("[with] blocks can only have empty variable declarations!");
+			if (cc->base.type != LTS_TT_COLON or cc->rightSide)
+				parser.context.error("[with] blocks can only have empty variable declarations!");
+		}
 
 	}
 	result->leftSide = parser.nextExpression();

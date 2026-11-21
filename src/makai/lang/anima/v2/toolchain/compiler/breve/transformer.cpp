@@ -423,7 +423,7 @@ ATransformer::Result VariableDecl::transform(Context& context, Node::Instance co
 		var.defaulted = true;
 		if (!var.type)
 			var.type = result.type.asWeak();
-	}
+	} else var.hasValue = false;
 	context.pop(path.size());
 	if (!var.type)
 		context.error("[" + Makai::toString(__LINE__) + "]::INTERNAL_ERROR -> Variable has lost its type!", node);
@@ -566,6 +566,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 	scope->type->flags.isStructure = true;
 	MAKAILIB_DEBUGLN_FULL("Parsing fields...");
 	MAKAILIB_DEBUGLN_FULL("Field count: ", fields.size());
+	auto bsz = some<u64>(0);
 	for (auto const& [field, id]: Range::expand(fields)) {
 		auto const decl = context.getExpression(field);
 		auto& var = *decl.scope->variable;
@@ -574,6 +575,9 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 		scope->subspaces[var.name] = decl.scope;
 		MAKAILIB_DEBUGLN_FULL("Field: ", var.name);
 		var.id = id;
+		if (var.type->byteSize && bsz)
+			bsz = *bsz + *var.type->byteSize;
+		else bsz = null;
 		if (var.scope->isPrivate())
 			privates.pushBack(var.scope.asStrong());
 		else if (var.scope->isProtected())
@@ -582,6 +586,7 @@ ATransformer::Result StructureDecl::transform(Context& context, Node::Instance c
 			statics.pushBack(var.scope->variable);
 		var.scope->makePublic();
 	}
+	type.byteSize = bsz;
 	context.pop(name.size());
 	context.registerType(scope);
 	auto implName = name;
@@ -1121,6 +1126,8 @@ static ssize likelihoodOf(Node::Instance const& node) {
 }
 
 ATransformer::Result PrefixExpression::transform(Context& context, Node::Instance const& node) {
+	if (node->base.text == "typeof")
+		return context.transform<TypeCountSizeOf>(node);
 	if (
 		node->base.text == "return"
 	or	node->base.text == "error"
@@ -2084,11 +2091,12 @@ ATransformer::Result Import::transform(Context& context, Node::Instance const& n
 	MAKAILIB_DEBUGLN_FULL("");
 	auto const subinter = importer(fpath);
 	// This is for testing purposes (probably (I don't know if I'll replace it))
-	if (!subinter.content) return {};
+	if (!subinter.structure) return {};
 	for (auto& [name, imp]: context.root->subspaces["0__@Tx0_IMPORTS"]->subspaces)
-		if (imp == subinter.content) return {.scope = subinter.content};
-	context.registerImport(subinter.content);
-	return {.scope = subinter.content};
+		if (imp == subinter.structure) return {.scope = subinter.structure};
+	context.symbols.append(subinter.symbols);
+	context.registerImport(subinter.structure);
+	return {.scope = subinter.structure};
 }
 
 ATransformer::Result Spread::transform(Context& context, Node::Instance const& node) {
@@ -2884,7 +2892,7 @@ ATransformer::Result TypeExtension::transform(Context& context, Node::Instance c
 	Namespace::TraitRef trait;
 	if (node->templateDecl) {
 		context.addGlobalTrait(
-			Context::GlobalTrait{
+			SymbolTable::GlobalTrait{
 				context.getTrait(node->middle),
 				node->templateDecl,
 				node->rightSide
@@ -3042,7 +3050,16 @@ ATransformer::Result Evaluation::transform(Context& context, Node::Instance cons
 
 ATransformer::Result Proof::transform(Context& context, Node::Instance const& node) {
 	bool success = false;
-	context.declare(UTF8StringList::from("<proof>::" + node->name()));
+	auto const pscope = context.declare(UTF8StringList::from("<proof>::" + node->name()));
+	pscope->declaredAsNamespace = false;
+	for (auto const& child: node->children) {
+		auto const chex = context.getExpression(child);
+		if (!(chex.scope && chex.scope->variable))
+			context.error("Expected variable declaration here!", child);
+		if (chex.scope->variable->hasValue)
+			context.error("Proof parameters may not have values!", child);
+		chex.scope->variable->fill();
+	}
 	try {
 		context.getExpression(node->leftSide);
 		success = true;
@@ -3078,23 +3095,27 @@ ATransformer::Result Assertion::transform(Context& context, Node::Instance const
 }
 
 ATransformer::Result Promotion::transform(Context& context, Node::Instance const& node) {
-	auto const type = context.getType(node->leftSide).type;
-	if (!type)
-		context.error("Expected type here!", node->leftSide);
-	String const id = type->metaID();
-	return {.type = context.basicType("type"), .direct = id};
+	auto const sym = context.getExpression(node->leftSide);
+	auto result = context.info(sym.scope);
+	return sym;
 }
 
 ATransformer::Result Demotion::transform(Context& context, Node::Instance const& node) {
 	auto const expr = context.getExpression(node->leftSide);
 	if (expr.direct.isUndefined())
-		context.error("Value is not direct type information!", node->leftSide);
-	if (expr.type != context.basicType("type"))
-		context.error("Value is not direct type information!", node->leftSide);
+		context.error("Value is not meta!", node->leftSide);
+	if (expr.type != context.infoType())
+		context.error("Value is not meta!", node->leftSide);
 	String const id = expr.direct.getString();
-	if (!context.allTypes.contains(id))
-		context.error("This type does not exist!", node->leftSide);
-	return {.type = context.allTypes[id]};
+	auto const mac = id.splitAtFirst('@');
+	if (mac.front() == "type") {
+		if (!context.symbols.types.contains(mac.back()))
+			context.error("This type does not exist!", node->leftSide);
+		return {.type = context.symbols.types[mac.back()]};
+	}
+	if (!context.symbols.all.contains(mac.back()))
+		context.error("This symbol does not exist!", node->leftSide);
+	return {.scope = context.symbols.all[mac.back()]};
 }
 
 ATransformer::Result Switch::transform(Context& context, Node::Instance const& node) {
@@ -3544,7 +3565,9 @@ ATransformer::Result StringInterpolation::transform(Context& context, Node::Inst
 	for (usize i = 0; i < count; ++i) {
 		auto const expr = context.getExpression(node->children[i]);
 		if (!expr.direct.isUndefined()) {
-			base += expr.direct.isString() ? expr.direct.getString() : expr.direct.toString();
+			if (expr.direct.contains("::type")) {
+				// TODO: Direct structured data
+			} else base += expr.direct.isString() ? expr.direct.getString() : expr.direct.toString();
 			if (parts.size()) base += parts.popBack();
 		} else {
 			if (expr.mayBeEmpty)
@@ -3553,8 +3576,16 @@ ATransformer::Result StringInterpolation::transform(Context& context, Node::Inst
 				context.impl()->writeMainLine("push", expr.source.value());
 			else if (expr.isStackTop() && expr.isCopied())
 				context.impl()->writeMainLine("copy", *expr.source, "-> top");
-			if (expr.type != context.basicType("string"))
-				context.impl()->writeMainLine("op strfy");
+			if (expr.type != context.basicType("string")) {
+				if (expr.type->flags.isBasic)
+					context.impl()->writeMainLine("op strfy");
+				else if (expr.type->methods.contains("toString")) {
+					auto const ov = expr.type->methods["toString"]->overloadFromTypes({expr.type});
+					if (!ov)
+						context.error("Value is not implicitly convertible to string!", node->children[i]);
+					context.impl()->writeMainLine("call", ov.match->entry);
+				} else context.error("Value is not implicitly convertible to string!", node->children[i]);
+			}
 			if (base.size())
 				context.impl()->writeMainLine("push", base);
 			base.clear();
@@ -3572,6 +3603,50 @@ ATransformer::Result StringInterpolation::transform(Context& context, Node::Inst
 	auto const strType = context.basicType("string");
 	if (stack.empty()) return {.source = {base.toString()}, .scope = strType->scope.asStrong(), .type = strType, .direct = base.toString()};
 	else return {.source = {"move top"}, .scope = strType->scope.asStrong(), .type = strType};
+}
+
+
+ATransformer::Result TypeCountSizeOf::transform(Context& context, Node::Instance const& node) {
+	auto val = context.getExpression(node->leftSide);
+	auto const nbt = node->base.text;
+	if (!val.source)
+		context.error("Invalid expression (Does not result in a value)!", node->leftSide);
+	if (val.mayBeEmpty)
+		context.error("One or more code paths may not result in a value!", node->leftSide);
+	if (val.isCompilable()) {
+		if (nbt == "typeof" && val.type != context.basicType("any")) {
+			auto result = context.info(val.type->scope.asStrong());
+			if (val.direct.contains("::origin"))
+				result.type = context.symbols.types[val.direct["::origin"].getString()];
+			result.source = result.type->metaID();
+			return result;
+		} else if (nbt == "countof" or nbt == "sizeof") {
+			Nullable<u64> szx = null;
+			auto type = val.type;
+			if (val.direct.contains("::origin")) {
+				type = context.symbols.types[val.direct["::origin"].getString()];
+				szx = val.direct["::data"].size();
+			}
+			if (nbt == "sizeof") {
+				if (!type->byteSize)
+					context.error("Type's byte size cannot be deduced at compile-time!", node->leftSide);
+				szx = type->byteSize;
+			}
+			else if (!szx) szx = val.direct.size();
+			return {.source = {Makai::toString(*szx)}, .type = context.basicType("uint64"), .direct = *szx};
+		}
+	}
+	if (val.shouldBePushed() && !val.isCompilable())
+		context.impl()->writeMainLine("push", *val.source);
+	else if (val.isStackTop() && val.isCopied())
+		context.impl()->writeMainLine("copy", *val.source, "-> top");
+	if (nbt == "typeof") {
+		context.impl()->writeMainLine("type");
+		return {.source = {"move top"}, .type = context.basicType("type")};
+	} else {
+		context.impl()->writeMainLine(nbt == "sizeof" ? "size" : "count");
+		return {.source = {"move top"}, .type = context.basicType("uint64")};
+	}
 }
 
 Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {
@@ -3597,40 +3672,44 @@ Namespace::TypeRef ATransformer::Context::basicTypeOf(Makai::Data::Value const& 
 
 Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& type) {
 	if (!type) return nullptr;
-	if (!arrays.contains(type.asWeak())) {
+	if (!symbols.arrays.contains(type.asWeak())) {
 		auto const arr = type.create();
 		arr->flags.isArray = true;
 		arr->base = type;
 		arr->name = type->name + "Array";
 		auto const nsp = Namespace::Instance::create(arr->name);
+		arr->scope = nsp.asWeak();
+		nsp->type = arr;
 		registerType(nsp);
 		auto& ns = *nsp;
 		ns.type = arr;
-		arrays[type.asWeak()] = arr;
+		symbols.arrays[type.asWeak()] = arr;
 		return arr;
-	} else return arrays[type.asWeak()];
+	} else return symbols.arrays[type.asWeak()];
 }
 
 Namespace::TypeRef ATransformer::Context::nullableFor(Namespace::TypeRef const& type) {
 	if (!type) return nullptr;
-	if (!nullables.contains(type.asWeak())) {
+	if (!symbols.nullables.contains(type.asWeak())) {
 		auto const arr = type.create();
 		arr->flags.isNullable = true;
 		arr->base = type;
 		arr->name = type->name + "OrNull";
 		auto const nsp = Namespace::Instance::create(arr->name);
+		arr->scope = nsp.asWeak();
+		nsp->type = arr;
 		registerType(nsp);
 		auto& ns = *nsp;
 		ns.type = arr;
-		nullables[type.asWeak()] = arr;
+		symbols.nullables[type.asWeak()] = arr;
 		return arr;
-	} else return nullables[type.asWeak()];
+	} else return symbols.nullables[type.asWeak()];
 }
 
 Namespace::TypeRef ATransformer::Context::tupleFor(List<Namespace::TypeRef> const& types) {
 	usize id = 0;
 	if (types.size() == 1) return types.back();
-	if (!tuples.contains(types)) {
+	if (!symbols.tuples.contains(types)) {
 		auto const scope = Namespace::Instance::create("<tuple>::" + Makai::toString(++id));
 		scopeStack.pushBack(scope);
 		auto const tup = Namespace::TypeRef::create();
@@ -3649,15 +3728,16 @@ Namespace::TypeRef ATransformer::Context::tupleFor(List<Namespace::TypeRef> cons
 		}
 		tup->name += "_Tuple";
 		scopeStack.popBack();
+		scope->type = tup;
 		registerType(scope);
 		return tup;
-	} else return tuples[types];
+	} else return symbols.tuples[types];
 }
 
 Namespace::TypeRef ATransformer::Context::unionFor(List<Namespace::TypeRef> const& types) {
 	usize id = 0;
 	if (types.size() == 1) return types.back();
-	if (!unions.contains(types)) {
+	if (!symbols.unions.contains(types)) {
 		auto const scope = Namespace::Instance::create("<union>::" + Makai::toString(++id));
 		scopeStack.pushBack(scope);
 		auto const tup = Namespace::TypeRef::create();
@@ -3685,9 +3765,10 @@ Namespace::TypeRef ATransformer::Context::unionFor(List<Namespace::TypeRef> cons
 		pop(1);
 		tup->name += "_Union";
 		scopeStack.popBack();
+		scope->type = tup;
 		registerType(scope);
 		return tup;
-	} else return unions[types];
+	} else return symbols.unions[types];
 }
 
 ATransformer::Result ATransformer::Context::transform(ATransformer& transformer, Node::Instance const& node) {
@@ -3717,17 +3798,18 @@ void ATransformer::Context::registerType(Namespace::Instance const& ns) {
 	static usize id = 0;
 	if (!ns) return;
 	root->subspaces["0__@Tx1_USER_TYPES"]->subspaces[Makai::toString("#", idName(++id), "::") + ns->name] = ns;
-	allTypes[ns->type->metaID()] = ns->type;
+	addSymbol(ns);
+	symbols.types[ns->type->metaID()] = ns->type;
 }
 
-void ATransformer::Context::addGlobalTrait(GlobalTrait const& trait) {
+void ATransformer::Context::addGlobalTrait(SymbolTable::GlobalTrait const& trait) {
 	if (!trait.baseTrait) return;
-	globalTraits.pushBack(trait);
-	for (auto const& [_, type]: allTypes)
+	symbols.globalTraits.pushBack(trait);
+	for (auto const& [_, type]: symbols.types)
 		reifyGlobalTrait(trait, type);
 }
 
-void ATransformer::Context::reifyGlobalTrait(GlobalTrait const& trait, Namespace::TypeRef const& type) {
+void ATransformer::Context::reifyGlobalTrait(SymbolTable::GlobalTrait const& trait, Namespace::TypeRef const& type) {
 	static usize id = 0;
 	if (!type) return;
 	if (trait.baseTrait && type->traits.contains(trait.baseTrait->name))
@@ -3765,7 +3847,7 @@ void ATransformer::Context::extendWithTrait(Namespace::TraitRef const& trait, Na
 }
 
 void ATransformer::Context::hydrateType(Namespace::TypeRef const& type) {
-	for (auto const& gt: globalTraits)
+	for (auto const& gt: symbols.globalTraits)
 		reifyGlobalTrait(gt, type);
 }
 
@@ -3822,7 +3904,7 @@ Rtd ATransformer::Context::reify(Node::Instance const& node, Context::Reificatio
 	for (auto const& arg: targs) {
 		if (index >= generic->names.size())
 			continue;
-		Template::Parameter param;
+		SymbolTable::Template::Parameter param;
 		if (arg->content == Node::Content::AV2_TANC_ASSIGNMENT) {
 			if (!generic->params.contains(arg->leftSide->base.text)) {
 				pop(1);
@@ -3935,34 +4017,34 @@ Rtd ATransformer::Context::reify(Node::Instance const& node, Context::Reificatio
 		}
 		pop(1);
 	}
-	if (reifications.contains(reifyName)) {
+	if (symbols.reifications.contains(reifyName)) {
 		pop(1);
-		return reifications[reifyName];
+		return symbols.reifications[reifyName];
 	}
 	try {
 		auto const reified = getExpression(node);
-		reifications[reifyName] = reified.scope;
 		registerReification(reified.scope);
+		symbols.reifications[reifyName] = reified.scope;
 		pop(1);
 		node->templateDecl = tdecl;
 		return reified.scope;
 	} catch (Makai::Error::Generic const& e) {
-		node->templateDecl = tdecl;
 		pop(1);
+		node->templateDecl = tdecl;
 		return e.report();
 	}
 }
 
-ATransformer::Template::Instance ATransformer::Context::templateFor(Node::Instance const& node) {
-	if (templates.contains(node))
-		return templates[node];
+SymbolTable::Template::Instance ATransformer::Context::templateFor(Node::Instance const& node) {
+	if (symbols.templates.contains(node))
+		return symbols.templates[node];
 	auto const tdecl = node->templateDecl;
 	node->templateDecl = nullptr;
-	Template::Instance generic =  generic.create(pathOf(node->leftSide).join("/") + node->name());
+	SymbolTable::Template::Instance generic =  generic.create(pathOf(node->leftSide).join("/") + node->name());
 	generic->decl = node;
 	for (auto& arg: tdecl->children) {
 		if (arg->content == Node::Content::AV2_TANC_NAME) {
-			Template::Parameter param = {
+			SymbolTable::Template::Parameter param = {
 				arg->base.text,
 				basicType("type")
 			};
@@ -3971,7 +4053,7 @@ ATransformer::Template::Instance ATransformer::Context::templateFor(Node::Instan
 			generic->params[param.name] = param;
 			generic->names.pushBack(param.name);
 		} else if (arg->leftSide->content == Node::Content::AV2_TANC_NAME) {
-			Template::Parameter param = {arg->leftSide->base.text};
+			SymbolTable::Template::Parameter param = {arg->leftSide->base.text};
 			if (generic->params.contains(param.name))
 				error("Redeclaration of template parameter!", arg);
 			generic->names.pushBack(param.name);
@@ -4015,7 +4097,7 @@ ATransformer::Template::Instance ATransformer::Context::templateFor(Node::Instan
 		}
 	}
 	node->templateDecl = tdecl;
-	templates[node] = generic;
+	symbols.templates[node] = generic;
 	return generic;
 }
 
@@ -4036,14 +4118,15 @@ Namespace::TypeRef ATransformer::Context::infoType() {
 }
 
 ATransformer::Result ATransformer::Context::info(Namespace::Instance const& ns) {
-	usize id = 0;
-	if (ns->property)		id = uint64(ns->property.raw());
-	else if (ns->type)		id = uint64(ns->type.raw());
-	else if (ns->function)	id = uint64(ns->function.raw());
-	else if (ns->trait)		id = uint64(ns->trait.raw());
-	else if (ns->variable)	id = uint64(ns->variable.raw());
-	else if (ns->attribute)	id = uint64(ns->attribute.raw());
-	else					id = uint64(ns.raw());
+	String id = "";
+	if (ns->property)		id = "prop@";
+	else if (ns->type)		id = "type@";
+	else if (ns->function)	id = "fn@";
+	else if (ns->trait)		id = "trait@";
+	else if (ns->variable)	id = "var@";
+	else if (ns->attribute)	id = "attr@";
+	else					id = "ns@";
+	id += ns->metaID();
 	return {.scope = ns, .type = infoType(), .direct = id};
 }
 

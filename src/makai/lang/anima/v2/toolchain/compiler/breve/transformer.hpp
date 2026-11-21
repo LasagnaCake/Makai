@@ -8,26 +8,6 @@
 
 namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	struct ATransformer {
-		struct Template {
-			using Instance = Instance<Template>;
-
-			struct Parameter {
-				UTF8String						name;
-				Namespace::TypeRef				type;
-				List<Namespace::TraitRef>		traits;
-				List<Namespace::VariableRef>	constraints;
-				Node::Instance					defaultValue;
-			};
-
-			using ParameterNames	= UTF8StringList;
-			using ParameterMap		= Dictionary<Parameter>;
-
-			UTF8String		name;
-			Node::Instance	decl;
-			ParameterMap	params;
-			ParameterNames	names;
-		};
-
 		struct Result {
 			Nullable<UTF8String>	source;
 			Namespace::Instance		scope;
@@ -104,24 +84,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 
 			Context();
 
-			UTF8Dictionary<Namespace::TypeRef>					allTypes;
-			UTF8Dictionary<Namespace::TypeRef>					basics;
-			Map<Handle<TypeDecl>, Namespace::TypeRef>			arrays;
-			Map<Handle<TypeDecl>, Namespace::TypeRef>			nullables;
-			Map<List<Namespace::TypeRef>, Namespace::TypeRef>	tuples;
-			Map<List<Namespace::TypeRef>, Namespace::TypeRef>	unions;
-			Map<Node::Instance, Template::Instance>				templates;
-			UTF8Dictionary<Namespace::Instance>					reifications;
-
-			struct GlobalTrait {
-				Namespace::TraitRef baseTrait;
-				Node::Instance declaration;
-				Node::Instance selfConstraint;
-			};
-			List<GlobalTrait> globalTraits;
-
-			void addGlobalTrait(GlobalTrait const& trait);
-			void reifyGlobalTrait(GlobalTrait const& trait, Namespace::TypeRef const& forType);
+			void addGlobalTrait(SymbolTable::GlobalTrait const& trait);
+			void reifyGlobalTrait(SymbolTable::GlobalTrait const& trait, Namespace::TypeRef const& forType);
 
 			void extendWithTrait(Namespace::TraitRef const& trait, Namespace::TypeRef const& type, Node::Instance const& decl);
 
@@ -145,7 +109,7 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 			using ReificationArgs = List<Node::Instance>;
 
 			Makai::Result<Namespace::Instance, String> reify(Node::Instance const& node, ReificationArgs const& targs);
-			Template::Instance templateFor(Node::Instance const& node);
+			SymbolTable::Template::Instance templateFor(Node::Instance const& node);
 
 			static Namespace::TypeRef infoType();
 
@@ -471,6 +435,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve::Transformer {
 	};
 
 	struct StringInterpolation: ATransformer {
+		Result transform(Context& context, Node::Instance const& node) override;
+	};
+
+	struct TypeCountSizeOf: ATransformer {
 		Result transform(Context& context, Node::Instance const& node) override;
 	};
 }

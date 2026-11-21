@@ -10,10 +10,17 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 
 	struct Intermediate;
 
-	struct Labeled {
+	struct Labeled: ID::Identifiable<ID::VLUID const> {
 		UTF8String	name;
 		UTF8String	pureName;
 		u64			hash;
+
+		constexpr String idName() const {
+			auto const base = id();
+			return toString("_ID_u", base[3], "u", base[2], "u", base[1], "u", base[0], "_");
+		}
+
+		Labeled(UTF8String const& name): name(name) {}
 	};
 
 	struct Positioned {
@@ -179,6 +186,10 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		Implementation::Instance compose() const override;
 
 		Makai::Data::Value serialize() const override;
+
+		UTF8String metaID() const;
+
+		String const dtx;
 	};
 
 	struct TypeDecl: Labeled, Positioned, Scoped, ISerializable, Reifiable {
@@ -201,6 +212,8 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		UTF8Dictionary<Namespace::OverloadRef>	operators;
 		List<Namespace::TypeRef>				args;
 		UTF8Dictionary<Namespace::TraitRef>		traits;
+
+		Nullable<u64> byteSize;
 
 		String const dtx;
 
@@ -500,8 +513,52 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		virtual ~Trait();
 	};
 
+
+	struct SymbolTable {
+		struct Template {
+			using Instance = Instance<Template>;
+
+			struct Parameter {
+				UTF8String						name;
+				Namespace::TypeRef				type;
+				List<Namespace::TraitRef>		traits;
+				List<Namespace::VariableRef>	constraints;
+				Node::Instance					defaultValue;
+			};
+
+			using ParameterNames	= UTF8StringList;
+			using ParameterMap		= Dictionary<Parameter>;
+
+			UTF8String		name;
+			Node::Instance	decl;
+			ParameterMap	params;
+			ParameterNames	names;
+		};
+
+		UTF8Dictionary<Namespace::Instance>					all;
+		UTF8Dictionary<Namespace::TypeRef>					types;
+		UTF8Dictionary<Namespace::TypeRef>					basics;
+		Map<Handle<TypeDecl>, Namespace::TypeRef>			arrays;
+		Map<Handle<TypeDecl>, Namespace::TypeRef>			nullables;
+		Map<List<Namespace::TypeRef>, Namespace::TypeRef>	tuples;
+		Map<List<Namespace::TypeRef>, Namespace::TypeRef>	unions;
+		Map<Node::Instance, Template::Instance>				templates;
+		UTF8Dictionary<Namespace::Instance>					reifications;
+
+		struct GlobalTrait {
+			Namespace::TraitRef baseTrait;
+			Node::Instance declaration;
+			Node::Instance selfConstraint;
+		};
+
+		List<GlobalTrait> globalTraits;
+
+		void append(SymbolTable const& other);
+	};
+
 	struct File {
-		Namespace::Instance		content;
+		Namespace::Instance		structure;
+		SymbolTable				symbols;
 	 	Function::OverloadRef	main;
 	};
 
@@ -535,6 +592,12 @@ namespace Makai::Anima::V2::Toolchain::Compiler::Breve {
 		virtual ~Intermediate();
 
 		Makai::Data::Value serialize() const override;
+
+		SymbolTable symbols;
+
+		void append(Intermediate const& other);
+
+		void addSymbol(Namespace::Instance const& sym);
 	};
 }
 

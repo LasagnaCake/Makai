@@ -111,5 +111,5 @@ Breve::File Breve::parseFile(
 	Transformer::ATransformer::Context compCtx;
 	Transformer::TheEntireProgram tf;
 	tf.transform(compCtx, parser.parse());
-	return {compCtx.root, compCtx.main.raw()};
+	return {compCtx.root, compCtx.symbols, compCtx.main.asStrong()};
 }

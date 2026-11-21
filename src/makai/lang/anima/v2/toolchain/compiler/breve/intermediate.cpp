@@ -10,7 +10,7 @@ IWritable::~IWritable() {}
 
 #define ATTRIBUTE_TRANSFORMER()  [=] (Intermediate& inter, Namespace::Instance const& ns, Makai::Data::Value const& v, Attribute& base)
 
-Namespace::Namespace(UTF8String const& name): Labeled(name) {}
+Namespace::Namespace(UTF8String const& name): Labeled(name), dtx(Makai::Data::hashed(__DATE__ __TIME__, Data::HashMode::HM_SHA3_512))  {}
 Function::Function(UTF8String const& name): Labeled(name) {}
 Trait::Trait(UTF8String const& name): Labeled(name) {}
 TypeDecl::TypeDecl(UTF8String const& name): Labeled(name), dtx(Makai::Data::hashed(__DATE__ __TIME__, Data::HashMode::HM_SHA3_512)) {}
@@ -89,6 +89,7 @@ Namespace::Instance Intermediate::push(UTF8StringList const& path) {
 	}
 	MAKAILIB_DEBUGLN_FULL("Subpath = ", path.front().toString());
 	Namespace::Instance ns = ns.create(path.front());
+	addSymbol(ns);
 	if (scopeStack.empty())
 		root->subspaces[ns->name] = ns;
 	else scopeStack.back()->subspaces[ns->name] = ns;
@@ -97,6 +98,10 @@ Namespace::Instance Intermediate::push(UTF8StringList const& path) {
 		return push(path.sliced(1));
 	if (!scopeStack.back()) throw Error::FailedAction("The fuck");
 	return scopeStack.back();
+}
+
+void Intermediate::addSymbol(Namespace::Instance const& symbol) {
+	symbols.all[symbol->metaID()] = symbol;
 }
 
 void Intermediate::pop(usize count) {
@@ -138,10 +143,19 @@ static bool const test(Namespace::TypeRef const& a, Namespace::TypeRef const& b,
 	else return a != b;
 }
 
-Makai::UTF8String  TypeDecl::metaID() const {
-	return "meta::"
-	+	Makai::Data::hashed((node->name() + "::" + name).toString(), Makai::Data::HashMode::HM_SHA3_512)
+Makai::UTF8String Namespace::metaID() const {
+	return Makai::toString("meta")
+	+ "::" + Makai::Data::hashed((idName() + "::" + name).toString(), Makai::Data::HashMode::HM_SHA3_512)
 	+ "::" + dtx
+	+ "::" + idName()
+	;
+}
+
+Makai::UTF8String TypeDecl::metaID() const {
+	return Makai::toString("meta")
+	+ "::" + Makai::Data::hashed((idName() + "::" + name).toString(), Makai::Data::HashMode::HM_SHA3_512)
+	+ "::" + dtx
+	+ "::" + idName()
 	;
 }
 
@@ -730,27 +744,27 @@ static Namespace::AttributeRef createBasicAttribute() {
 			Transformer::ATransformer::Context::error("Basic type must not contain fields!", ns->node);
 		}
 		ns->type->pureName = bt;
-		if (bt == "void")			{ns->type->basic = AV2_BT_VOID;		}
-		else if (bt == "bool")		{ns->type->basic = AV2_BT_BOOL;		}
-		else if (bt == "int8")		{ns->type->basic = AV2_BT_INT8;		}
-		else if (bt == "uint8")		{ns->type->basic = AV2_BT_UINT8;	}
-		else if (bt == "int16")		{ns->type->basic = AV2_BT_INT16;	}
-		else if (bt == "uint16")	{ns->type->basic = AV2_BT_UINT16;	}
-		else if (bt == "int32")		{ns->type->basic = AV2_BT_INT32;	}
-		else if (bt == "uint32")	{ns->type->basic = AV2_BT_UINT32;	}
-		else if (bt == "int64")		{ns->type->basic = AV2_BT_INT64;	}
-		else if (bt == "uint64")	{ns->type->basic = AV2_BT_UINT64;	}
-		else if (bt == "float32")	{ns->type->basic = AV2_BT_REAL32;	}
-		else if (bt == "float64")	{ns->type->basic = AV2_BT_REAL64;	}
-		else if (bt == "float128")	{ns->type->basic = AV2_BT_REAL128;	}
-		else if (bt == "vector")	{ns->type->basic = AV2_BT_VECTOR;	}
-		else if (bt == "bytes")		{ns->type->basic = AV2_BT_BYTES;	}
-		else if (bt == "matrix")	{ns->type->basic = AV2_BT_MATRIX;	}
-		else if (bt == "type")		{ns->type->basic = AV2_BT_TYPEID;	}
-		else if (bt == "string")	{ns->type->basic = AV2_BT_STRING;	}
-		else if (bt == "char")		{ns->type->basic = AV2_BT_CHAR;		}
-		else if (bt == "any")		{ns->type->basic = AV2_BT_ANY;		}
-		else if (bt == "null")		{ns->type->basic = AV2_BT_NULL;		}
+		if (bt == "void")			{ns->type->basic = AV2_BT_VOID;		ns->type->byteSize = null;	}
+		else if (bt == "bool")		{ns->type->basic = AV2_BT_BOOL;		ns->type->byteSize = 1;		}
+		else if (bt == "int8")		{ns->type->basic = AV2_BT_INT8;		ns->type->byteSize = 1;		}
+		else if (bt == "uint8")		{ns->type->basic = AV2_BT_UINT8;	ns->type->byteSize = 1;		}
+		else if (bt == "int16")		{ns->type->basic = AV2_BT_INT16;	ns->type->byteSize = 2;		}
+		else if (bt == "uint16")	{ns->type->basic = AV2_BT_UINT16;	ns->type->byteSize = 2;		}
+		else if (bt == "int32")		{ns->type->basic = AV2_BT_INT32;	ns->type->byteSize = 4;		}
+		else if (bt == "uint32")	{ns->type->basic = AV2_BT_UINT32;	ns->type->byteSize = 4;		}
+		else if (bt == "int64")		{ns->type->basic = AV2_BT_INT64;	ns->type->byteSize = 8;		}
+		else if (bt == "uint64")	{ns->type->basic = AV2_BT_UINT64;	ns->type->byteSize = 8;		}
+		else if (bt == "float32")	{ns->type->basic = AV2_BT_REAL32;	ns->type->byteSize = 4;		}
+		else if (bt == "float64")	{ns->type->basic = AV2_BT_REAL64;	ns->type->byteSize = 8;		}
+		else if (bt == "float128")	{ns->type->basic = AV2_BT_REAL128;	ns->type->byteSize = 16;	}
+		else if (bt == "vector")	{ns->type->basic = AV2_BT_VECTOR;	ns->type->byteSize = 4 * 4;	}
+		else if (bt == "bytes")		{ns->type->basic = AV2_BT_BYTES;	ns->type->byteSize = null;	}
+		else if (bt == "matrix")	{ns->type->basic = AV2_BT_MATRIX;	ns->type->byteSize = null;	}
+		else if (bt == "type")		{ns->type->basic = AV2_BT_TYPEID;	ns->type->byteSize = null;	}
+		else if (bt == "string")	{ns->type->basic = AV2_BT_STRING;	ns->type->byteSize = null;	}
+		else if (bt == "char")		{ns->type->basic = AV2_BT_CHAR;		ns->type->byteSize = 4;		}
+		else if (bt == "any")		{ns->type->basic = AV2_BT_ANY;		ns->type->byteSize = null;	}
+		else if (bt == "null")		{ns->type->basic = AV2_BT_NULL;		ns->type->byteSize = null;	}
 		else Transformer::ATransformer::Context::error("Invalid basic type!", ns->node);
 		switch (*ns->type->basic) {
 			case AV2_BT_STRING:
@@ -1285,6 +1299,23 @@ Namespace::Instance Intermediate::parent() {
 
 Implementation::Instance Intermediate::impl() {
 	return top()->impl;
+}
+
+void Intermediate::append(Intermediate const& other) {
+	symbols.append(other.symbols);
+}
+
+void SymbolTable::append(SymbolTable const& other) {
+	all.append(other.all);
+	types.append(other.types);
+	basics.append(other.basics);
+	arrays.append(other.arrays);
+	nullables.append(other.nullables);
+	tuples.append(other.tuples);
+	unions.append(other.unions);
+	templates.append(other.templates);
+	reifications.append(other.reifications);
+	globalTraits.appendBack(other.globalTraits);
 }
 
 Makai::UTF8String Function::Overload::prototype() const {

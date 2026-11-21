@@ -252,6 +252,12 @@ public:
 		return *this;
 	}
 
+	constexpr static SelfType some(DataType const& value) requires (!REFERENCE)	{return SelfType().set(value);}
+	constexpr static SelfType some(DataType&& value) requires (!REFERENCE)		{return SelfType().set(value);}
+	constexpr static SelfType some(DataType value) requires (REFERENCE)			{return SelfType().set(value);}
+
+	constexpr static SelfType none() {return SelfType();}
+
 	/// @brief Equality comparison operator.
 	/// @param other `Nullable` to compare with.
 	/// @return Whether they're equal.
@@ -354,6 +360,9 @@ private:
 
 /// @brief `Nullable` analog.
 template <class T> using Maybe = Nullable<T>;
+
+template <class T> constexpr static Nullable<T> some(T value)	{return Nullable<T>::some(value);	}
+template <class T> constexpr static Nullable<T> none()			{return Nullable<T>::none();		}
 
 CTL_NAMESPACE_END
 
