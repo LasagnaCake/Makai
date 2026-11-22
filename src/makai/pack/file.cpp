@@ -48,13 +48,14 @@ Nullable<Archive::LoadError> Archive::open(String const& passkey, Source&& inx, 
 				auto const files = unpack(ddx.files, *in);
 				auto const names = unpack<String>(ddx.names, *in);
 				auto const bbx = ddx.block.fromBytes(*in);
+				if (!bbx) return LoadError::PLE_BROKEN_DIR_STRUCTURE;
 				if (files && names) {
 					auto const fx = *files;
 					auto const nx = *names;
 					u64 lhash = 0;
 					for (usize i = 0; i < Math::lowest(fx.size(), nx.size()); ++i) {
 						auto const q = nx[i].toBytes();
-						auto const qe = unpack(q.span(), bbx, key, ddx.mode.encryption, ddx.mode.compression, ddx.mode.level);
+						auto const qe = Pack::unpack(q.span(), *bbx, key, ddx.mode.encryption, ddx.mode.compression, ddx.mode.level);
 						if (!qe) return LoadError::PLE_BROKEN_FILE_NAMES;
 						qe.then([&] (auto const ex) -> void {
 								inBuf[UTF8String::fromBytes(ex)] = fx[i];
@@ -88,7 +89,7 @@ Nullable<Bytes<>> File::unpackFrom(BF::IReadable& reader, String const& key) con
 		Nullable<Bytes<>> fout;
 		auto const fe = *fdat;
 		if (fe.size() == packed) return null;
-		fout = unpack(fe.span(), block, key, mode.encryption, mode.compression, mode.level);
+		fout = Pack::unpack(fe.span(), block, key, mode.encryption, mode.compression, mode.level);
 		if (!fout) return null;
 		auto const fdo = fout.value();
 		if (fdo.size() != unpacked) return null;
@@ -157,7 +158,7 @@ Archive& Archive::close() {
 				List<Entry> efiles;
 				List<Bytes<>> names;
 				auto const dblk = Block::createFor(dd.mode.encryption);
-				dd.block = BF::Data<u8>{builder.append(dblk)};
+				dd.block = BF::RawBytes{builder.append(dblk)};
 				for (auto const& file: files().orElse({})) {
 					auto const f = tryGet(file);
 					tryGet(file)
@@ -177,11 +178,11 @@ Archive& Archive::close() {
 							auto fnb = file.toString().toBytes();
 							dd.hash += hashOf(Makai::rospan(fnb));
 							auto const pq = Pack::pack(Makai::rospan(fnb), dblk, key, dd.mode.encryption, dd.mode.compression, dd.mode.level);
+							if (!pq) throw Error::FailedAction("Failed to add file name!");
 							pq.then([&] (auto const& ed) -> void {
 									names.pushBack(ed);
 								})
 							;
-							if (!pq) throw Error::FailedAction("Failed to add file name!");
 						})
 						.onError([] (auto const& e) {
 							switch (e) {
