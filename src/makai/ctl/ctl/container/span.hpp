@@ -60,6 +60,8 @@ struct Span:
 
 	using Ordered::OrderType;
 
+	using MutableSpan = Span<AsNonConst<TData>, S, TIndex, EXTENT>;
+
 	/// @brief Whether the span is a static span.
 	constexpr static bool STATIC	= (S != DYNAMIC_SIZE || EXTENT == ExtentSize::CES_STATIC);
 	/// @brief Whether the span is a dynamic span.
@@ -80,6 +82,16 @@ struct Span:
 	/// @brief Move constructor (`Span`).
 	/// @param other Other `Span` to move.
 	constexpr Span(SelfType&& other) noexcept: contents(CTL::move(other.contents)), count(CTL::move(other.count))	{}
+
+
+	/// @brief Copy constructor (`Span`).
+	/// @param other Other `Span` to copy from.
+	constexpr Span(MutableSpan const& other) noexcept
+	requires (Type::Different<SelfType, MutableSpan>): contents(other.contents), count(other.count)							{}
+	/// @brief Move constructor (`Span`).
+	/// @param other Other `Span` to move.
+	constexpr Span(MutableSpan&& other) noexcept
+	requires (Type::Different<SelfType, MutableSpan>): contents(CTL::move(other.contents)), count(CTL::move(other.count))	{}
 
 	/// @brief Constructs a `Span` from a pointer to a range of elements.
 	/// @param data Elements to view.

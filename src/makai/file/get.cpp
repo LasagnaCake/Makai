@@ -135,30 +135,22 @@ void Makai::File::attachArchive(Pack::Archive::Source&& buffer, String const& pa
 	MAKAILIB_DEBUGLN_FULL("Attaching archive...");
 	if (state() == ArchiveState::FAS_LOADING)
 		throw Error::FailedAction("Other archive is being loaded!", CTL_CPP_PRETTY_SOURCE);
-	try {
-		state() = ArchiveState::FAS_LOADING;
-		archive().close();
-		if (auto const err = archive().open(password, buffer.transfer())) {
-			switch (*err) {
-				using enum Pack::Archive::LoadError;
-				case PLE_ALREADY_OPEN:			break;
-				case PLE_FILE_IS_TOO_NEW:		throw Error::FailedAction("File format is newer than supported format!", CTL_CPP_PRETTY_SOURCE);
-				case PLE_BROKEN_HEADER:			throw Error::FailedAction("Broken pack header!", CTL_CPP_PRETTY_SOURCE);
-				case PLE_BROKEN_DIR_HEADER:		throw Error::FailedAction("Broken directory header!", CTL_CPP_PRETTY_SOURCE);
-				case PLE_BROKEN_DIR_STRUCTURE:	throw Error::FailedAction("Broken directory file structure!", CTL_CPP_PRETTY_SOURCE);
-				case PLE_NOT_A_PACK:			throw Error::FailedAction("Not an archive pack!", CTL_CPP_PRETTY_SOURCE);
-				case PLE_NO_HEADER:				throw Error::FailedAction("Archive has no readable header!", CTL_CPP_PRETTY_SOURCE);
-			}
+	state() = ArchiveState::FAS_LOADING;
+	archive().close();
+	if (auto const err = archive().open(password, buffer.transfer())) {
+		switch (*err) {
+			using enum Pack::Archive::LoadError;
+			case PLE_ALREADY_OPEN:			break;
+			case PLE_FILE_IS_TOO_NEW:		throw Error::FailedAction("File format is newer than supported format!", CTL_CPP_PRETTY_SOURCE);
+			case PLE_BROKEN_HEADER:			throw Error::FailedAction("Broken pack header!", CTL_CPP_PRETTY_SOURCE);
+			case PLE_BROKEN_DIR_HEADER:		throw Error::FailedAction("Broken directory header!", CTL_CPP_PRETTY_SOURCE);
+			case PLE_BROKEN_DIR_STRUCTURE:	throw Error::FailedAction("Broken directory file structure!", CTL_CPP_PRETTY_SOURCE);
+			case PLE_NOT_A_PACK:			throw Error::FailedAction("Not an archive pack!", CTL_CPP_PRETTY_SOURCE);
+			case PLE_NO_HEADER:				throw Error::FailedAction("Archive has no readable header!", CTL_CPP_PRETTY_SOURCE);
 		}
-		state() = ArchiveState::FAS_OPEN;
-		MAKAILIB_DEBUGLN_FULL("Archive Attached!");
-	} catch (Error::Generic const& e) {
-		MAKAILIB_DEBUGLN_FULL("Archive attachment failed!");
-		MAKAILIB_DEBUGLN_FULL("Reason: ", e.report());
-	} catch (std::exception const& e) {
-		MAKAILIB_DEBUGLN_FULL("Archive attachment failed!");
-		MAKAILIB_DEBUGLN_FULL("Reason: ", e.what());
 	}
+	state() = ArchiveState::FAS_OPEN;
+	MAKAILIB_DEBUGLN_FULL("Archive Attached!");
 	#endif
 }
 

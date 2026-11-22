@@ -24,7 +24,7 @@ namespace Makai::Pack {
 	/// @return Encrypted data.
 	Nullable<Bytes<>> encrypt(
 		ConstByteSpan<> const&	data,
-		String const&			block,
+		Bytes<> const&			block,
 		String const&			key		= "",
 		Encryption const		method	= Encryption::PE_AES256
 	);
@@ -37,7 +37,7 @@ namespace Makai::Pack {
 	/// @return Decrypted data.
 	Nullable<Bytes<>> decrypt(
 		ConstByteSpan<> const&	data,
-		String const&			block,
+		Bytes<> const&			block,
 		String const&			key		= "",
 		Encryption const		method	= Encryption::PE_AES256
 	);
@@ -72,7 +72,7 @@ namespace Makai::Pack {
 	/// @return Encrypted data.
 	inline Nullable<Bytes<>> encrypt(
 		Bytes<> const&		data,
-		String const&		block,
+		Bytes<> const&		block,
 		String const&		key		= "",
 		Encryption const	method	= Encryption::PE_AES256
 	) {
@@ -87,7 +87,7 @@ namespace Makai::Pack {
 	/// @return Decrypted data.
 	inline Nullable<Bytes<>> decrypt(
 		Bytes<> const&		data,
-		String const&		block,
+		Bytes<> const&		block,
 		String const&		key		= "",
 		Encryption const	method	= Encryption::PE_AES256
 	) {
@@ -122,7 +122,7 @@ namespace Makai::Pack {
 
 	Nullable<Bytes<>> pack(
 		ConstByteSpan<> const&	data,
-		String const&			block,
+		Bytes<> const&			block,
 		String const&			key		= "",
 		Encryption const		enc		= Encryption::PE_AES256,
 		Compression const		comp	= Compression::PC_ZIP,
@@ -131,7 +131,7 @@ namespace Makai::Pack {
 
 	Nullable<Bytes<>> unpack(
 		ConstByteSpan<> const&	data,
-		String const&			block,
+		Bytes<> const&			block,
 		String const&			key		= "",
 		Encryption const		enc		= Encryption::PE_AES256,
 		Compression const		comp	= Compression::PC_ZIP,
@@ -140,7 +140,7 @@ namespace Makai::Pack {
 
 	inline Nullable<Bytes<>> pack(
 		Bytes<> const&		data,
-		String const&		block,
+		Bytes<> const&		block,
 		String const&		key		= "",
 		Encryption const	enc		= Encryption::PE_AES256,
 		Compression const	comp	= Compression::PC_ZIP,
@@ -151,7 +151,7 @@ namespace Makai::Pack {
 
 	inline Nullable<Bytes<>> unpack(
 		Bytes<> const&		data,
-		String const&		block,
+		Bytes<> const&		block,
 		String const&		key		= "",
 		Encryption const	enc		= Encryption::PE_AES256,
 		Compression const	comp	= Compression::PC_ZIP,

@@ -15,18 +15,19 @@ static CTL::Random::Engine::Secure& rng() {
 	return r;
 }
 
-String Block::createFor(Encryption const mode) {
+Bytes<> Block::createFor(Encryption const mode) {
 	switch (mode) {
-		case Encryption::PE_NO_ENCRYPTION: return "";
+		case Encryption::PE_NO_ENCRYPTION:
+			return Bytes<>();
 		case Encryption::PE_AES256: {
-			String str;
+			Bytes<> str;
 			str.resize(16, 0);
 			for (auto& c: str)
 				c = rng().next() % 0xFF;
 			return str;
 		};
 	}
-	return "";
+	return Bytes<>();
 }
 
 Nullable<Archive::LoadError> Archive::open(String const& passkey, Source&& inx, Destination&& outx, Nullable<PackInfo> const& info) {
@@ -49,7 +50,7 @@ Nullable<Archive::LoadError> Archive::open(String const& passkey, Source&& inx, 
 				if (files && names) {
 					auto const fx = *files;
 					auto const nx = *names;
-					auto const bbx = ddx.block.fromBytes<String>(*in);
+					auto const bbx = ddx.block.fromBytes(*in);
 					u64 lhash = 0;
 					for (usize i = 0; i < Math::lowest(fx.size(), nx.size()); ++i) {
 						auto const q = nx[i].toBytes();
@@ -61,7 +62,7 @@ Nullable<Archive::LoadError> Archive::open(String const& passkey, Source&& inx, 
 						;
 					}
 					if (ddx.hash != lhash)
-						 return LoadError::PLE_BROKEN_DIR_HEADER;
+						 return LoadError::PLE_BROKEN_DIR_STRUCTURE;
 				} else return LoadError::PLE_BROKEN_DIR_STRUCTURE;
 			} else return LoadError::PLE_BROKEN_DIR_HEADER;
 		} else return LoadError::PLE_BROKEN_HEADER;
@@ -79,7 +80,7 @@ Nullable<Archive::LoadError> Archive::open(String const& passkey, Destination&& 
 }
 
 Nullable<Bytes<>> File::unpackFrom(BF::IReadable& reader, String const& key) const {
-	auto const bbx = block.fromBytes<String>(reader);
+	auto const bbx = block.fromBytes(reader);
 	if (!bbx) return null;
 	auto const block = bbx.value();
 	if (auto const fdat = contents.fromBytes(reader)) {
@@ -155,7 +156,7 @@ Archive& Archive::close() {
 				List<Entry> efiles;
 				List<Bytes<>> names;
 				auto const dblk = Block::createFor(dd.mode.encryption);
-				dd.block = BF::Text{builder.append(dblk)};
+				dd.block = BF::Data<u8>{builder.append(dblk)};
 				for (auto const& file: files().orElse({})) {
 					auto const f = tryGet(file);
 					tryGet(file)
@@ -172,14 +173,15 @@ Archive& Archive::close() {
 								})
 							;
 							efiles.pushBack(builder.put(fzx));
-							auto const fnb = file.toString().toBytes();
+							auto fnb = file.toString().toBytes();
+							fnb.popBack();
 							dd.hash += hashOf(fnb.span());
-							auto const pq = Pack::pack(fnb.span(), blk, key, fd.mode.encryption, dd.mode.compression, dd.mode.level);
+							auto const pq = Pack::pack(Makai::rospan(fnb), blk, key, dd.mode.encryption, dd.mode.compression, dd.mode.level);
 							pq.then([&] (auto const& ed) -> void {
 									names.pushBack(ed);
 								})
 							;
-							if (!pq) throw Error::FailedAction("Failed to pack file!");
+							if (!pq) throw Error::FailedAction("Failed to add file name!");
 						})
 						.onError([] (auto const& e) {
 							switch (e) {

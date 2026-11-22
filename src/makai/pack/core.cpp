@@ -25,13 +25,13 @@ template<class T>
 static Nullable<Bytes<>> cbcTransform(
 	ConstByteSpan<> const&	data,
 	String const&			password	= "",
-	String					block		= {}
+	Bytes<>					block		= {}
 ) try {
 	std::string result;
 	T tf;
 	String pass = password;
 	pass.resize(tf.MaxKeyLength(), ' ');
-	block.resize(16, 0);
+	block.resize(16, '0');
 	tf.SetKeyWithIV((uint8*)pass.data(), pass.size(), (ref<byte>)block.data(), 16);
 	StringSource ss(
 		data.data(),
@@ -44,8 +44,6 @@ static Nullable<Bytes<>> cbcTransform(
 	);
 	return Bytes<>((ref<byte>)result.data(), result.size());
 } catch (std::exception const& e) {
-	return null;
-} catch (CTL::Exception const& e) {
 	return null;
 }
 
@@ -80,15 +78,13 @@ static Nullable<Bytes<>> flate(
 	return Bytes<>((ref<byte>)result.data(), result.size());
 } catch (std::exception const& e) {
 	return null;
-} catch (CTL::Exception const& e) {
-	return null;
 }
 
 template<typename T>
 static Nullable<Bytes<>> cbcEncrypt(
 	ConstByteSpan<> const&	data,
 	String const&			password	= "",
-	String const&			block		= {}
+	Bytes<> const&			block		= {}
 ) {
 	return cbcTransform<typename CBC_Mode<T>::Encryption>(data, password, block);
 }
@@ -97,14 +93,14 @@ template<typename T>
 static Nullable<Bytes<>> cbcDecrypt(
 	ConstByteSpan<> const&	data,
 	String const&			password	= "",
-	String const&			block		= {}
+	Bytes<> const&			block		= {}
 ) {
 	return cbcTransform<typename CBC_Mode<T>::Decryption>(data, password, block);
 }
 
 Nullable<Bytes<>> Makai::Pack::encrypt(
 	ConstByteSpan<> const&	data,
-	String const&			block,
+	Bytes<> const&			block,
 	String const&			password,
 	Encryption const		method
 ) {
@@ -118,7 +114,7 @@ Nullable<Bytes<>> Makai::Pack::encrypt(
 
 Nullable<Bytes<>> Makai::Pack::decrypt(
 	ConstByteSpan<> const&	data,
-	String const&			block,
+	Bytes<> const&			block,
 	String const&			password,
 	Encryption const		method
 ) {
@@ -135,7 +131,7 @@ Nullable<Bytes<>> Makai::Pack::compress(
 	Compression const		method,
 	uint8 const				level
 ) {
-	return flate<Inflator>(data, method, level);
+	return flate<Deflator>(data, method, level);
 }
 
 Nullable<Bytes<>> Makai::Pack::decompress(
@@ -143,13 +139,13 @@ Nullable<Bytes<>> Makai::Pack::decompress(
 	Compression const		method,
 	uint8 const				level
 ) {
-	return flate<Deflator>(data, method, level);
+	return flate<Inflator>(data, method, level);
 }
 
 
 Nullable<Bytes<>> Makai::Pack::pack(
 	ConstByteSpan<> const&	data,
-	String const&			block,
+	Bytes<> const&			block,
 	String const&			key,
 	Encryption const		enc,
 	Compression const		comp,
@@ -162,7 +158,7 @@ Nullable<Bytes<>> Makai::Pack::pack(
 
 Nullable<Bytes<>> Makai::Pack::unpack(
 	ConstByteSpan<> const&	data,
-	String const&			block,
+	Bytes<> const&			block,
 	String const&			key,
 	Encryption const		enc,
 	Compression const		comp,
