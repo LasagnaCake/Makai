@@ -62,8 +62,8 @@ Nullable<Archive::LoadError> Archive::open(String const& passkey, Source&& inx, 
 						;
 					}
 					if (ddx.hash != lhash)
-						 return LoadError::PLE_BROKEN_DIR_STRUCTURE;
-				} else return LoadError::PLE_NO_DIR_STRUCTURE;
+						 return LoadError::PLE_BROKEN_FILE_NAMES;
+				} else return LoadError::PLE_BROKEN_DIR_STRUCTURE;
 			} else return LoadError::PLE_BROKEN_DIR_HEADER;
 		} else return LoadError::PLE_BROKEN_HEADER;
 	} else pack = info.orElse({});
