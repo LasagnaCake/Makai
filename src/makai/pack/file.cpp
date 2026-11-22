@@ -63,7 +63,7 @@ Nullable<Archive::LoadError> Archive::open(String const& passkey, Source&& inx, 
 					}
 					if (ddx.hash != lhash)
 						 return LoadError::PLE_BROKEN_DIR_STRUCTURE;
-				} else return LoadError::PLE_BROKEN_DIR_STRUCTURE;
+				} else return LoadError::PLE_NO_DIR_STRUCTURE;
 			} else return LoadError::PLE_BROKEN_DIR_HEADER;
 		} else return LoadError::PLE_BROKEN_HEADER;
 	} else pack = info.orElse({});
@@ -175,7 +175,7 @@ Archive& Archive::close() {
 							efiles.pushBack(builder.put(fzx));
 							auto fnb = file.toString().toBytes();
 							fnb.popBack();
-							dd.hash += hashOf(fnb.span());
+							dd.hash += hashOf(Makai::rospan(fnb));
 							auto const pq = Pack::pack(Makai::rospan(fnb), blk, key, dd.mode.encryption, dd.mode.compression, dd.mode.level);
 							pq.then([&] (auto const& ed) -> void {
 									names.pushBack(ed);
