@@ -107,7 +107,7 @@ Nullable<Bytes<>> Makai::Pack::encrypt(
 	switch (method) {
 		default: return null;
 		case Encryption::PE_NO_ENCRYPTION:	return Bytes<>(data);
-		case Encryption::PE_AES256:	return cbcEncrypt<AES>(data, password, block);
+		case Encryption::PE_AES256:			return cbcEncrypt<AES>(data, password, block);
 	}
 	return null;
 }
@@ -121,7 +121,7 @@ Nullable<Bytes<>> Makai::Pack::decrypt(
 	switch (method) {
 		default: return null;
 		case Encryption::PE_NO_ENCRYPTION:	return Bytes<>(data);
-		case Encryption::PE_AES256:	return cbcDecrypt<AES>(data, password, block);
+		case Encryption::PE_AES256:			return cbcDecrypt<AES>(data, password, block);
 	}
 	return null;
 }
@@ -153,7 +153,7 @@ Nullable<Bytes<>> Makai::Pack::pack(
 ) {
 	auto const cc = compress(data, comp, level);
 	if (!cc) return null;
-	return encrypt(data, block, key, enc);
+	return encrypt(*cc, block, key, enc);
 }
 
 Nullable<Bytes<>> Makai::Pack::unpack(
@@ -166,5 +166,5 @@ Nullable<Bytes<>> Makai::Pack::unpack(
 ) {
 	auto const cc = decrypt(data, block, key, enc);
 	if (!cc) return null;
-	return decompress(data, comp, level);
+	return decompress(*cc, comp, level);
 }
