@@ -47,10 +47,10 @@ Nullable<Archive::LoadError> Archive::open(String const& passkey, Source&& inx, 
 				auto const ddx = dir.value();
 				auto const files = unpack(ddx.files, *in);
 				auto const names = unpack<String>(ddx.names, *in);
+				auto const bbx = ddx.block.fromBytes(*in);
 				if (files && names) {
 					auto const fx = *files;
 					auto const nx = *names;
-					auto const bbx = ddx.block.fromBytes(*in);
 					u64 lhash = 0;
 					for (usize i = 0; i < Math::lowest(fx.size(), nx.size()); ++i) {
 						auto const q = nx[i].toBytes();
