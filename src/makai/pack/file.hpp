@@ -8,7 +8,7 @@ namespace Makai::Pack {
 	using namespace BF;
 
 	/// @brief Hash IV block.
-	struct Block: BF::Data<u8> {
+	struct Block: BF::RawBytes {
 		/// @brief Creates an IV block with a cryptographically-secure random number generator operation.
 		/// @return IV block.
 		static Bytes<> createFor(Encryption const method);
@@ -25,7 +25,7 @@ namespace Makai::Pack {
 		u64				packed		= 0;
 		Mode			mode;
 		u64				hash		= 0;
-		BF::Data<u8>	block;
+		BF::RawBytes	block;
 	};
 
 	struct [[CTL_PACKED_STRUCT]] File: PackedEntry {
