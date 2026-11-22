@@ -174,7 +174,6 @@ Archive& Archive::close() {
 							;
 							efiles.pushBack(builder.put(fzx));
 							auto fnb = file.toString().toBytes();
-							fnb.popBack();
 							dd.hash += hashOf(Makai::rospan(fnb));
 							auto const pq = Pack::pack(Makai::rospan(fnb), blk, key, dd.mode.encryption, dd.mode.compression, dd.mode.level);
 							pq.then([&] (auto const& ed) -> void {

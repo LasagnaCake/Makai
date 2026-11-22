@@ -84,10 +84,10 @@ struct AtomicCell:
 	SelfType& operator=(SelfType const& other) {
 		if (wrapper == other.wrapper) return *this;
 		unbind();
-		if (!other.exists()) return *this;
+		if (!other.tryLock()) return *this;
 		wrapper = other.wrapper;
-		auto const _ = wrapper->lock();
 		wrapper->acquire();
+		wrapper->oplock.unlock();
 		return *this;
 	}
 
@@ -108,8 +108,8 @@ struct AtomicCell:
 	/// @return Pointer to value.
 	/// @throw `NullPointerException` if object does not exist.
 	PointerType operator->() const {
-		if (!exists()) emptyError();
-		auto const _ = wrapper->lock();
+		if (!tryLock()) emptyError();
+		wrapper->oplock.unlock();
 		return &wrapper->value;
 	}
 
@@ -117,8 +117,8 @@ struct AtomicCell:
 	/// @return Reference to value.
 	/// @throw `NullPointerException` if object does not exist.
 	ReferenceType operator*() const {
-		if (!exists()) emptyError();
-		auto const _ = wrapper->lock();
+		if (!tryLock()) emptyError();
+		wrapper->oplock.unlock();
 		return wrapper->value;
 	}
 
@@ -139,9 +139,9 @@ struct AtomicCell:
 	/// @return Reference to self.
 	template<Type::Functional<DataType(DataType const&)> TFunction>
 	SelfType& modify(TFunction const& op) {
-		if (!exists()) return *this;
-		auto const _ = wrapper->lock();
+		if (!tryLock()) return *this;
 		wrapper->value = op(wrapper->value);
+		wrapper->oplock.unlock();
 		return (*this);
 	}
 
@@ -151,9 +151,9 @@ struct AtomicCell:
 	/// @return Reference to self.
 	template<Type::Functional<void(DataType const&)> TFunction>
 	SelfType& perform(TFunction const& op) {
-		if (!exists()) return *this;
-		auto const _ = wrapper->lock();
+		if (!tryLock()) return *this;
 		op(wrapper->value);
+		wrapper->oplock.unlock();
 		return (*this);
 	}
 
@@ -163,10 +163,10 @@ struct AtomicCell:
 	/// @return Reference to self.
 	template<Type::Functional<void()> TFunction>
 	SelfType& perform(TFunction const& op) {
-		if (!exists())
+		if (!tryLock())
 			return (op(), *this);
-		auto const _ = wrapper->lock();
 		op();
+		wrapper->oplock.unlock();
 		return (*this);
 	}
 
@@ -192,7 +192,11 @@ struct AtomicCell:
 
 	/// @brief Returns whether the object exists.
 	/// @return Whether object exists.
-	bool exists() const			{return (wrapper && !wrapper->dead());		}
+	bool exists() const	 {
+		if (!tryLock()) return false;
+		wrapper->oplock.unlock();
+		return true;
+	}
 	/// @brief Returns whether the object exists.
 	/// @return Whether object exists.
 	operator bool() const		{return exists();							}
@@ -215,8 +219,15 @@ struct AtomicCell:
 	}
 
 private:
+	bool tryLock() const {
+		if (!wrapper) return false;
+			if (!wrapper->dead()) return false;
+		wrapper->oplock.lock();
+		return true;
+	}
+
 	void unbind() {
-		if (!exists()) return;
+		if (!tryLock()) return;
 		wrapper->oplock.lock();
 		wrapper->release();
 		if (wrapper->dead()) {

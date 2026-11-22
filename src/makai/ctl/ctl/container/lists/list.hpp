@@ -179,9 +179,7 @@ public:
 	/// @brief Move constructor.
 	/// @param other `List` to move from.
 	constexpr List(SelfType&& other) {
-		contents	= ::CTL::move(other.contents);
-		count		= ::CTL::move(other.count);
-		magnitude	= ::CTL::move(other.magnitude);
+		swap(*this, other);
 	}
 
 	/// @brief Constructs a `List` from a range of values.
@@ -1237,7 +1235,7 @@ public:
 		SelfType result;
 		for (SizeType i = 0; i < count; ++i) {
 			bool miss = false;
-			for(SizeType j = count - 1; j >= 0; --j) {
+			for(IndexType j = count - 1; j >= 0; --j) {
 				if (i == j) break;
 				if ((miss = !compare(contents[i], contents[j])))
 					break;
