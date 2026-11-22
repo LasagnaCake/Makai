@@ -54,15 +54,16 @@ Nullable<Archive::LoadError> Archive::open(String const& passkey, Source&& inx, 
 					u64 lhash = 0;
 					for (usize i = 0; i < Math::lowest(fx.size(), nx.size()); ++i) {
 						auto const q = nx[i].toBytes();
-						unpack(q.span(), bbx, key, ddx.mode.encryption, ddx.mode.compression, ddx.mode.level)
-							.then([&] (auto const ex) -> void {
+						auto const qe = unpack(q.span(), bbx, key, ddx.mode.encryption, ddx.mode.compression, ddx.mode.level);
+						if (!qe) return LoadError::PLE_BROKEN_FILE_NAMES;
+						qe.then([&] (auto const ex) -> void {
 								inBuf[UTF8String::fromBytes(ex)] = fx[i];
 								lhash += hashOf(ex.span());
 							})
 						;
 					}
 					if (ddx.hash != lhash)
-						 return LoadError::PLE_BROKEN_FILE_NAMES;
+						 return LoadError::PLE_INVALID_FILE_NAMES;
 				} else return LoadError::PLE_BROKEN_DIR_STRUCTURE;
 			} else return LoadError::PLE_BROKEN_DIR_HEADER;
 		} else return LoadError::PLE_BROKEN_HEADER;
@@ -175,7 +176,7 @@ Archive& Archive::close() {
 							efiles.pushBack(builder.put(fzx));
 							auto fnb = file.toString().toBytes();
 							dd.hash += hashOf(Makai::rospan(fnb));
-							auto const pq = Pack::pack(Makai::rospan(fnb), blk, key, dd.mode.encryption, dd.mode.compression, dd.mode.level);
+							auto const pq = Pack::pack(Makai::rospan(fnb), dblk, key, dd.mode.encryption, dd.mode.compression, dd.mode.level);
 							pq.then([&] (auto const& ed) -> void {
 									names.pushBack(ed);
 								})

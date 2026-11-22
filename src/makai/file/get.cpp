@@ -146,6 +146,7 @@ void Makai::File::attachArchive(Pack::Archive::Source&& buffer, String const& pa
 			case PLE_BROKEN_DIR_HEADER:		throw Error::FailedAction("Broken directory header!", CTL_CPP_PRETTY_SOURCE);
 			case PLE_BROKEN_DIR_STRUCTURE:	throw Error::FailedAction("Broken directory file structure!", CTL_CPP_PRETTY_SOURCE);
 			case PLE_BROKEN_FILE_NAMES:		throw Error::FailedAction("Broken file names!", CTL_CPP_PRETTY_SOURCE);
+			case PLE_INVALID_FILE_NAMES:	throw Error::FailedAction("File names do not match archive structure!", CTL_CPP_PRETTY_SOURCE);
 			case PLE_NOT_A_PACK:			throw Error::FailedAction("Not an archive pack!", CTL_CPP_PRETTY_SOURCE);
 			case PLE_NO_HEADER:				throw Error::FailedAction("Archive has no readable header!", CTL_CPP_PRETTY_SOURCE);
 		}

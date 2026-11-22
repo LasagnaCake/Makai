@@ -220,7 +220,7 @@ using Trigger	= Function<bool(Args...)>;
 template<class TObject, class TReturn, class... TArgs>
 constexpr Function<TReturn(TArgs...)>
 memberCall(TObject& obj, As<TReturn(TObject::*)(TArgs...)> const func) {
-	return [&] (TArgs... args) -> TReturn {return (obj.*func)(args...);};
+	return [&obj, func] (TArgs... args) -> TReturn {return (obj.*func)(args...);};
 }
 
 /// @brief Returns a callable version of a member function.
@@ -233,7 +233,7 @@ memberCall(TObject& obj, As<TReturn(TObject::*)(TArgs...)> const func) {
 template<class TObject, class TReturn, class... TArgs>
 constexpr Function<TReturn(TObject&, TArgs...)>
 fromMemberCall(As<TReturn(TObject::*)(TArgs...)> const func) {
-	return [&] (TObject& obj, TArgs... args) -> TReturn {return (obj.*func)(args...);};
+	return [func] (TObject& obj, TArgs... args) -> TReturn {return (obj.*func)(args...);};
 }
 
 CTL_NAMESPACE_END
