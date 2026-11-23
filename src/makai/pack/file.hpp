@@ -35,7 +35,7 @@ namespace Makai::Pack {
 	};
 
 	struct [[CTL_PACKED_STRUCT]] Directory: PackedEntry {
-		StringTable<String>	names;
+		BF::ByteBlockTable	names;
 		HeaderTable<File>	files;
 	};
 

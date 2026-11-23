@@ -218,10 +218,15 @@ namespace BinaryFormat {
 	using StringTable = Table<T, Convert::toString<T>>;
 
 	template <Type::NoneOf<String, UTF8String, UTF32String> T>
+	using ListTable = Table<List<T>, Convert::toList<T>>;
+
+	template <Type::NoneOf<String, UTF8String, UTF32String> T>
 	using ValueTable = Table<T, Convert::toValue<T>>;
 
 	template <Type::NoneOf<String, UTF8String, UTF32String> T>
 	using HeaderTable = Table<T, Convert::toHeader<T>>;
+
+	using ByteBlockTable = ListTable<u8>;
 
 	template <class T, auto F = Table<T>::convert>
 	constexpr Nullable<List<T>> unpack(Table<T, F> const& table, IReadable& source) {

@@ -221,7 +221,7 @@ struct AtomicCell:
 private:
 	bool tryLock() const {
 		if (!wrapper) return false;
-			if (!wrapper->dead()) return false;
+			if (wrapper->dead()) return false;
 		wrapper->oplock.lock();
 		return true;
 	}

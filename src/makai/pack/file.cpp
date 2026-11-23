@@ -46,7 +46,7 @@ Nullable<Archive::LoadError> Archive::open(String const& passkey, Source&& inx, 
 			if (auto const dir = pack.value().directory.fromBytes(*in)) {
 				auto const ddx = dir.value();
 				auto const files = unpack(ddx.files, *in);
-				auto const names = unpack<String>(ddx.names, *in);
+				auto const names = unpack(ddx.names, *in);
 				auto const bbx = ddx.block.fromBytes(*in);
 				if (!bbx) return LoadError::PLE_BROKEN_DIR_STRUCTURE;
 				if (files && names) {
@@ -54,7 +54,7 @@ Nullable<Archive::LoadError> Archive::open(String const& passkey, Source&& inx, 
 					auto const nx = *names;
 					u64 lhash = 0;
 					for (usize i = 0; i < Math::lowest(fx.size(), nx.size()); ++i) {
-						auto const q = nx[i].toBytes();
+						auto const q = nx[i];
 						auto const qe = Pack::unpack(q.span(), *bbx, key, ddx.mode.encryption, ddx.mode.compression, ddx.mode.level);
 						if (!qe) return LoadError::PLE_BROKEN_FILE_NAMES;
 						qe.then([&] (auto const ex) -> void {
