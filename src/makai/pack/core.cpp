@@ -44,7 +44,7 @@ static Nullable<Bytes<>> cbcTransform(
 	);
 	return Bytes<>((ref<byte>)result.data(), result.size());
 } catch (std::exception const& e) {
-	return null;
+	throw Error::FailedAction(e.what());
 }
 
 template<Makai::Type::Equal<Deflator> T>
@@ -77,7 +77,7 @@ static Nullable<Bytes<>> flate(
 	}
 	return Bytes<>((ref<byte>)result.data(), result.size());
 } catch (std::exception const& e) {
-	return null;
+	throw Error::FailedAction(e.what());
 }
 
 template<typename T>
