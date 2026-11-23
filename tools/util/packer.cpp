@@ -7,6 +7,7 @@ static Makai::Data::Value configBase() {
 	Makai::Data::Value cfg;
 	cfg["help"]		= false;
 	cfg["output"]	= "${name}.pack";
+	cfg["root"]		= "";
 	cfg["pass"]		= "password";
 	cfg["type"]		= "base64";
 	return cfg;
@@ -17,6 +18,7 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["o"]	= "output";
 	tl["p"]	= "pass";
 	tl["t"]	= "type";
+	tl["r"]	= "root";
 }
 
 CTL::String escape(char const c) {
@@ -47,11 +49,12 @@ namespace Command {
 		DEBUGLN("keygen <file> [--password <password>] [--type <type>]");
 	}
 
-	static void packFolder(Makai::Pack::Archive& pa, Makai::String const& folder, Makai::String const& source) {
+	static void packFolder(Makai::Pack::Archive& pa, Makai::String const& folder, Makai::String const& source, Makai::String const& root) {
 		auto const files = Makai::OS::FS::walkFiles(folder);
+		auto const basepath = f.sliced(source.size());
+		auto const destPath = root.size() ? Makai::OS::FS::concatenate(root, basepath) : basepath;
 		for (auto const& f: files) {
 			DEBUGLN("- ", f);
-			auto const destPath = f.sliced(source.size());
 			if (auto const e = pa.tryAdd(destPath, {.data = Makai::File::loadBinary(f)})) {
 				switch (e.value()) {
 					case Makai::Pack::Archive::AddError::PAE_NOT_OPEN:	throw Makai::Error::FailedAction("");
@@ -84,7 +87,7 @@ namespace Command {
 				Makai::Pack::Archive::Destination::create<Makai::Pack::BF::Writer>(outFile)
 			);
 			DEBUGLN("Folder: ", source);
-			packFolder(pa, source, source);
+			packFolder(pa, source, source, cfg["root"].getString());
 			pa.close();
 		}
 		Makai::File::saveBinary(packName, outFile);
