@@ -221,13 +221,16 @@ struct AtomicCell:
 private:
 	bool tryLock() const {
 		if (!wrapper) return false;
-			if (wrapper->dead()) return false;
 		wrapper->oplock.lock();
+		if (wrapper->dead()) {
+			wrapper->oplock.unlock();
+			return false;
+		}
 		return true;
 	}
 
 	void unbind() {
-		if (!tryLock()) return;
+		if (!wrapper) return;
 		wrapper->oplock.lock();
 		wrapper->release();
 		if (wrapper->dead()) {
