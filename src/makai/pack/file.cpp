@@ -98,13 +98,22 @@ Nullable<Bytes<>> File::unpackFrom(BF::IReadable& reader, String const& key) con
 	} else return null;
 }
 
-Result<Archive::FileEntry, Archive::GetError> Archive::tryGet(UTF8String const& path) {
+UTF8String Archive::normalized(UTF8String path) {
+	return Makai::Regex::replace(
+		path.toString().lower(),
+		R"##((\\\/)+)##",
+		"/"
+	);
+}
+
+Result<Archive::FileEntry, Archive::GetError> Archive::tryGet(UTF8String path) {
 	if (!isOpen) return GetError::PGE_NOT_OPEN;
+	path = normalized(path);
 	if (outBuf.contains(path))
 		return outBuf[path];
 	if (!in) return GetError::PGE_WRITE_ONLY;
-	else if (inBuf.contains(path) && inBuf[path]) {
-		auto const fheader = *inBuf[path];
+	else if (inBuf.contains(path)) {
+		auto const fheader = inBuf[path];
 		if (auto const fdat = fheader.unpackFrom(*in, key)) {
 			FileEntry fe = {*fdat, fheader.mode};
 			if (cacheLoadedFiles) outBuf[path] = fe;
@@ -113,33 +122,35 @@ Result<Archive::FileEntry, Archive::GetError> Archive::tryGet(UTF8String const& 
 	} else return GetError::PGE_NO_FILE;
 }
 
-Nullable<Archive::AddError> Archive::tryAdd(UTF8String const& path, Archive::FileEntry const& file) {
+Nullable<Archive::AddError> Archive::tryAdd(UTF8String path, Archive::FileEntry const& file) {
 	if (!isOpen) return AddError::PAE_NOT_OPEN;
 	if (!out) return AddError::PAE_READ_ONLY;
-	inBuf[path] = null;
+	path = normalized(path);
 	outBuf[path] = file;
 	return null;
 }
 
-Archive& Archive::remove(UTF8String const& path) {
+Archive& Archive::remove(UTF8String path) {
 	if (!isOpen) return *this;
+	path = normalized(path);
 	inBuf.erase(path);
 	outBuf.erase(path);
 	return *this;
 }
 
-bool Archive::contains(UTF8String const& path) const {
+bool Archive::contains(UTF8String path) const {
 	if (!isOpen) return false;
+	path = normalized(path);
 	return (inBuf.contains(path) or outBuf.contains(path));
 }
 
 Nullable<UTF8StringList> Archive::files() const {
 	if (!isOpen) return null;
 	UTF8Dictionary<bool> checked;
-	for (auto const& [file, x]: inBuf)
-		if (x) checked[file] = true;
 	for (auto const& [file, _]: outBuf)
-		if (!checked.contains(file))
+		checked[file] = true;
+	for (auto const& [file, _]: inBuf)
+		if (checked.contains(file))
 			checked[file] = true;
 	auto const chk = checked.keys();
 	return chk;

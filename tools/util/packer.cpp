@@ -52,9 +52,9 @@ namespace Command {
 	static void packFolder(Makai::Pack::Archive& pa, Makai::String const& folder, Makai::String const& source, Makai::String const& root) {
 		auto const files = Makai::OS::FS::walkFiles(folder);
 		for (auto const& f: files) {
-			DEBUGLN("- ", f);
-			auto const basepath = f.sliced(source.size());
+			auto const basepath = f.sliced(source.size()+1);
 			auto const destPath = root.size() ? Makai::OS::FS::concatenate(root, basepath) : basepath;
+			DEBUGLN("- ", f, " -> ", destPath);
 			if (auto const e = pa.tryAdd(destPath, {.data = Makai::File::loadBinary(f)})) {
 				switch (e.value()) {
 					case Makai::Pack::Archive::AddError::PAE_NOT_OPEN:	throw Makai::Error::FailedAction("");

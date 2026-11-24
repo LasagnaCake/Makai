@@ -26,7 +26,7 @@ namespace Math::Wave {
 	using WaveFunction = Function<T(T const, usize const)>;
 
 	#define WAVE_FUNCTION(NAME) template<Type::Number T = float> constexpr T NAME(T const t, usize const lod = 8)
- 
+
 	WAVE_FUNCTION(square)	{return sin(t) < 0 ? T(-1) : T(+1);	}
 
 	WAVE_FUNCTION(sine)			{return sin(t);							}

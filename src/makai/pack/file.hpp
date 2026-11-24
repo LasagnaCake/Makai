@@ -106,11 +106,11 @@ namespace Makai::Pack {
 		Nullable<LoadError> open(String const& passkey, Source&& in);
 		Nullable<LoadError> open(String const& passkey, Destination&& out, PackInfo const& info = {});
 
-		Result<FileEntry, GetError> tryGet(UTF8String const& path);
-		Nullable<AddError> tryAdd(UTF8String const& path, FileEntry const& file);
+		Result<FileEntry, GetError> tryGet(UTF8String path);
+		Nullable<AddError> tryAdd(UTF8String path, FileEntry const& file);
 
-		Archive&	remove(UTF8String const& path);
-		bool		contains(UTF8String const& path) const;
+		Archive&	remove(UTF8String path);
+		bool		contains(UTF8String path) const;
 
 		Nullable<UTF8StringList> files() const;
 
@@ -121,14 +121,16 @@ namespace Makai::Pack {
 		constexpr bool exists() const	{return isOpen;		}
 		constexpr operator bool() const	{return exists();	}
 
+		static UTF8String normalized(UTF8String path);
+
 	private:
-		bool							isOpen = false;
-		String							key;
-		Nullable<PackInfo>				pack;
-		Source							in;
-		Destination						out;
-		UTF8Dictionary<Nullable<File>>	inBuf;
-		UTF8Dictionary<FileEntry>		outBuf;
+		bool						isOpen = false;
+		String						key;
+		Nullable<PackInfo>			pack;
+		Source						in;
+		Destination					out;
+		UTF8Dictionary<File>		inBuf;
+		UTF8Dictionary<FileEntry>	outBuf;
 	};
 }
 
