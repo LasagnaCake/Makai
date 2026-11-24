@@ -100,7 +100,7 @@ Nullable<Bytes<>> File::unpackFrom(BF::IReadable& reader, String const& key) con
 
 UTF8String Archive::normalized(UTF8String path) {
 	return Makai::Regex::replace(
-		path.toString().lower(),
+		path.toString(),
 		R"##((\\\/)+)##",
 		"/"
 	);
