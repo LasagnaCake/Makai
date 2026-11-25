@@ -8,8 +8,9 @@ static Makai::Data::Value configBase() {
 	cfg["help"]		= false;
 	cfg["output"]	= "${name}.pack";
 	cfg["root"]		= "";
-	cfg["pass"]		= "password";
-	cfg["type"]		= "base64";
+	cfg["pass"]		= "";
+	cfg["type"]		= "";
+	cfg["format"]	= "base64";
 	return cfg;
 }
 
@@ -19,6 +20,7 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["p"]	= "pass";
 	tl["t"]	= "type";
 	tl["r"]	= "root";
+	tl["f"]	= "format";
 }
 
 CTL::String escape(char const c) {
@@ -124,10 +126,8 @@ namespace Command {
 	}
 
 	static void doKeygen(Makai::Data::Value const& cfg) {
-		DEBUGLN("Generating keyfile...");
 		usize sz = srng.number<usize>(32, 64);
-		CTL::String const passhash = Makai::Data::hashed(cfg["pass"].getString(), Makai::Data::HashMode::HM_SHA3_256);
-		DEBUGLN("Password hash size: ", passhash.size());
+		CTL::String passhash = Makai::Data::hashed(cfg["pass"].getString(), Makai::Data::HashMode::HM_SHA3_256);
 		if (cfg["type"].getString() == "embed") {
 			CTL::String const pkid = CTL::toString("PASSKEY_ID", srng.integer<usize>(), "EX");
 			CTL::String keyfile = "";
@@ -151,11 +151,40 @@ namespace Command {
 			}
 			keyfile += "\");\n";
 			keyfile += "#endif\n";
-			Makai::File::saveText((cfg["__args"].size() < 2) ? "key.256.h" : cfg["__args"][1], keyfile);
-		} else if (cfg["type"].getString() == "base64") {
-			Makai::File::saveText((cfg["__args"].size() < 2) ? "key.txt" : cfg["__args"][1], Makai::Data::encode(passhash.toBytes(), Makai::Data::EncodingType::ET_BASE64));
+			Makai::File::saveText(((cfg["__args"].size() < 2) ? "key" : cfg["__args"][1].getString()) + ".256.h", keyfile);
+		} else {
+			bool encoded = false;
+			if ((encoded = cfg["format"].getString() == "base64"))
+				passhash = Makai::Data::encode(passhash.toBytes(), Makai::Data::EncodingType::ET_BASE64);
+			else if ((encoded = cfg["format"].getString() == "base32"))
+				passhash = Makai::Data::encode(passhash.toBytes(), Makai::Data::EncodingType::ET_BASE32);
+			auto const kt = cfg["type"].getString();
+			auto const fname = ((cfg["__args"].size() < 2) ? "key" : cfg["__args"][1].getString()) + "." + cfg["type"].getString();
+			if (kt == "txt")
+				Makai::File::saveText(fname, passhash);
+			else {
+				Makai::Data::Value keyfile = keyfile.object();
+				keyfile["key"] = encoded ? passhash : Makai::Data::encode(passhash.toBytes(), Makai::Data::EncodingType::ET_BASE64);
+				keyfile["format"] = encoded ? cfg["format"].getString() : "base64";
+				if (kt == "json")
+					Makai::File::saveText(fname, keyfile.toJSONString("  "));
+				else if (kt == "flow")
+					Makai::File::saveText(fname, keyfile.toFLOWString("  "));
+				else DEBUGLN(keyfile.toFLOWString());
+			};
 		}
-		DEBUGLN("Key generated!");
+	}
+
+	static void doSalt(Makai::Data::Value const& cfg) {
+		CTL::Bytes<> salty;
+		salty.reserve(32, 0);
+		for (auto& b: salty)
+			b = srng.number<byte>();
+		cfg["pass"] = Makai::Data::hashed(cfg["pass"].getString() + CTL::String::fromBytes(salty), Makai::Data::HashMode::HM_SHA3_256);
+		if (cfg["__args"].size() > 1)
+			cfg["__args"][1] = "salt." + cfg["__args"][1].getString();
+		else cfg["__args"][1] = "salt";
+		return doKeygen(cfg);
 	}
 }
 
@@ -174,7 +203,8 @@ int main(int argc, char** argv) try {
 		if		(command == "pack"		)	Command::doPack(cfg);
 		else if	(command == "unpack"	)	Command::doUnpack(cfg);
 		else if	(command == "keygen"	)	Command::doKeygen(cfg);
-		return 0;
+		else if	(command == "salt"		)	Command::doSalt(cfg);
+		return -1;
 	}
 } catch (Makai::Error::Generic const& e) {
 	DEBUGLN(e.report());
