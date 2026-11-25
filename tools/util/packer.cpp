@@ -170,17 +170,24 @@ namespace Command {
 					Makai::File::saveText(fname, keyfile.toJSONString("  "));
 				else if (kt == "flow")
 					Makai::File::saveText(fname, keyfile.toFLOWString("  "));
-				else DEBUGLN(keyfile.toFLOWString());
+				else DEBUGLN(keyfile["format"].getString(), ":", keyfile["key"].getString());
 			};
 		}
 	}
 
 	static void doSalt(Makai::Data::Value const& cfg) {
 		CTL::Bytes<> salty;
-		salty.reserve(32, 0);
+		salty.reserve(256, 0);
 		for (auto& b: salty)
-			b = srng.number<byte>();
-		cfg["pass"] = Makai::Data::hashed(cfg["pass"].getString() + CTL::String::fromBytes(salty), Makai::Data::HashMode::HM_SHA3_256);
+			b = srng.number<u8>();
+		cfg["pass"] = Makai::Data::hashed(
+			cfg["pass"].getString()
+		+	Makai::Data::encode(
+				salty,
+				Makai::Data::EncodingType::ET_BASE64
+			),
+			Makai::Data::HashMode::HM_SHA3_512
+		);
 		if (cfg["__args"].size() > 1)
 			cfg["__args"][1] = "salt." + cfg["__args"][1].getString();
 		else cfg["__args"][1] = "salt";
@@ -204,7 +211,8 @@ int main(int argc, char** argv) try {
 		else if	(command == "unpack"	)	Command::doUnpack(cfg);
 		else if	(command == "keygen"	)	Command::doKeygen(cfg);
 		else if	(command == "salt"		)	Command::doSalt(cfg);
-		return -1;
+		else return -1;
+		return 0;
 	}
 } catch (Makai::Error::Generic const& e) {
 	DEBUGLN(e.report());

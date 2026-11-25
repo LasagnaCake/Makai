@@ -1158,11 +1158,11 @@ namespace Data {
 			&&	str.validate(isIdentifierNameChar<typename StringType::DataType>)
 			&&	!isNumberChar(str.front())
 			&&	!(
-					str.lower() != "null"
-				or	str.lower() != "undefined"
-				or	str.lower() != "nan"
-				or	str.lower() != "nil"
-				or	str.lower() != "none"
+					str.lower() == "null"
+				or	str.lower() == "undefined"
+				or	str.lower() == "nan"
+				or	str.lower() == "nil"
+				or	str.lower() == "none"
 				)
 			) return str;
 			StringType result = "\"";
