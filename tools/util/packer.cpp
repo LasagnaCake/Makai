@@ -176,22 +176,32 @@ namespace Command {
 	}
 
 	static void doSalt(Makai::Data::Value const& cfg) {
-		CTL::Bytes<> salty;
-		salty.reserve(256, 0);
+		CTL::List<u64> salty;
+		salty.reserve(16, 0);
 		for (auto& b: salty)
-			b = srng.number<u8>();
+			b = srng.number<u64>() ^ srng.number<u64>();
 		cfg["pass"] = Makai::Data::hashed(
 			cfg["pass"].getString()
 		+	Makai::Data::encode(
-				salty,
+				salty.toBytes(),
 				Makai::Data::EncodingType::ET_BASE64
 			),
 			Makai::Data::HashMode::HM_SHA3_512
 		);
-		if (cfg["__args"].size() > 1)
-			cfg["__args"][1] = "salt." + cfg["__args"][1].getString();
-		else cfg["__args"][1] = "salt";
-		return doKeygen(cfg);
+		DEBUGLN(
+			"base64:",
+			Makai::Data::encode(
+				Makai::Data::hashed(
+					cfg["pass"].getString()
+				+	Makai::Data::encode(
+						salty.toBytes(),
+						Makai::Data::EncodingType::ET_BASE64
+					),
+					Makai::Data::HashMode::HM_SHA3_512
+				).toBytes(),
+				Makai::Data::EncodingType::ET_BASE64
+			)
+		);
 	}
 }
 
