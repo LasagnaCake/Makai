@@ -3656,7 +3656,7 @@ ATransformer::Result TypeCountSizeOf::transform(Context& context, Node::Instance
 Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {
 	auto const scope = resolve(UTF8StringList::from(name));
 	if (!(scope && scope->type))
-		error("Basic type ["+name+"] does not exist!\nDid you forget to [using import core.types]?", context.now(basicType));
+		error("Basic type ["+name+"] does not exist!\nDid you forget to [using import core.types]?");
 	return scope->type;
 }
 
@@ -3678,7 +3678,7 @@ Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& typ
 	if (!type) return nullptr;
 	if (!symbols.arrays.contains(type.asWeak())) {
 		auto const arr = type.create();
-		arr->flags.isValueType = type->flags.isValueType && !type->flags.isArray;
+		arr->flags.isValueType = type->flags.isValueType && !(type->flags.isArray or type->basic == Core::BasicType::AV2_BT_ANY);
 		arr->flags.isArray = true;
 		arr->base = type;
 		arr->name = type->name + "Array";
