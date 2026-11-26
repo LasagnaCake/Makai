@@ -1713,6 +1713,8 @@ static Makai::UTF8StringList resolveAttribute(
 					attr->value[name] = context.pathOf(at->rightSide).join("/").toString();
 				} else if (attr->attribute->fields[name].path) {
 					context.error("Expected path here!", at->rightSide);
+				} else if (at->rightSide->content == Node::Content::AV2_TANC_VALUE) {
+					attr->value[name] = at->rightSide->value;
 				} else {
 					auto const expr = context.getExpression(at->rightSide);
 					if (!expr.isCompilable())
@@ -3654,7 +3656,7 @@ ATransformer::Result TypeCountSizeOf::transform(Context& context, Node::Instance
 Namespace::TypeRef ATransformer::Context::basicType(UTF8String const& name) {
 	auto const scope = resolve(UTF8StringList::from(name));
 	if (!(scope && scope->type))
-		error("Basic type ["+name+"] does not exist!\nDid you forget to [using import core.types]?");
+		error("Basic type ["+name+"] does not exist!\nDid you forget to [using import core.types]?", context.now(basicType));
 	return scope->type;
 }
 
