@@ -1715,7 +1715,7 @@ static Makai::UTF8StringList resolveAttribute(
 					context.error("Expected path here!", at->rightSide);
 				} else {
 					auto const expr = context.getExpression(at->rightSide);
-					if (!expr.isCompiled())
+					if (!expr.isCompilable())
 						context.error("Expected direct value here!", at->rightSide);
 					attr->value[name] = expr.direct;
 				}
@@ -3676,7 +3676,7 @@ Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& typ
 	if (!type) return nullptr;
 	if (!symbols.arrays.contains(type.asWeak())) {
 		auto const arr = type.create();
-		arr->flags.isValueType = type->flags.isValueType;
+		arr->flags.isValueType = type->flags.isValueType && !type->flags.isArray;
 		arr->flags.isArray = true;
 		arr->base = type;
 		arr->name = type->name + "Array";

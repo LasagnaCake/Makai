@@ -1,0 +1,2 @@
+using import makai.ex.game.dialog.actor
+using import makai.ex.game.dialog.scene
