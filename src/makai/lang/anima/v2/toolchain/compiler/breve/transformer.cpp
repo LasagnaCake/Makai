@@ -1713,11 +1713,13 @@ static Makai::UTF8StringList resolveAttribute(
 					attr->value[name] = context.pathOf(at->rightSide).join("/").toString();
 				} else if (attr->attribute->fields[name].path) {
 					context.error("Expected path here!", at->rightSide);
-				} else if (at->rightSide->content != Node::Content::AV2_TANC_VALUE) {
-					context.error("Expected constant (or name) here!", at->rightSide);
+				} else {
+					auto const expr = context.getExpression(at->rightSide);
+					if (!expr.isCompiled())
+						context.error("Expected direct value here!", at->rightSide);
+					attr->value[name] = expr.direct;
 				}
 			}
-			attr->value[name] = at->rightSide->value;
 		}
 		Makai::UTF8StringList missing;
 		for (auto const& [name, desc]: attr->attribute->fields) {
