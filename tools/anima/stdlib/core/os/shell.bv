@@ -1,4 +1,4 @@
-using import core
+using import core.types
 
 module OS.Shell {
 	struct Command {
