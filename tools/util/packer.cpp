@@ -11,6 +11,7 @@ static Makai::Data::Value configBase() {
 	cfg["pass"]		= "";
 	cfg["type"]		= "";
 	cfg["format"]	= "base64";
+	cfg["gen"]		= 4;
 	return cfg;
 }
 
@@ -21,6 +22,7 @@ static void translationBase(Makai::CLI::Parser::Translation& tl) {
 	tl["t"]	= "type";
 	tl["r"]	= "root";
 	tl["f"]	= "format";
+	tl["g"]	= "gen";
 }
 
 CTL::String escape(char const c) {
@@ -126,8 +128,8 @@ namespace Command {
 	}
 
 	static void doKeygen(Makai::Data::Value const& cfg) {
-		usize sz = srng.number<usize>(32, 64);
-		CTL::String passhash = Makai::Data::hashed(cfg["pass"].getString(), Makai::Data::HashMode::HM_SHA3_256);
+		usize sz = srng.number<usize>(64, 128);
+		CTL::String passhash = Makai::Data::hashed(cfg["pass"].getString(), Makai::Data::HashMode::HM_SHA3_512);
 		if (cfg["type"].getString() == "embed") {
 			CTL::String const pkid = CTL::toString("PASSKEY_ID", srng.integer<usize>(), "EX");
 			CTL::String keyfile = "";
@@ -175,30 +177,30 @@ namespace Command {
 		}
 	}
 
-	static void doSalt(Makai::Data::Value const& cfg) {
-		CTL::List<u64> salty;
-		salty.reserve(64, 0);
-		for (auto& b: salty)
+	static CTL::Bytes<> generateSalt() {
+		CTL::List<u64> salt;
+		salt.reserve(64, 0);
+		for (auto& b: salt)
 			b = srng.number<u64>();
-		cfg["pass"] = Makai::Data::hashed(
-			cfg["pass"].getString()
-		+	Makai::Data::encode(
-				salty.toBytes(),
-				Makai::Data::EncodingType::ET_BASE64
-			),
-			Makai::Data::HashMode::HM_SHA3_512
-		);
+		return salt.toBytes();
+	}
+
+	static void doSalt(Makai::Data::Value const& cfg) {
+		CTL::Bytes<> salt = cfg["pass"].getString().toBytes();
+		auto const rounds = cfg["gen"].getUnsigned();
+		for (usize i = 0; i < rounds; ++i)
+			salt = Makai::Data::hashed(
+				CTL::String::fromBytes(salt)
+			+	Makai::Data::encode(
+					generateSalt(),
+					Makai::Data::EncodingType::ET_BASE64
+				),
+				Makai::Data::HashMode::HM_SHA3_512
+			).toBytes();
 		DEBUGLN(
 			"base64:",
 			Makai::Data::encode(
-				Makai::Data::hashed(
-					cfg["pass"].getString()
-				+	Makai::Data::encode(
-						salty.toBytes(),
-						Makai::Data::EncodingType::ET_BASE64
-					),
-					Makai::Data::HashMode::HM_SHA3_512
-				).toBytes(),
+				salt,
 				Makai::Data::EncodingType::ET_BASE64
 			)
 		);

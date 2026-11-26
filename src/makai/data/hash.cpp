@@ -12,7 +12,7 @@ BinaryData<> hashData(BinaryData<> const& data) {
 	BinaryData<> result;
 	T hasher;
 	hasher.Update((const byte*)data.data(), data.size());
-	result.resize(hasher.DigestSize());
+	result.resize(hasher.DigestSize(), 0);
 	hasher.Final((byte*)result.data());
 	return result;
 }
@@ -22,7 +22,7 @@ String hashString(String const& str) {
 	String result;
 	T hasher;
 	hasher.Update((const byte*)str.data(), str.size());
-	result.resize(hasher.DigestSize());
+	result.resize(hasher.DigestSize(), '\0');
 	hasher.Final((byte*)result.data());
 	return result;
 }
