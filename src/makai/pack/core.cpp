@@ -31,7 +31,7 @@ static Nullable<Bytes<>> cbcTransform(
 	T tf;
 	String pass = password;
 	pass.resize(tf.MaxKeyLength(), ' ');
-	block.resize(16, '0');
+	block.resize(16, ' ');
 	tf.SetKeyWithIV((ref<byte>)pass.data(), pass.size(), (ref<byte>)block.data(), 16);
 	StringSource ss(
 		data.data(),
@@ -39,7 +39,8 @@ static Nullable<Bytes<>> cbcTransform(
 		true,
 		new StreamTransformationFilter(
 			tf,
-			new StringSink(result)
+			new StringSink(result),
+			CryptoPP::BlockPaddingSchemeDef::BlockPaddingScheme::NO_PADDING
 		)
 	);
 	return Bytes<>((ref<byte>)result.data(), result.size());
