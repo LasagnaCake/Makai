@@ -177,9 +177,9 @@ namespace Command {
 
 	static void doSalt(Makai::Data::Value const& cfg) {
 		CTL::List<u64> salty;
-		salty.reserve(16, 0);
+		salty.reserve(64, 0);
 		for (auto& b: salty)
-			b = srng.number<u64>() ^ srng.number<u64>();
+			b = srng.number<u64>();
 		cfg["pass"] = Makai::Data::hashed(
 			cfg["pass"].getString()
 		+	Makai::Data::encode(
