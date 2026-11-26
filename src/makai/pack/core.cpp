@@ -32,7 +32,7 @@ static Nullable<Bytes<>> cbcTransform(
 	String pass = password;
 	pass.resize(tf.MaxKeyLength(), ' ');
 	block.resize(16, '0');
-	tf.SetKeyWithIV((uint8*)pass.data(), pass.size(), (ref<byte>)block.data(), 16);
+	tf.SetKeyWithIV((ref<byte>)pass.data(), pass.size(), (ref<byte>)block.data(), 16);
 	StringSource ss(
 		data.data(),
 		data.size(),
