@@ -2,63 +2,74 @@ using import core
 
 with module Makai.Ex.Dialog
 
-struct Actor {
-	name: string
+trait ActorTrait {
+	@Operator(infix="*")
+	title :: (@ByRef self: Self, what: string)
+	@Operator(infix="-")
+	say :: (@ByRef self: Self, what: string)
+	@Operator(infix="+")
+	add :: (@ByRef self: Self, what: string)
+	@Operator(infix="&")
+	perform :: (@ByRef self: Self, what: string)
+	@Operator(infix="^")
+	emote :: (@ByRef self: Self, what: string)
 
+	enter :: (@ByRef self: Self)
+	leave :: (@ByRef self: Self)
+	present :: (@ByRef self: Self)
+	withdraw :: (@ByRef self: Self)
+}
+
+extend struct Actor {
+	name: string
+} with ActorTrait {
 	@[Private, Static, Native(name="makai/ex/game/dialog/scene/actor/title/v1")]
-	_title(name: string, what: string) -> void
+	_title :: (name: string, what: string) -> void
 	@[Private, Static, Native(name="makai/ex/game/dialog/scene/actor/say/v1")]
-	_say(name: string, what: string) -> void
+	_say :: (name: string, what: string) -> void
 	@[Private, Static, Native(name="makai/ex/game/dialog/scene/actor/add/v1")]
-	_add(name: string, what: string) -> void
+	_add :: (name: string, what: string) -> void
 	@[Private, Static, Native(name="makai/ex/game/dialog/scene/actor/perform/v1")]
-	_perform(name: string, what: string) -> void
+	_perform :: (name: string, what: string) -> void
 	@[Private, Static, Native(name="makai/ex/game/dialog/scene/actor/emote/v1")]
-	_emote(name: string, what: string) -> void
+	_emote :: (name: string, what: string) -> void
 
 	@[Private, Static, Native(name="makai/ex/game/dialog/scene/actor/enter/v1")]
-	_enter(name: string) -> void
+	_enter :: (name: string) -> void
 	@[Private, Static, Native(name="makai/ex/game/dialog/scene/actor/exit/v1")]
-	_leave(name: string) -> void
+	_leave :: (name: string) -> void
 	@[Private, Static, Native(name="makai/ex/game/dialog/scene/actor/present/v1")]
-	_present(name: string) -> void
+	_present :: (name: string) -> void
 	@[Private, Static, Native(name="makai/ex/game/dialog/scene/actor/withdraw/v1")]
-	_withdraw(name: string) -> void
+	_withdraw :: (name: string) -> void
 
-	@Operator(infix="*")
-	title(@ByRef self: Self, what: string)		=> (_title(self.name, what),	self)
-	@Operator(infix="-")
-	say(@ByRef self: Self, what: string)		=> (_say(self.name, what),		self)
-	@Operator(infix="+")
-	add(@ByRef self: Self, what: string)		=> (_add(self.name, what),		self)
-	@Operator(infix="&")
-	perform(@ByRef self: Self, what: string)	=> (_perform(self.name, what),	self)
-	@Operator(infix="^")
-	emote(@ByRef self: Self, what: string)		=> (_emote(self.name, what),	self)
+	title :: (@ByRef self: Self, what: string)		=> (_title(self.name, what),	self)
+	say :: (@ByRef self: Self, what: string)		=> (_say(self.name, what),		self)
+	add :: (@ByRef self: Self, what: string)		=> (_add(self.name, what),		self)
+	perform :: (@ByRef self: Self, what: string)	=> (_perform(self.name, what),	self)
+	emote :: (@ByRef self: Self, what: string)		=> (_emote(self.name, what),	self)
 
-	enter(@ByRef self: Self)	=> (_enter(self.name),		self)
-	leave(@ByRef self: Self)	=> (_leave(self.name),		self)
-	present(@ByRef self: Self)	=> (_present(self.name),	self)
-	withdraw(@ByRef self: Self)	=> (_withdraw(self.name),	self)
-}
+	enter :: (@ByRef self: Self)	=> (_enter(self.name),		self)
+	leave :: (@ByRef self: Self)	=> (_leave(self.name),		self)
+	present :: (@ByRef self: Self)	=> (_present(self.name),	self)
+	withdraw :: (@ByRef self: Self)	=> (_withdraw(self.name),	self)
 
-extend [Actor] {
-	@Operator(infix="*")
-	title(@ByRef self: Self, @ByRef what: string)	=> (for actor => self actor.title(what),	self)
-	@Operator(infix="-")
-	say(@ByRef self: Self, @ByRef what: string)		=> (for actor => self actor.say(what),		self)
-	@Operator(infix="+")
-	add(@ByRef self: Self, @ByRef what: string)		=> (for actor => self actor.add(what),		self)
-	@Operator(infix="&")
-	perform(@ByRef self: Self, @ByRef what: string)	=> (for actor => self actor.perform(what),	self)
-	@Operator(infix="^")
-	emote(@ByRef self: Self, @ByRef what: string)	=> (for actor => self actor.emote(what),	self)
-}
-
-extend Actor {
 	@[Private, Static, Native(name="makai/ex/game/dialog/scene/loadActor/v1")]
-	loadActor(path: string) -> string
+	loadActor :: (path: string) -> string
 
 	@Static
 	load :: (path: string) -> Actor => new Actor {loadActor(path)}
+}
+
+extend [T: ActorTrait] [T] with ActorTrait {
+	title :: (@ByRef self: Self, @ByRef what: string)	=> (for actor => self actor.title(what),	self)
+	say :: (@ByRef self: Self, @ByRef what: string)		=> (for actor => self actor.say(what),		self)
+	add :: (@ByRef self: Self, @ByRef what: string)		=> (for actor => self actor.add(what),		self)
+	perform :: (@ByRef self: Self, @ByRef what: string)	=> (for actor => self actor.perform(what),	self)
+	emote :: (@ByRef self: Self, @ByRef what: string)	=> (for actor => self actor.emote(what),	self)
+
+	enter :: (@ByRef self: Self)	=> (for actor => self actor.leave(),	self)
+	leave :: (@ByRef self: Self)	=> (for actor => self actor.leave(),	self)
+	present :: (@ByRef self: Self)	=> (for actor => self actor.present(),	self)
+	withdraw :: (@ByRef self: Self)	=> (for actor => self actor.withdraw(),	self)
 }

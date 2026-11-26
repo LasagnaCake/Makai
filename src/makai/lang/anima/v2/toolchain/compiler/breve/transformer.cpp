@@ -3674,6 +3674,7 @@ Namespace::TypeRef ATransformer::Context::arrayFor(Namespace::TypeRef const& typ
 	if (!type) return nullptr;
 	if (!symbols.arrays.contains(type.asWeak())) {
 		auto const arr = type.create();
+		arr->flags.isValueType = type->flags.isValueType;
 		arr->flags.isArray = true;
 		arr->base = type;
 		arr->name = type->name + "Array";
