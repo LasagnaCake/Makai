@@ -1,0 +1,25 @@
+using import core
+
+with module ANI
+
+trait Setter[T, PROP_PATH: string] {
+	@[Static, Native(name=PROP_PATH)]
+	setValue :: (value: T) -> void
+}
+
+trait Getter[T, PROP_PATH: string] {
+	@[Static, Native(name=PROP_PATH)]
+	getValue :: () -> T
+}
+
+trait Property[
+	T,
+	NAME: string,
+	SET_PATH: string = $"prop/{NAME}/set",
+	GET_PATH: string = $"prop/{NAME}/set"
+]: Setter[T, SET_PATH], Getter[T, GET_PATH] {
+	prop eval NAME {
+		set (self: Self, newValue: T) -> void => setValue(newValue)
+		get (self: Self) -> T => getValue()
+	}
+}
