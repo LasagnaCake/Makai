@@ -88,7 +88,7 @@ Nullable<Bytes<>> File::unpackFrom(BF::IReadable& reader, String const& key) con
 	if (auto const fdat = contents.fromBytes(reader)) {
 		Nullable<Bytes<>> fout;
 		auto const fe = *fdat;
-		if (fe.size() == packed) return null;
+		if (fe.size() != packed) return null;
 		fout = Pack::unpack(fe.span(), block, key, mode.encryption, mode.compression, mode.level);
 		if (!fout) return null;
 		auto const fdo = fout.value();
